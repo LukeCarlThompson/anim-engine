@@ -151,6 +151,7 @@ export class AnimEngine implements AnimEngineInternalApi {
     // If we are over 1 progress then finish
     if (this.#timeProgressFraction >= 1) {
       this.#currentValue = this.#toCurrentValue;
+      this.#timeProgressFraction = 1;
 
       if (this.#repeatNumber < this.#repeatCounter) {
         this.#velocity = this.#currentValue - previousValue;
@@ -163,7 +164,6 @@ export class AnimEngine implements AnimEngineInternalApi {
       this.#velocity = 0;
       this.#onUpdate?.(this.#currentValue, this.#velocity);
       this.#status = "finished";
-      this.#timeProgressFraction = 0;
       this.#deactivate(this);
       this.#onEnded?.(this.#currentValue);
       this.#playResolver?.(this);

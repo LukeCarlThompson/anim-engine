@@ -65,6 +65,44 @@ export type AnimEngineApi = {
   get currentValue(): number;
 };
 
+export type AnimEngineSteps = [AnimEngineFirstStep, ...AnimEngineSubsequentStep[]];
+
+export type AnimEngineFirstStep = {
+  from: NumberOrFunction;
+  to: NumberOrFunction;
+  durationMs?: number;
+  ease?: EaseName;
+};
+
+export type AnimEngineSubsequentStep = {
+  from?: NumberOrFunction;
+  to: NumberOrFunction;
+  durationMs?: number;
+  ease?: EaseName;
+};
+
+export type AnimEngineSequenceOptions = {
+  repeat?: number;
+  onStarted?: (currentValue: number) => void;
+  onUpdate?: (currentValue: number, velocity: number) => void;
+  onEnded?: (currentValue: number) => void;
+  onRepeat?: (currentValue: number) => void;
+  steps: AnimEngineSteps;
+};
+
+export type AnimEngineSequenceApi = {
+  play(): Promise<void>;
+  pause(): void;
+  resume(): void;
+  stop(): void;
+  kill(): void;
+  get velocity(): number;
+  get progress(): number;
+  set progress(progress: number);
+  get status(): AnimEngineStatus;
+  get currentValue(): number;
+};
+
 export type TickerApi = {
   start(): void;
   stop(): void;
