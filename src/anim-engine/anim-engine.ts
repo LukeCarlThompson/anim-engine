@@ -58,6 +58,7 @@ export type AnimEngineApi = {
   resume: () => void;
   stop: () => void;
   kill: () => void;
+  skipToEnd(): void;
   get velocity(): number;
   get progress(): number;
   set progress(progress: number);
@@ -96,6 +97,8 @@ export type AnimEngineSequenceApi = {
   resume(): void;
   stop(): void;
   kill(): void;
+  skipToEndOfCurrentStep(): void;
+  skipToEnd(): void;
   get velocity(): number;
   get progress(): number;
   set progress(progress: number);

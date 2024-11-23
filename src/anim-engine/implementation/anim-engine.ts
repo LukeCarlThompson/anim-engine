@@ -26,11 +26,11 @@ export class AnimEngine implements AnimEngineInternalApi {
   #onUpdate?: (currentValue: number, velocity: number) => void;
   #onEnded?: (endValue: number) => void;
   #onRepeat?: (startValue: number) => void;
-  #playResolver?: (value: this | PromiseLike<this>) => void;
   #repeatCounter: number = 0;
   #activate: (animEngine: AnimEngineInternalApi) => void;
   #deactivate: (animEngine: AnimEngineInternalApi) => void;
   #removeFromTicker: (animEngine: AnimEngineInternalApi) => void;
+  #playController?: AbortController;
 
   public constructor({
     to,
@@ -65,15 +65,20 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public play(): Promise<AnimEngineApi> {
+    const promise = new Promise<this>((resolve) => {
+      this.#playController = new AbortController();
+      this.#playController.signal.addEventListener("abort", () => {
+        resolve(this);
+        this.#status = "stopped";
+        this.#deactivate(this);
+      });
+    });
+
     this.#fromCurrentValue = this.#getConcreteValue(this.#from);
     this.#currentValue = this.#fromCurrentValue;
     this.#toCurrentValue = this.#getConcreteValue(this.#to);
     this.#status = "playing";
     this.#activate(this);
-
-    const promise = new Promise<this>((resolve) => {
-      this.#playResolver = resolve;
-    });
     this.#onStarted?.(this.#fromCurrentValue);
 
     return promise;
@@ -85,6 +90,7 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#deactivate(this);
   }
 
+  // TODO: Do we need a different resume method from the usual play one?
   public resume(): void {
     if (this.#status !== "paused") return;
     this.#status = "playing";
@@ -92,14 +98,16 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public stop(): void {
-    if (this.#status !== "paused" && this.#status === "playing") return;
-    this.#status = "stopped";
-    this.#deactivate(this);
+    this.#playController?.abort();
+  }
 
-    this.#playResolver?.(this);
+  public skipToEnd(): void {
+    this.#timeProgressFraction = 1;
+    this.#playController?.abort();
   }
 
   public kill(): void {
+    this.#playController?.abort();
     this.#removeFromTicker(this);
   }
 
@@ -166,7 +174,7 @@ export class AnimEngine implements AnimEngineInternalApi {
       this.#status = "finished";
       this.#deactivate(this);
       this.#onEnded?.(this.#currentValue);
-      this.#playResolver?.(this);
+      this.#playController?.abort();
       return;
     }
 
@@ -179,13 +187,9 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   #repeat(): void {
-    if (typeof this.#from === "function") {
-      this.#fromCurrentValue = this.#from();
-      this.#currentValue = this.#from();
-    }
-    if (typeof this.#to === "function") {
-      this.#toCurrentValue = this.#to();
-    }
+    this.#fromCurrentValue = this.#getConcreteValue(this.#from);
+    this.#currentValue = this.#fromCurrentValue;
+    this.#toCurrentValue = this.#getConcreteValue(this.#to);
 
     this.#timeProgressFraction = 0;
 

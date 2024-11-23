@@ -30,6 +30,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
         ease,
         onUpdate: (currentValue, velocity) => {
           this.#currentValue = currentValue;
+          // TODO: Progress should be a fraction of the total time for the sequence, not a representaion of the step fractions.
           this.#progress = (i + this.#sequence[i].progress) / this.#sequence.length;
           options.onUpdate?.(currentValue, velocity);
         },
@@ -87,10 +88,25 @@ export class AnimSequence implements AnimEngineSequenceApi {
 
   public stop(): void {
     this.#sequence.forEach((step) => {
+      step.stop();
+    });
+    this.#status = "stopped";
+  }
+
+  public skipToEndOfCurrentStep(): void {
+    this.#sequence.forEach((step) => {
       if (step.status === "playing" || step.status === "paused") {
         this.#status = "stopped";
-        step.stop();
+        step.skipToEnd();
       }
+    });
+  }
+
+  public skipToEnd(): void {
+    // Solve the problem of skipping all steps.
+    // If we skip the steps the original play promise doesn't resolve. Try abort controllers.
+    this.#sequence.forEach((step) => {
+      step.skipToEnd();
     });
   }
 
