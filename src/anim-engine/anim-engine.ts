@@ -42,7 +42,7 @@ export type AnimEngineOptions = {
   ease?: EaseName;
   repeat?: number;
   onStarted?: (currentValue: number) => void;
-  onUpdate?: (currentValue: number) => void;
+  onUpdate?: (currentValue: number, velocity: number) => void;
   onEnded?: (currentValue: number) => void;
   onRepeat?: (currentValue: number) => void;
 };
@@ -50,15 +50,24 @@ export type AnimEngineOptions = {
 export type CreateAnimEngine = (options: AnimEngineOptions) => AnimEngineApi;
 
 export type AnimEngineApi = {
-  set to(to: NumberOrFunction);
   set from(from: NumberOrFunction);
+  set to(to: NumberOrFunction);
+  set ease(ease: EaseName);
   play: () => Promise<AnimEngineApi>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
   kill: () => void;
+  get velocity(): number;
   get progress(): number;
   set progress(progress: number);
   get status(): AnimEngineStatus;
   get currentValue(): number;
+};
+
+export type TickerApi = {
+  start(): void;
+  stop(): void;
+  set autoStart(autoStart: boolean);
+  update(now: number): void;
 };

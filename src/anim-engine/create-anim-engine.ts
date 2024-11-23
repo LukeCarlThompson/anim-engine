@@ -2,10 +2,10 @@ import type { AnimEngineApi, AnimEngineOptions } from "./anim-engine";
 
 import { AnimEngine } from "./implementation";
 import type { AnimEngineInternalApi } from "./implementation/anim-engine";
-import { getTicker } from "./get-ticker";
+import { getInternalTicker } from "./get-ticker";
 
 export const createAnimEngine = (options: AnimEngineOptions): AnimEngineApi => {
-  const ticker = getTicker();
+  const ticker = getInternalTicker();
 
   if (ticker.autoStart) {
     ticker.start();

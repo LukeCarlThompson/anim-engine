@@ -21,11 +21,12 @@ export class AnimEngine implements AnimEngineInternalApi {
   #from: NumberOrFunction;
   #fromCurrentValue: number = 0;
   #currentValue: number = 0;
+  #velocity: number = 0;
   #durationMs: number;
   #easeName: EaseName;
   #repeatNumber: number;
   #onStarted?: (startValue: number) => void;
-  #onUpdate?: (currentValue: number) => void;
+  #onUpdate?: (currentValue: number, velocity: number) => void;
   #onEnded?: (endValue: number) => void;
   #onRepeat?: (startValue: number) => void;
   #playResolver?: (value: this | PromiseLike<this>) => void;
@@ -110,6 +111,10 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#removeFromTicker(this);
   }
 
+  public set from(from: NumberOrFunction) {
+    this.#from = from;
+  }
+
   public set to(to: NumberOrFunction) {
     if (this.#status === "playing") {
       this.#timeProgressFraction = 0;
@@ -117,8 +122,8 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#to = to;
   }
 
-  public set from(from: NumberOrFunction) {
-    this.#from = from;
+  public set ease(ease: EaseName) {
+    this.#easeName = ease;
   }
 
   public get progress(): number {
@@ -127,6 +132,10 @@ export class AnimEngine implements AnimEngineInternalApi {
 
   public set progress(progress: number) {
     this.#timeProgressFraction = progress;
+  }
+
+  public get velocity(): number {
+    return this.#velocity;
   }
 
   public get status(): AnimEngineStatus {
@@ -143,21 +152,24 @@ export class AnimEngine implements AnimEngineInternalApi {
 
   public update(deltaMs: number): void {
     const thisUpdateTimeProgressFraction = deltaMs / this.#durationMs;
-
     this.#timeProgressFraction += thisUpdateTimeProgressFraction;
+
+    const previousValue = this.#currentValue;
 
     // If we are over 1 progress then finish
     if (this.#timeProgressFraction >= 1) {
       this.#currentValue = this.#toCurrentValue;
 
       if (this.#repeatNumber < this.#repeatCounter) {
+        this.#velocity = this.#currentValue - previousValue;
         this.#repeatCounter++;
-        this.#onUpdate?.(this.#currentValue);
+        this.#onUpdate?.(this.#currentValue, this.#velocity);
         this.#repeat();
         return;
       }
 
-      this.#onUpdate?.(this.#currentValue);
+      this.#velocity = 0;
+      this.#onUpdate?.(this.#currentValue, this.#velocity);
       this.#status = "finished";
       this.#timeProgressFraction = 0;
       this.#deactivate(this);
@@ -169,7 +181,9 @@ export class AnimEngine implements AnimEngineInternalApi {
     const easedProgressFraction = easingFunctions[this.#easeName](this.#timeProgressFraction);
     const distance = this.#toCurrentValue - this.#fromCurrentValue;
     this.#currentValue = this.#fromCurrentValue + distance * easedProgressFraction;
-    this.#onUpdate?.(this.#currentValue);
+
+    this.#velocity = this.#currentValue - previousValue;
+    this.#onUpdate?.(this.#currentValue, this.#velocity);
   }
 
   #repeat(): void {
