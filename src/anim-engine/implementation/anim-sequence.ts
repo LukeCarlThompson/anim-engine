@@ -10,16 +10,15 @@ import type { Ticker } from "./ticker";
 import { getInternalTicker } from "../get-ticker";
 
 export class AnimSequence implements AnimEngineSequenceApi {
-  #progress: number;
   #ticker: Ticker;
   #sequence: AnimEngineInternalApi[];
   #currentValue: number;
   #status: AnimEngineStatus;
+  #totalDurationMs: number;
 
   public constructor(options: AnimEngineSequenceOptions) {
     this.#ticker = getInternalTicker();
     this.#status = "stopped";
-    this.#progress = 0;
     this.#currentValue = this.#getConcreteValue(options.steps[0].from);
 
     this.#sequence = options.steps.map(({ from, to, durationMs, ease }, i) => {
@@ -30,12 +29,12 @@ export class AnimSequence implements AnimEngineSequenceApi {
         ease,
         onUpdate: (currentValue, velocity) => {
           this.#currentValue = currentValue;
-          // TODO: Progress should be a fraction of the total time for the sequence, not a representaion of the step fractions.
-          this.#progress = (i + this.#sequence[i].progress) / this.#sequence.length;
           options.onUpdate?.(currentValue, velocity);
         },
       });
     });
+
+    this.#totalDurationMs = this.#sequence.reduce((prev, next) => prev + next.durationMs, 0);
   }
 
   public get velocity(): number {
@@ -48,7 +47,12 @@ export class AnimSequence implements AnimEngineSequenceApi {
     return 0;
   }
   public get progress(): number {
-    return this.#progress;
+    const currentProgressMs = this.#sequence.reduce((prev, next) => {
+      prev += next.progress * next.durationMs;
+      return prev;
+    }, 0);
+
+    return currentProgressMs / this.#totalDurationMs;
   }
   public set progress(progress: number) {
     // TODO: How do we set the progress? Or should I just remove this feature?
@@ -60,7 +64,12 @@ export class AnimSequence implements AnimEngineSequenceApi {
     return this.#currentValue;
   }
 
+  public get durationMs(): number {
+    return this.#totalDurationMs;
+  }
+
   public async play(): Promise<void> {
+    this.#sequence.forEach((step) => (step.progress = 0));
     this.#status = "playing";
     for (let i = 0; i < this.#sequence.length; i++) {
       await this.#sequence[i].play();
@@ -103,6 +112,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public skipToEnd(): void {
+    // BUG: This doesn't work correctly
     // Solve the problem of skipping all steps.
     // If we skip the steps the original play promise doesn't resolve. Try abort controllers.
     this.#sequence.forEach((step) => {
@@ -111,7 +121,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public kill(): void {
-    // TODO: DO we need another status for dead? How can we stop this attempting to be revivied?
+    // TODO: Do we need another status for dead? How can we stop this attempting to be revivied?
     // We should remove all references to the AnimEngine instances so they can be cleaned up.
     this.#status = "stopped";
     this.#sequence.forEach((step) => {

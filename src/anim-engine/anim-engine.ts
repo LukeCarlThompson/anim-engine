@@ -64,6 +64,7 @@ export type AnimEngineApi = {
   set progress(progress: number);
   get status(): AnimEngineStatus;
   get currentValue(): number;
+  get durationMs(): number;
 };
 
 export type AnimEngineSteps = [AnimEngineFirstStep, ...AnimEngineSubsequentStep[]];
@@ -104,6 +105,7 @@ export type AnimEngineSequenceApi = {
   set progress(progress: number);
   get status(): AnimEngineStatus;
   get currentValue(): number;
+  get durationMs(): number;
 };
 
 export type TickerApi = {

@@ -4,7 +4,6 @@ import { easingFunctions } from "./easing";
 import type { Ticker } from "./ticker";
 
 export type AnimEngineInternalApi = AnimEngineApi & {
-  get duration(): number;
   get progress(): number;
   readonly update: (delta: number) => void;
 };
@@ -17,7 +16,7 @@ export class AnimEngine implements AnimEngineInternalApi {
   #toCurrentValue: number = 0;
   #from: NumberOrFunction;
   #fromCurrentValue: number = 0;
-  #currentValue: number = 0;
+  #currentValue: number;
   #velocity: number = 0;
   #durationMs: number;
   #easeName: EaseName;
@@ -44,8 +43,9 @@ export class AnimEngine implements AnimEngineInternalApi {
     onRepeat,
   }: AnimEngineOptions) {
     this.#ticker = getInternalTicker();
-    this.#to = to;
     this.#from = from;
+    this.#currentValue = this.#getConcreteValue(from);
+    this.#to = to;
     this.#durationMs = durationMs;
     this.#easeName = ease;
     this.#repeatNumber = repeat;
@@ -77,6 +77,7 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#fromCurrentValue = this.#getConcreteValue(this.#from);
     this.#currentValue = this.#fromCurrentValue;
     this.#toCurrentValue = this.#getConcreteValue(this.#to);
+    this.#timeProgressFraction = 0;
     this.#status = "playing";
     this.#activate(this);
     this.#onStarted?.(this.#fromCurrentValue);
@@ -90,7 +91,6 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#deactivate(this);
   }
 
-  // TODO: Do we need a different resume method from the usual play one?
   public resume(): void {
     if (this.#status !== "paused") return;
     this.#status = "playing";
@@ -103,7 +103,7 @@ export class AnimEngine implements AnimEngineInternalApi {
 
   public skipToEnd(): void {
     this.#timeProgressFraction = 1;
-    this.#playController?.abort();
+    this.update(0);
   }
 
   public kill(): void {
@@ -142,7 +142,7 @@ export class AnimEngine implements AnimEngineInternalApi {
     return this.#status;
   }
 
-  public get duration(): number {
+  public get durationMs(): number {
     return this.#durationMs;
   }
 
