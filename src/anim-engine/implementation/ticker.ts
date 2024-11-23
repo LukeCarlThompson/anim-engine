@@ -7,10 +7,10 @@ export class Ticker implements TickerApi {
   #lastTime?: number;
   #activeAnimEngineQueue: Set<AnimEngineInternalApi> = new Set();
   #inactiveAnimEngines: Set<AnimEngineInternalApi> = new Set();
+  #animationframeRequest?: number;
 
   public start(): void {
     if (this.#isRunning) return;
-
     this.#isRunning = true;
     this.#updateLoop();
   }
@@ -55,6 +55,9 @@ export class Ticker implements TickerApi {
 
   #updateLoop = (): void => {
     if (!this.#isRunning) return;
+    if (this.#animationframeRequest) {
+      cancelAnimationFrame(this.#animationframeRequest);
+    }
 
     this.#updateFunction(Date.now());
 
@@ -62,6 +65,6 @@ export class Ticker implements TickerApi {
       this.stop();
     }
 
-    requestAnimationFrame(this.#updateLoop);
+    this.#animationframeRequest = requestAnimationFrame(this.#updateLoop);
   };
 }
