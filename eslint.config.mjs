@@ -17,12 +17,13 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["vite.config.js"],
+          allowDefaultProject: ["vite.config.js", ".storybook/*", "eslint.config.mjs"],
           defaultProject: "./tsconfig.json",
         },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    ignores: ["eslint.config.mjs"],
+    ignores: [],
   }
 );
