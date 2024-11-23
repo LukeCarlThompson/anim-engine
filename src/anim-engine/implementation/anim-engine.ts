@@ -65,18 +65,9 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public play(): Promise<AnimEngineApi> {
-    if (typeof this.#from === "function") {
-      this.#fromCurrentValue = this.#from();
-      this.#currentValue = this.#from();
-    } else {
-      this.#fromCurrentValue = this.#from;
-    }
-
-    if (typeof this.#to === "function") {
-      this.#toCurrentValue = this.#to();
-    } else {
-      this.#toCurrentValue = this.#to;
-    }
+    this.#fromCurrentValue = this.#getConcreteValue(this.#from);
+    this.#currentValue = this.#fromCurrentValue;
+    this.#toCurrentValue = this.#getConcreteValue(this.#to);
     this.#status = "playing";
     this.#activate(this);
 
@@ -199,5 +190,13 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#timeProgressFraction = 0;
 
     this.#onRepeat?.(this.#currentValue);
+  }
+
+  #getConcreteValue(numberOrFunction: NumberOrFunction): number {
+    if (typeof numberOrFunction === "function") {
+      return numberOrFunction();
+    }
+
+    return numberOrFunction;
   }
 }
