@@ -27,13 +27,24 @@ body {
 }
 
 .block {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: black;
-  width: 100px;
-  height: 100px;
-  background-color: pink;
-  border-radius: 10px;
-  font-size: 2rem;
+  position: relative;
+  height: 0;
+  width: 0;
+  will-change: transform;
+
+  &:after {
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    width: 40px;
+    height: 120px;
+    background-color: pink;
+    border-radius: 10px;
+    font-size: 2rem;
+  }
 }
