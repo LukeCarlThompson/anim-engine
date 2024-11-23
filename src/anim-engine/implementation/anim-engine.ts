@@ -1,5 +1,7 @@
 import type { AnimEngineApi, AnimEngineOptions, AnimEngineStatus, EaseName, NumberOrFunction } from "../anim-engine";
+import { getInternalTicker } from "../get-ticker";
 import { easingFunctions } from "./easing";
+import type { Ticker } from "./ticker";
 
 export type AnimEngineInternalApi = AnimEngineApi & {
   get duration(): number;
@@ -7,13 +9,8 @@ export type AnimEngineInternalApi = AnimEngineApi & {
   readonly update: (delta: number) => void;
 };
 
-export type AnimEngineInternalOptions = AnimEngineOptions & {
-  activate: (animEngine: AnimEngineInternalApi) => void;
-  deactivate: (animEngine: AnimEngineInternalApi) => void;
-  removeFromTicker: (animEngine: AnimEngineInternalApi) => void;
-};
-
 export class AnimEngine implements AnimEngineInternalApi {
+  #ticker: Ticker;
   #timeProgressFraction = 0;
   #status: AnimEngineStatus = "stopped";
   #to: NumberOrFunction;
@@ -45,10 +42,8 @@ export class AnimEngine implements AnimEngineInternalApi {
     onUpdate,
     onEnded,
     onRepeat,
-    activate,
-    deactivate,
-    removeFromTicker,
-  }: AnimEngineInternalOptions) {
+  }: AnimEngineOptions) {
+    this.#ticker = getInternalTicker();
     this.#to = to;
     this.#from = from;
     this.#durationMs = durationMs;
@@ -58,9 +53,15 @@ export class AnimEngine implements AnimEngineInternalApi {
     this.#onUpdate = onUpdate;
     this.#onEnded = onEnded;
     this.#onRepeat = onRepeat;
-    this.#activate = activate;
-    this.#deactivate = deactivate;
-    this.#removeFromTicker = removeFromTicker;
+    this.#activate = () => {
+      this.#ticker.activateAnimEngine(this);
+    };
+    this.#deactivate = () => {
+      this.#ticker.deactivateAnimEngine(this);
+    };
+    this.#removeFromTicker = () => {
+      this.#ticker.removeAnimEngine(this);
+    };
   }
 
   public play(): Promise<AnimEngineApi> {
