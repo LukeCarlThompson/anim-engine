@@ -21,9 +21,12 @@ body {
 }
 
 #app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   margin: 0;
-  background: rgb(48, 48, 80);
+  background: #373050;
 }
 
 .block {
@@ -38,14 +41,9 @@ body {
     position: absolute;
     top: -50px;
     left: -50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: black;
-    width: 40px;
-    height: 120px;
-    background-color: pink;
+    width: 100px;
+    height: 100px;
+    background-color: cornflowerblue;
     border-radius: 10px;
-    font-size: 2rem;
   }
 }
