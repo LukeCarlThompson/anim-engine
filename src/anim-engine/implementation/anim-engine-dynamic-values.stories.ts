@@ -20,6 +20,9 @@ const meta = {
     container.style.alignItems = "center";
 
     const target = document.createElement("div");
+    target.style.display = "flex";
+    target.style.alignItems = "center";
+    target.style.justifyContent = "center";
     target.style.height = "40px";
     target.style.width = "40px";
     target.style.left = "200px";
@@ -28,13 +31,19 @@ const meta = {
     target.style.position = "absolute";
     target.style.zIndex = "1";
     target.style.cursor = "grab";
+    target.style.fontWeight = "bold";
+    target.style.color = "white";
+    target.style.userSelect = "none";
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    target.style.webkitUserSelect = "none";
+    target.style.boxShadow = "0 10px 10px -5px rgba(0, 0, 0, 0.3)";
+    target.innerHTML = "<-->";
     container.appendChild(target);
 
     let isGrabbing = false;
     target.addEventListener("mousedown", () => {
       isGrabbing = true;
     });
-
     container.addEventListener("mouseup", () => {
       isGrabbing = false;
     });
@@ -42,8 +51,8 @@ const meta = {
     container.addEventListener("mousemove", (e) => {
       if (!isGrabbing) return;
       // const topOffset = e.clientY - container.getBoundingClientRect().top - 20;
-      const leftOffset = e.clientX - container.getBoundingClientRect().left - 20;
       // target.style.top = `${topOffset}px`;
+      const leftOffset = e.clientX - container.getBoundingClientRect().left - 20;
       target.style.left = `${leftOffset}px`;
     });
 
