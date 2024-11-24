@@ -4,7 +4,7 @@ import { Pane } from "tweakpane";
 import { EASE_NAMES } from "./easing";
 
 import { createAnimEngine } from "../create-anim-engine";
-import { addTweakpaneControls } from "./add-tweakpane-controls";
+import { addTweakpaneControls } from "./add-controls.tweakpane";
 
 import type { AnimEngineOptions } from "../anim-engine";
 
