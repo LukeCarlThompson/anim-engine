@@ -8,11 +8,15 @@ export default defineConfig({
   plugins: [dts({ tsconfigPath: "tsconfig.build.json" })],
   build: {
     copyPublicDir: false,
+    sourcemap: true,
     lib: {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       entry: resolve(join(import.meta.dirname, "src/anim-engine/index.ts")),
       formats: ["es"],
-      fileName: "index.js",
+      fileName: "index",
+    },
+    rollupOptions: {
+      treeshake: "smallest",
     },
   },
 });
