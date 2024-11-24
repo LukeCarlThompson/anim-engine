@@ -59,7 +59,7 @@ const meta = {
     const block = document.createElement("div");
     block.style.height = "100px";
     block.style.width = "100px";
-    block.style.backgroundColor = "pink";
+    block.style.backgroundColor = "cornflowerblue";
 
     container.appendChild(block);
 
