@@ -6,19 +6,15 @@ import type {
   NumberOrFunction,
 } from "../anim-engine";
 
-import type { Ticker } from "./ticker";
-import { getInternalTicker } from "../get-ticker";
-
 export class AnimSequence implements AnimEngineSequenceApi {
-  #ticker: Ticker;
   #sequence: AnimEngineInternalApi[];
   #currentValue: number;
   #status: AnimEngineStatus;
   #totalDurationMs: number;
-  #playController?: AbortController;
+  #skipToEndController?: AbortController;
+  #stopController?: AbortController;
 
   public constructor(options: AnimEngineSequenceOptions) {
-    this.#ticker = getInternalTicker();
     this.#status = "stopped";
     this.#currentValue = this.#getConcreteValue(options.steps[0].from);
 
@@ -70,22 +66,38 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public async play(): Promise<void> {
-    this.#playController = new AbortController();
-    this.#playController.signal.addEventListener("abort", () => {
+    if (this.#status === "dead") {
+      throw new Error("Unable to play animation sequence as it has previously been killed.");
+    }
+
+    this.#skipToEndController = new AbortController();
+    this.#skipToEndController.signal.addEventListener("abort", () => {
       for (let i = 0; i < this.#sequence.length; i++) {
         this.#sequence[i].skipToEnd();
       }
     });
+
+    this.#stopController = new AbortController();
+    this.#stopController.signal.addEventListener("abort", () => {
+      for (let i = 0; i < this.#sequence.length; i++) {
+        this.#sequence[i].stop();
+      }
+    });
+
     this.#sequence.forEach((step) => (step.progress = 0));
     this.#status = "playing";
+
     for (let i = 0; i < this.#sequence.length; i++) {
       const playPromise = this.#sequence[i].play();
-      if (this.#playController.signal.aborted) {
+      if (this.#skipToEndController.signal.aborted) {
         this.#sequence[i].skipToEnd();
+      }
+      if (this.#stopController.signal.aborted) {
+        this.#sequence[i].stop();
       }
       await playPromise;
     }
-    this.#status = "finished";
+    this.#status = "stopped";
   }
 
   public pause(): void {
@@ -107,10 +119,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public stop(): void {
-    this.#sequence.forEach((step) => {
-      step.stop();
-    });
-    this.#status = "stopped";
+    this.#stopController?.abort();
   }
 
   public skipToEndOfCurrentStep(): void {
@@ -123,14 +132,13 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public skipToEnd(): void {
-    this.#playController?.abort();
+    this.#skipToEndController?.abort();
   }
 
   public kill(): void {
-    // TODO: Do we need another status for dead? How can we stop this attempting to be revivied?
-    this.#status = "stopped";
+    this.#status = "dead";
     this.#sequence.forEach((step) => {
-      this.#ticker.removeAnimEngine(step);
+      step.kill();
     });
     this.#sequence.length = 0;
   }

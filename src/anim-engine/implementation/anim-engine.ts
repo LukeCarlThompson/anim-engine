@@ -29,7 +29,7 @@ export class AnimEngine implements AnimEngineInternalApi {
   #activate: (animEngine: AnimEngineInternalApi) => void;
   #deactivate: (animEngine: AnimEngineInternalApi) => void;
   #removeFromTicker: (animEngine: AnimEngineInternalApi) => void;
-  #playController?: AbortController;
+  #skipToEndController?: AbortController;
 
   public constructor({
     to,
@@ -65,9 +65,12 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public play(): Promise<AnimEngineApi> {
+    if (this.#status === "dead") {
+      throw new Error("Unable to play animation as it has previously been killed.");
+    }
     const promise = new Promise<this>((resolve) => {
-      this.#playController = new AbortController();
-      this.#playController.signal.addEventListener("abort", () => {
+      this.#skipToEndController = new AbortController();
+      this.#skipToEndController.signal.addEventListener("abort", () => {
         resolve(this);
         this.#status = "stopped";
         this.#deactivate(this);
@@ -98,7 +101,7 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public stop(): void {
-    this.#playController?.abort();
+    this.#skipToEndController?.abort();
   }
 
   public skipToEnd(): void {
@@ -107,8 +110,9 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public kill(): void {
-    this.#playController?.abort();
+    this.#skipToEndController?.abort();
     this.#removeFromTicker(this);
+    this.#status = "dead";
   }
 
   public set from(from: NumberOrFunction) {
@@ -171,10 +175,10 @@ export class AnimEngine implements AnimEngineInternalApi {
 
       this.#velocity = 0;
       this.#onUpdate?.(this.#currentValue, this.#velocity);
-      this.#status = "finished";
+      this.#status = "stopped";
       this.#deactivate(this);
       this.#onEnded?.(this.#currentValue);
-      this.#playController?.abort();
+      this.#skipToEndController?.abort();
       return;
     }
 

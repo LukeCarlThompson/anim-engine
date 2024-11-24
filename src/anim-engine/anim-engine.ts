@@ -31,7 +31,7 @@ export type EaseName =
   | "outBounce"
   | "inOutBounce";
 
-export type AnimEngineStatus = "playing" | "paused" | "stopped" | "finished";
+export type AnimEngineStatus = "playing" | "paused" | "stopped" | "dead";
 
 export type NumberOrFunction = number | (() => number);
 
@@ -50,15 +50,36 @@ export type AnimEngineOptions = {
 export type CreateAnimEngine = (options: AnimEngineOptions) => AnimEngineApi;
 
 export type AnimEngineApi = {
+  /**
+   * Plays the animation from start to end.
+   */
+  play: () => Promise<AnimEngineApi>;
+  /**
+   * Pauses a playing animation at the current frame leaving the `play()` promise unresolved.
+   * It can be resumed.
+   */
+  pause: () => void;
+  /**
+   * Resumes a paused animation.
+   */
+  resume: () => void;
+  /**
+   * Stops a playing animation at the current frame and resolves the `play()` promise.
+   * It cannot be resumed but can be played again.
+   */
+  stop: () => void;
+  /**
+   * Stops an animation at the current frame and removes it from the ticker. If the animation is playing the `play()` promise will not be resolved. It cannot be played again or resumed.
+   */
+  kill: () => void;
+  /**
+   * Skips a playing animation to the end value immediately and resolves the `play()` promise.
+   * The animation can be played again.
+   */
+  skipToEnd(): void;
   set from(from: NumberOrFunction);
   set to(to: NumberOrFunction);
   set ease(ease: EaseName);
-  play: () => Promise<AnimEngineApi>;
-  pause: () => void;
-  resume: () => void;
-  stop: () => void;
-  kill: () => void;
-  skipToEnd(): void;
   get velocity(): number;
   get progress(): number;
   set progress(progress: number);
