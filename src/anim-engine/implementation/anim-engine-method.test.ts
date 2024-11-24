@@ -1,26 +1,27 @@
 import { beforeAll, beforeEach, expect, test } from "vitest";
 
+import type { Ticker } from "./ticker";
 import { createAnimEngine } from "../create-anim-engine";
-import { getInternalTicker } from "../get-ticker";
+import { getTicker } from "../get-ticker";
 
 /**
  * Tests on the runtime methods of the AnimEngine class.
  */
 
 beforeAll(() => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   ticker.autoStart = false;
 });
 
 beforeEach(() => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker() as Ticker;
   ticker.reset();
 });
 
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN the ticker is run for over 1000ms
       THEN the current value should be 100`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({
@@ -45,7 +46,7 @@ test(`GIVEN a tween from 0 to 100 over 1000ms
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN stop is called after 500ms
       THEN the play promise should resolve`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({
@@ -77,7 +78,7 @@ test(`GIVEN a tween from 0 to 100 over 1000ms
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN it is paused after 500ms and then resumed after 1000ms
       THEN the play promise should not resolve when paused and should resolve when the animation ends`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({
@@ -126,7 +127,7 @@ test(`GIVEN a tween from 0 to 100 over 1000ms
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN it is stopped after 500ms
       THEN the play promise should resolve and the current value should be 50`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({
@@ -160,7 +161,7 @@ test(`GIVEN a tween from 0 to 100 over 1000ms
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN it is skipped to end after 500ms
       THEN the play promise should resolve and the current value should be 100`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({
@@ -194,7 +195,7 @@ test(`GIVEN a tween from 0 to 100 over 1000ms
 test(`GIVEN a tween from 0 to 100 over 1000ms
       WHEN it is killed after 500ms
       THEN the play promise should not resolve and playing it again should throw an error`, async () => {
-  const ticker = getInternalTicker();
+  const ticker = getTicker();
   let time = 0;
 
   const animEngine = createAnimEngine({

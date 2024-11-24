@@ -10,11 +10,3 @@ export const getTicker = (): TickerApi => {
 
   return ticker;
 };
-
-export const getInternalTicker = (): Ticker => {
-  if (ticker) return ticker;
-
-  ticker = new Ticker();
-
-  return ticker;
-};

@@ -1,5 +1,5 @@
 import type { AnimEngineApi, AnimEngineOptions, AnimEngineStatus, EaseName, NumberOrFunction } from "../anim-engine";
-import { getInternalTicker } from "../get-ticker";
+import { getTicker } from "../get-ticker";
 import { easingFunctions } from "./easing";
 import type { Ticker } from "./ticker";
 
@@ -43,7 +43,7 @@ export class AnimEngine implements AnimEngineInternalApi {
     onEnded,
     onRepeat,
   }: AnimEngineOptions) {
-    this.#ticker = getInternalTicker();
+    this.#ticker = getTicker() as Ticker;
     this.#from = from;
     this.#currentValue = this.#getConcreteValue(from);
     this.#to = to;
