@@ -10,7 +10,7 @@
 <h3 align="center">Anim Engine</h3>
 
   <p align="center">
-    project_description
+    A renderer agnostic animation toolkit for making awesome animations and smooth interactions.
     <br />
     <a href="https://github.com/LukeCarlThompson/anim-engine"><strong>Explore the docs »</strong></a>
     <br />
@@ -104,12 +104,16 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-  - [ ] Nested Feature
+- [ ] Set the current progress on a sequence
+- [ ] Animate an array of values
+- [ ] Sequence steps to be able to overlap
+- [ ] Sequence steps to be able to automatically pause with a provided option
+- [ ] Finish the readme
+- [ ] Documentation
+- [ ] Available on NPM
+- [ ] Demo page
 
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/LukeCarlThompson/anim-engine/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -123,18 +127,12 @@ If you have a suggestion that would make this better, please fork the repo and c
 Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+2. Create your Feature Branch (`git checkout -b feature/my-new-feature`)
+3. Commit your Changes (`git commit -m 'Add my awesome feature'`)
+4. Push to the Branch (`git push origin feature/my-new-feature`)
 5. Open a Pull Request
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Top contributors:
-
-<a href="https://github.com/github_username/repo_name/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=github_username/repo_name" alt="contrib.rocks image" />
-</a>
 
 <!-- LICENSE -->
 
@@ -158,8 +156,7 @@ Project Link: [https://github.com/LukeCarlThompson/anim-engine](https://github.c
 
 ## Acknowledgments
 
-- []()
-- []()
-- []()
+- [https://easings.net/](https://easings.net/)
+- [https://animejs.com/](https://animejs.com/)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
