@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/anim-engine/**/*.ts"],
+  "exclude": ["**/*.tweakpane.**", "**/*.test.**", "**/*.stories.**"]
+}
