@@ -52,6 +52,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
     return currentProgressMs / this.#totalDurationMs;
   }
   public set progress(progress: number) {
+    void progress;
     // TODO: How do we set the progress? Or should I just remove this feature?
   }
   public get status(): AnimEngineStatus {
