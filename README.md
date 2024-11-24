@@ -106,12 +106,19 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 - [ ] Set the current progress on a sequence
 - [ ] Animate an array of values
+- [ ] Ability to repeat an animation a set number of times
+- [ ] Ability to repeat an animation forwards and backwards a set number of times
 - [ ] Sequence steps to be able to overlap
 - [ ] Sequence steps to be able to automatically pause with a provided option
+- [ ] Include a variety of interpolation functions
+- [ ] Include a cubic bezier ease function
 - [ ] Finish the readme
 - [ ] Documentation
 - [ ] Available on NPM
 - [ ] Demo page
+- [ ] Demos with DOM elements
+- [ ] Demos with Pixi objects
+- [ ] Demos with ThreeJs objects
 
 See the [open issues](https://github.com/LukeCarlThompson/anim-engine/issues) for a full list of proposed features (and known issues).
 
