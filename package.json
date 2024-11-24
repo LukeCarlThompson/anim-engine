@@ -1,7 +1,7 @@
 {
   "name": "anim-engine",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "JavaScript library for animating numbers",
   "repository": "https://github.com/LukeCarlThompson/anim-engine",
