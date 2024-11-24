@@ -30,6 +30,7 @@ export class AnimEngine implements AnimEngineInternalApi {
   #deactivate: (animEngine: AnimEngineInternalApi) => void;
   #removeFromTicker: (animEngine: AnimEngineInternalApi) => void;
   #skipToEndController?: AbortController;
+  #stoppingController?: AbortController;
 
   public constructor({
     to,
@@ -71,9 +72,18 @@ export class AnimEngine implements AnimEngineInternalApi {
     const promise = new Promise<this>((resolve) => {
       this.#skipToEndController = new AbortController();
       this.#skipToEndController.signal.addEventListener("abort", () => {
+        this.#timeProgressFraction = 1;
+        this.#status = "stopped";
+        this.update(0);
+        this.#deactivate(this);
         resolve(this);
+      });
+
+      this.#stoppingController = new AbortController();
+      this.#stoppingController.signal.addEventListener("abort", () => {
         this.#status = "stopped";
         this.#deactivate(this);
+        resolve(this);
       });
     });
 
@@ -101,16 +111,14 @@ export class AnimEngine implements AnimEngineInternalApi {
   }
 
   public stop(): void {
-    this.#skipToEndController?.abort();
+    this.#stoppingController?.abort();
   }
 
   public skipToEnd(): void {
-    this.#timeProgressFraction = 1;
-    this.update(0);
+    this.#skipToEndController?.abort();
   }
 
   public kill(): void {
-    this.#skipToEndController?.abort();
     this.#removeFromTicker(this);
     this.#status = "dead";
   }
