@@ -43,6 +43,13 @@ export class Ticker implements TickerApi {
     this.#updateFunction(now);
   }
 
+  /**
+   * Resets the tickers internal time values. Required for testing.
+   */
+  public reset(): void {
+    this.#lastTime = undefined;
+  }
+
   #updateFunction(now: number): void {
     const deltaMs = now - (this.#lastTime ?? now);
 
