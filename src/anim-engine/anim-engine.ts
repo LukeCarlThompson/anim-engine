@@ -60,7 +60,7 @@ export type AnimEngineApi = {
    */
   pause: () => void;
   /**
-   * Resumes a paused animation.
+   * Resumes a paused animation from where it was paused.
    */
   resume: () => void;
   /**
@@ -69,14 +69,14 @@ export type AnimEngineApi = {
    */
   stop: () => void;
   /**
-   * Stops an animation at the current frame and removes it from the ticker. If the animation is playing the `play()` promise will not be resolved. It cannot be played again or resumed.
-   */
-  kill: () => void;
-  /**
    * Skips a playing animation to the end value immediately and resolves the `play()` promise.
    * The animation can be played again.
    */
   skipToEnd(): void;
+  /**
+   * Stops an animation at the current frame and removes it from the ticker. If the animation is playing the `play()` promise will not be resolved. It cannot be played again or resumed.
+   */
+  kill: () => void;
   set from(from: NumberOrFunction);
   set to(to: NumberOrFunction);
   set ease(ease: EaseName);
