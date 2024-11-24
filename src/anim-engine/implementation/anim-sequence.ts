@@ -15,6 +15,7 @@ export class AnimSequence implements AnimEngineSequenceApi {
   #currentValue: number;
   #status: AnimEngineStatus;
   #totalDurationMs: number;
+  #playController?: AbortController;
 
   public constructor(options: AnimEngineSequenceOptions) {
     this.#ticker = getInternalTicker();
@@ -69,10 +70,20 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public async play(): Promise<void> {
+    this.#playController = new AbortController();
+    this.#playController.signal.addEventListener("abort", () => {
+      for (let i = 0; i < this.#sequence.length; i++) {
+        this.#sequence[i].skipToEnd();
+      }
+    });
     this.#sequence.forEach((step) => (step.progress = 0));
     this.#status = "playing";
     for (let i = 0; i < this.#sequence.length; i++) {
-      await this.#sequence[i].play();
+      const playPromise = this.#sequence[i].play();
+      if (this.#playController.signal.aborted) {
+        this.#sequence[i].skipToEnd();
+      }
+      await playPromise;
     }
     this.#status = "finished";
   }
@@ -112,21 +123,16 @@ export class AnimSequence implements AnimEngineSequenceApi {
   }
 
   public skipToEnd(): void {
-    // BUG: This doesn't work correctly
-    // Solve the problem of skipping all steps.
-    // If we skip the steps the original play promise doesn't resolve. Try abort controllers.
-    this.#sequence.forEach((step) => {
-      step.skipToEnd();
-    });
+    this.#playController?.abort();
   }
 
   public kill(): void {
     // TODO: Do we need another status for dead? How can we stop this attempting to be revivied?
-    // We should remove all references to the AnimEngine instances so they can be cleaned up.
     this.#status = "stopped";
     this.#sequence.forEach((step) => {
       this.#ticker.removeAnimEngine(step);
     });
+    this.#sequence.length = 0;
   }
 
   #getConcreteValue(numberOrFunction: NumberOrFunction): number {
