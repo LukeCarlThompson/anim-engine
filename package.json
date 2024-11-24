@@ -13,12 +13,13 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "dev": "npm run lint && vite",
-    "build": "npm run lint && tsc && vite build",
+    "dev": "npm run lint && npm run test:watch && vite",
+    "build": "npm run lint && npm run test && tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint --config ./eslint.config.mjs",
-    "test": "vitest",
-    "storybook": "storybook dev -p 6006",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "storybook": "npm run lint && npm run test:watch && storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepublishOnly": "npm run build"
   },
