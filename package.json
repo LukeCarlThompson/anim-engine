@@ -19,8 +19,8 @@
     "lint": "eslint --config ./eslint.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "storybook": "npm run lint && npm run test:watch && storybook dev -p 6006",
-    "build-storybook": "storybook build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "npm run lint && npm run test && storybook build",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
