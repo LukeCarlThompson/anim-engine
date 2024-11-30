@@ -1,4 +1,4 @@
-import { Ticker } from "./implementation/ticker";
+import { Ticker } from "./ticker-implementation";
 import type { TickerApi } from "./anim-engine";
 
 let ticker: Ticker | undefined = undefined;

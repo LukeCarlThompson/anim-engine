@@ -1,7 +1,7 @@
 import type { AnimEngineApi, AnimEngineOptions, AnimEngineStatus, EaseName, NumberOrFunction } from "../anim-engine";
 import { getTicker } from "../get-ticker";
+import type { Ticker } from "../ticker-implementation";
 import { easingFunctions } from "./easing";
-import type { Ticker } from "./ticker";
 
 export type AnimEngineInternalApi = AnimEngineApi & {
   get progress(): number;

@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, expect, test } from "vitest";
 
-import type { Ticker } from "./ticker";
+import type { Ticker } from "../ticker-implementation/ticker";
 import { createAnimEngine } from "../create-anim-engine";
 import { getTicker } from "../get-ticker";
 
