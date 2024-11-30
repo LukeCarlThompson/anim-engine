@@ -1,12 +1,15 @@
-import type { AnimEngineInternalApi } from "./anim-engine";
 import type { TickerApi } from "../anim-engine";
+
+export type UpdateableObject = {
+  update(deltaMs: number): void;
+};
 
 export class Ticker implements TickerApi {
   public autoStart: boolean = true;
   #isRunning: boolean = false;
   #lastTime?: number;
-  #activeAnimEngineQueue: Set<AnimEngineInternalApi> = new Set();
-  #inactiveAnimEngines: Set<AnimEngineInternalApi> = new Set();
+  #activeObjects: Set<UpdateableObject> = new Set();
+  #inactiveObjects: Set<UpdateableObject> = new Set();
   #animationframeRequest?: number;
 
   public start(): void {
@@ -20,23 +23,23 @@ export class Ticker implements TickerApi {
     this.#lastTime = undefined;
   }
 
-  public activateAnimEngine(animEngine: AnimEngineInternalApi): void {
-    this.#activeAnimEngineQueue.add(animEngine);
-    this.#inactiveAnimEngines.delete(animEngine);
+  public activateAnimEngine(animEngine: UpdateableObject): void {
+    this.#activeObjects.add(animEngine);
+    this.#inactiveObjects.delete(animEngine);
 
     if (this.autoStart) {
       this.start();
     }
   }
 
-  public deactivateAnimEngine(animEngine: AnimEngineInternalApi): void {
-    this.#activeAnimEngineQueue.delete(animEngine);
-    this.#inactiveAnimEngines.add(animEngine);
+  public deactivateAnimEngine(animEngine: UpdateableObject): void {
+    this.#activeObjects.delete(animEngine);
+    this.#inactiveObjects.add(animEngine);
   }
 
-  public removeAnimEngine(animEngine: AnimEngineInternalApi): void {
-    this.#activeAnimEngineQueue.delete(animEngine);
-    this.#inactiveAnimEngines.delete(animEngine);
+  public removeAnimEngine(animEngine: UpdateableObject): void {
+    this.#activeObjects.delete(animEngine);
+    this.#inactiveObjects.delete(animEngine);
   }
 
   public update(now: number): void {
@@ -53,7 +56,7 @@ export class Ticker implements TickerApi {
   #updateFunction(now: number): void {
     const deltaMs = now - (this.#lastTime ?? now);
 
-    this.#activeAnimEngineQueue.forEach((animation) => {
+    this.#activeObjects.forEach((animation) => {
       animation.update(deltaMs);
     });
 
@@ -68,7 +71,7 @@ export class Ticker implements TickerApi {
 
     this.#updateFunction(Date.now());
 
-    if (this.#activeAnimEngineQueue.size === 0) {
+    if (this.#activeObjects.size === 0) {
       this.stop();
     }
 
