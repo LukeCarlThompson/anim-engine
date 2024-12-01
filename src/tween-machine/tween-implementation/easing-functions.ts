@@ -1,4 +1,4 @@
-import { EaseName } from "../tween-machine";
+import type { EaseName } from "../tween-machine";
 
 export type EaseFunction = (progress: number) => number;
 

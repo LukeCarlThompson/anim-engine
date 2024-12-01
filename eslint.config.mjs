@@ -11,6 +11,7 @@ export default tseslint.config(
       "@typescript-eslint/explicit-module-boundary-types": "error",
       "no-unused-private-class-members": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/consistent-type-imports": "error",
     },
   },
   {

@@ -1,10 +1,12 @@
-import { AnimEngine, AnimEngineInternalApi } from "./anim-engine";
 import type {
   AnimEngineSequenceApi,
   AnimEngineSequenceOptions,
   AnimEngineStatus,
   NumberOrFunction,
 } from "../anim-engine";
+
+import { AnimEngine } from "./anim-engine";
+import type { AnimEngineInternalApi } from "./anim-engine";
 
 export class AnimSequence implements AnimEngineSequenceApi {
   #sequence: AnimEngineInternalApi[];

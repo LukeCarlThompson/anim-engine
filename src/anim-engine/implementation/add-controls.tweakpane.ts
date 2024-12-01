@@ -1,4 +1,4 @@
-import { AnimEngineApi, AnimEngineSequenceApi } from "../anim-engine";
+import type { AnimEngineApi, AnimEngineSequenceApi } from "../anim-engine";
 
 import type { Pane } from "tweakpane";
 
