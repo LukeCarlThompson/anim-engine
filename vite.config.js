@@ -11,7 +11,7 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      entry: resolve(join(import.meta.dirname, "src/anim-engine/index.ts")),
+      entry: resolve(join(import.meta.dirname, "src/tween-machine/index.ts")),
       formats: ["es"],
       fileName: "index",
     },
