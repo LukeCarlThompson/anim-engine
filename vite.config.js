@@ -5,7 +5,7 @@ import dts from "vite-plugin-dts";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [dts({ tsconfigPath: "tsconfig.build.json" })],
+  plugins: [dts({ tsconfigPath: "tsconfig.build.json", exclude: "src/tween-machine/*implementation/**/*" })],
   build: {
     copyPublicDir: false,
     sourcemap: true,
