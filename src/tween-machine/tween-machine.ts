@@ -48,12 +48,30 @@ export type TweenOptions<Target extends TweenTarget = TweenTarget> = {
 
 export type Tween = {
   play(): Promise<void>;
-  update(deltaMs: number): void;
   pause(): void;
   resume(): void;
   stop(): void;
   skipToEnd(): void;
   kill(): void;
+  get progress(): number;
+  set progress(progress: number);
+};
+
+export type TweenSequenceStep<Target extends TweenTarget> = {
+  to: Target;
+  durationMs?: number;
+  ease?: EaseName;
+};
+
+export type TweenSequenceOptions<Target extends TweenTarget> = {
+  onStarted?: (currentValue: PickByType<Target, number>) => void;
+  onUpdate?: (currentValue: PickByType<Target, number>, velocity: PickByType<Target, number>) => void;
+  onEnded?: (currentValue: PickByType<Target, number>) => void;
+  steps: TweenSequenceStep<PickByType<Target, number>>[];
+};
+
+export type TweenSequence = Tween & {
+  skipToEndOfCurrentStep(): void;
 };
 
 export type Ticker = {

@@ -108,4 +108,11 @@ export class TweenImplementation<Target extends TweenTarget> implements Tween {
   public kill(): void {
     ticker.removeAnimEngine(this);
   }
+
+  public get progress(): number {
+    return this.#tweenState.progressFraction;
+  }
+  public set progress(progress: number) {
+    this.#tweenState.progressFraction = Math.max(Math.min(progress, 1), 0);
+  }
 }
