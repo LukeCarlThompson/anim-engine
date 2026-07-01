@@ -14,7 +14,7 @@ Anim Engine is a JavaScript/TypeScript library for animating numeric values over
 - **Promise-based** — `play()` returns a promise that resolves when the animation finishes, is stopped, or skipped.
 - **Pure numeric engine** — computes values, delegates rendering to the user via `onUpdate`. No implicit target mutation.
 - **Ticker-sync friendly** — supports `requestAnimationFrame` auto-ticking or manual updates for game loops.
-- **Composable** — single tweens can be composed into timelines for multi-step orchestration.
+- **Two levels of time** — `animate({ keyframes })` describes *what a single value does over time*. `createTimeline({ keyframes })` describes *which tweens run when*. Both use the same `keyframes` structure with `at`/`gap` timing.
 - **No GC pressure** — zero object allocations in the hot update loop.
 
 ---
@@ -35,7 +35,7 @@ Anim Engine is a JavaScript/TypeScript library for animating numeric values over
 
 ## 3. API Surface
 
-### 3.1 `animate()`
+### 3.1 `animate()` — Single Tween
 
 The primary entry point. Animates a single numeric value.
 
@@ -55,35 +55,47 @@ const tween = animate({
 await tween.play();
 ```
 
-`animate()` is **single-value only**. For multiple properties, compose parallel tweens in a timeline. This keeps the library simple and the hot loop allocation-free.
+Both `from` and `to` accept `number | (() => number)`. Functions are evaluated at:
+- `.play()` call
+- Each repeat iteration
+- A yoyo reversal
+- When the user sets `tween.from = ...` or `tween.to = ...`
+
+### 3.2 `animate()` — Keyframes
+
+For multi-step value animation, pass a `keyframes` array instead of discrete `from`/`to`:
 
 ```ts
-createTimeline().at(0, [
-  animate({ from: () => mesh.x, to: 100, onUpdate: (v) => { mesh.x = v; } }),
-  animate({ from: () => mesh.y, to: 200, onUpdate: (v) => { mesh.y = v; } }),
-]).play();
+animate({
+  keyframes: [
+    { at: 0,    value: 0 },
+    { at: 500,  value: 100, ease: "outQuart" },
+    { at: 1200, value: 50,  ease: "outElastic" },
+  ],
+  onUpdate: (v) => { mesh.position.x = v; },
+});
 ```
 
-### 3.2 `from` and `to` — Dynamic Values
+Each keyframe specifies:
+- `at` — absolute time in milliseconds from the start of the animation
+- `value` — the target value at that point (`number | (() => number)`)
+- `ease` — easing to use from the previous keyframe to this one (optional, defaults to `"inOutSine"`)
 
-Both `from` and `to` accept `number | (() => number)`.
+The animation interpolates between consecutive keyframes using the easing of the *upcoming* keyframe. The `from` value of the first keyframe is the starting value; if omitted, it defaults to `0`.
+
+`from`/`to` and `keyframes` are mutually exclusive — use one or the other, never both.
+
+`animate()` is **single-value only**. For multiple properties, compose parallel tweens with `createTimeline()`:
 
 ```ts
-// Dynamic start, static end
-animate({
-  from: () => mesh.position.x,   // evaluated when play/repeat/yoyo starts
-  to: 100,
-  durationMs: 1000,
-  onUpdate: (v) => { mesh.position.x = v; },
-});
-
-// Both dynamic
-animate({
-  from: () => mesh.position.x,
-  to: () => target.position.x,   // also captured at boundaries, not every frame
-  durationMs: 1000,
-  onUpdate: (v) => { mesh.position.x = v; },
-});
+createTimeline({
+  keyframes: [
+    { at: 0, animations: [
+      animate({ from: () => mesh.x, to: 100, onUpdate: (v) => { mesh.x = v; } }),
+      animate({ from: () => mesh.y, to: 200, onUpdate: (v) => { mesh.y = v; } }),
+    ]},
+  ],
+}).play();
 ```
 
 **When functions are evaluated:**
@@ -98,19 +110,39 @@ This gives the user full control over timing — they decide when values are cap
 
 ### 3.3 Tween Options
 
+`animate()` accepts two mutually exclusive modes:
+
+#### Single-tween mode
+
 | Option          | Type                                      | Default       | Description |
 |-----------------|-------------------------------------------|---------------|-------------|
-| `from`          | `number \| (() => number)`                | `0`           | Start value. If omitted, defaults to `0`. |
-| `to`            | Same as `from`                            | —             | End value. **Required.** |
+| `from`          | `number \| (() => number)`                | `0`           | Start value. |
+| `to`            | `number \| (() => number)`                | —             | End value. **Required.** |
 | `durationMs`    | `number`                                  | `1000`        | Duration in milliseconds. |
-| `ease`          | `EaseName \| EaseFunction`                | `"inOutSine"` | Named easing or custom `(t: number) => number`. |
+| `ease`          | `EaseName \| EaseFunction`                | `"inOutSine"` | Easing function for this step. |
 | `delayMs`       | `number`                                  | `0`           | Delay before playback starts. |
-| `repeat`        | `number`                                  | `0`           | Additional repeats. `Infinity` loops forever. |
+| `repeat`        | `number`                                  | `0`           | Additional repeats. |
 | `yoyo`          | `boolean`                                 | `false`       | Alternate direction on repeat. |
 | `onStarted`     | `(value) => void`                         | —             | Called when playback begins. |
 | `onUpdate`      | `(value, velocity) => void`               | —             | Called every frame. |
-| `onEnded`       | `(value) => void`                         | —             | Called when animation completes naturally. |
-| `onRepeat`      | `(value) => void`                         | —             | Called at the start of each repeat iteration. |
+| `onEnded`       | `(value) => void`                         | —             | Called on natural completion. |
+| `onRepeat`      | `(value) => void`                         | —             | Called at each repeat start. |
+
+#### Keyframe mode
+
+| Option          | Type                                      | Default       | Description |
+|-----------------|-------------------------------------------|---------------|-------------|
+| `keyframes`     | `Keyframe[]`                              | —             | Array of keyframes. **Required.** |
+| `onUpdate`      | `(value, velocity) => void`               | —             | Called every frame. |
+| `onEnded`       | `(value) => void`                         | —             | Called on natural completion. |
+
+Each keyframe:
+
+| Property  | Type                        | Default       | Description |
+|-----------|-----------------------------|---------------|-------------|
+| `at`      | `number`                    | —             | Absolute time in ms from start. **Required.** |
+| `value`   | `number \| (() => number)`  | —             | Target value at this point. **Required.** |
+| `ease`    | `EaseName \| EaseFunction`  | `"inOutSine"` | Easing from previous keyframe to this one. |
 
 ### 3.4 Control Interfaces
 
@@ -169,87 +201,62 @@ Continuous primitives register with the ticker on creation and chase until `stop
 
 ### 3.5 Timeline — `createTimeline()`
 
-A timeline orchestrates multiple animation instances in time. It is **not** a value composer — each animation manages its own values and callbacks.
+Orchestrates multiple independent tweens (or other primitives) in time. Uses the same `keyframes` structure as `animate()`, but instead of `value` each keyframe has `animations` — pre-built tweens that run in parallel during that step.
 
 ```ts
 import { animate, createTimeline } from "anim-engine";
 
-// Create animations independently
-const moveToDoor = animate({
-  from: () => char.x,
-  to: 100,
-  durationMs: 500,
-  onUpdate: (v) => { char.x = v; },
-});
+const moveToDoor = animate({ /* ... */ });
+const openDoor = animate({ /* ... */ });
+const fadeIn = animate({ /* ... */ });
 
-const openDoor = animate({
-  from: () => door.rotation,
-  to: 1.57,
-  durationMs: 300,
-  onUpdate: (v) => { door.rotation = v; },
+const timeline = createTimeline({
+  keyframes: [
+    // Absolute: starts at time 0
+    { at: 0,    animations: [moveToDoor, fadeIn] },
+    // Relative: starts 500ms after the previous step ends
+    { gap: 500, animations: [openDoor] },
+    // Relative: overlaps previous step by 200ms (negative gap)
+    { gap: -200, animations: [walkThrough] },
+    // Absolute: independent of previous timing
+    { at: 5000, animations: [outro] },
+  ],
+  onStarted: () => console.log("started"),
+  onEnded: () => console.log("done"),
 });
-
-const fadeIn = animate({
-  from: 0,
-  to: 1,
-  durationMs: 200,
-  onUpdate: (v) => { overlay.style.opacity = v; },
-});
-
-// Compose them in time
-const timeline = createTimeline()
-  .at(0, [moveToDoor, fadeIn])       // both start at time 0 (parallel)
-  .after(0, openDoor)                 // starts after previous batch ends
-  .at(3000, someOtherAnim);           // absolute timeline position
 
 await timeline.play();
 ```
 
-#### Timing API
+#### Keyframe timing
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `.at()` | `(timeMs: number, anims: AnimControls | AnimControls[])` | Schedule animation(s) at absolute timeline position (ms from timeline start). |
-| `.after()` | `(gapMs: number, anims: AnimControls | AnimControls[])` | Schedule animation(s) relative to the end of the previously scheduled batch. `gapMs` can be negative for overlap. |
+Each keyframe uses either `at` (absolute) or `gap` (relative to previous step's end):
 
-**Timing rules:**
-- `.at(0, [...])` — parallel group at timeline start
-- `.after(0, anim)` — consecutive to the previous batch
-- `.after(500, anim)` — 500ms gap after previous batch ends
-- `.after(-200, anim)` — 200ms overlap with previous batch end
-- `.at(3000, anim)` — absolute timeline position
+| Property       | Type                        | Default | Description |
+|----------------|-----------------------------|---------|-------------|
+| `at`           | `number`                    | —       | Absolute time in ms from timeline start. |
+| `gap`          | `number`                    | —       | Gap after previous step ends. Positive = wait, negative = overlap. |
+| `animations`   | `AnimControls<number>[]`    | —       | Tweens to play in parallel during this step. **Required.** |
 
-Each call returns `this` for infinite chaining. TypeScript infers that each argument is an animation instance.
+Use `at` for exact positioning (independent of other steps). Use `gap` for sequential or overlapping timing (relative to previous).
 
 #### Timeline Controls
 
-Timeline implements a subset of `AnimControls` — lifecycle methods plus `progress` and `getDurationMs()`. Value-related properties (`currentValue`, `velocity`, `from`, `to`, `ease`, `setCurrent`) are not applicable since a timeline orchestrates multiple animations.
+The returned timeline matches `AnimControls` for lifecycle, but value-related properties (`currentValue`, `velocity`, `from`, `to`, `ease`, `setCurrent`) are not applicable.
 
 ```ts
-// Timeline controls
 await timeline.play();
 timeline.pause();
 timeline.resume();
 timeline.stop();
-timeline.skipToEnd();     // fast-forwards all animations
-timeline.kill();          // destroys everything, promise never resolves
-
-timeline.progress;        // global time progress 0–1
-timeline.getDurationMs(); // total timeline duration
+timeline.skipToEnd();
+timeline.kill();
+timeline.progress;        // 0–1 global progress
+timeline.getDurationMs(); // total duration
 timeline.status;          // "playing" | "paused" | "stopped" | "dead"
 ```
 
-#### Timeline Callbacks
-
-```ts
-const timeline = createTimeline()
-  .at(0, anim1)
-  .after(500, anim2)
-  .onStarted(() => console.log("timeline started"))
-  .onEnded(() => console.log("timeline complete"));
-```
-
-No `onUpdate` at the timeline level — each animation carries its own. Timeline-level `onStarted` fires when playback begins. `onEnded` fires when all steps complete.
+No `onUpdate` at the timeline level — each animation carries its own callback.
 
 ### 3.6 Spring
 
@@ -659,9 +666,9 @@ type ContinuousControls<T> = {
   status: "active" | "inactive" | "dead";
 };
 
-// === TweenOptions ===
+// === TweenOptions (single-tween mode) ===
 
-type TweenOptions = {
+type SingleTweenOptions = {
   from?: DynamicValue<number>;
   to: DynamicValue<number>;
   durationMs?: number;
@@ -675,7 +682,36 @@ type TweenOptions = {
   onRepeat?: (value: number) => void;
 };
 
-// === Timeline (type is internal — API is `.at()` / `.after()` chaining) ===
+// === KeyframeOptions (keyframe mode) ===
+
+type Keyframe = {
+  at: number;
+  value: DynamicValue<number>;
+  ease?: EaseName | EaseFunction;
+};
+
+type KeyframeOptions = {
+  keyframes: Keyframe[];
+  onUpdate?: (value: number, velocity: number) => void;
+  onEnded?: (value: number) => void;
+};
+
+// `animate()` accepts either single-tween or keyframe mode (mutually exclusive)
+type AnimateOptions = SingleTweenOptions | KeyframeOptions;
+
+// === Timeline ===
+
+type TimelineKeyframe = {
+  at?: number;                         // absolute time (alternative to gap)
+  gap?: number;                        // relative to previous step end (alternative to at)
+  animations: AnimControls<number>[];  // tweens to run in parallel
+};
+
+type TimelineOptions = {
+  keyframes: TimelineKeyframe[];
+  onStarted?: () => void;
+  onEnded?: () => void;
+};
 
 // === SpringOptions ===
 
@@ -768,12 +804,11 @@ The existing code is class-based (`class AnimEngine`, `class TweenImplementation
 - [ ] `onRepeat` callback
 - [ ] Test: all repeat scenarios
 
-### Phase 3: Timeline
-- [ ] `createTimeline()` with `.at()` and `.after()`
-- [ ] Parallel animation support (arrays)
+### Phase 3: Keyframes + Timeline
+- [ ] `animate({ keyframes: [...] })` — value keyframes with `at` and `value`
+- [ ] `createTimeline({ keyframes: [...] })` — animation keyframes with `at`/`gap` and `animations`
 - [ ] Timeline lifecycle (play, pause, resume, stop, skipToEnd, kill)
-- [ ] Timeline `onStarted` / `onEnded`
-- [ ] Test: timing, parallel, gap, overlap, nested kill
+- [ ] Test: single-tween, keyframes, timeline keyframes with at/gap, parallel, nested kill
 
 ### Phase 4: Spring + Smooth Damp + Lerp
 - [ ] `createSpring()` with Verlet integration
@@ -823,6 +858,22 @@ const gameLoop = (now: number) => {
 requestAnimationFrame(gameLoop);
 ```
 
+### Keyframe animation
+
+```ts
+import { animate } from "anim-engine";
+
+await animate({
+  keyframes: [
+    { at: 0,    value: 0 },
+    { at: 500,  value: 100, ease: "outQuart" },
+    { at: 800,  value: 200, ease: "outElastic" },
+    { at: 1200, value: 50,  ease: "outBounce" },
+  ],
+  onUpdate: (v) => { mesh.position.x = v; },
+}).play();
+```
+
 ### Complex scene orchestration
 
 ```ts
@@ -851,10 +902,12 @@ const bounce = createSpring({
   onUpdate: (v) => { icon.scale = v; },
 });
 
-await createTimeline()
-  .at(0, [slideIn, fadeIn])       // parallel start
-  .after(-100, bounce)             // overlap by 100ms with slideIn end
-  .play();
+await createTimeline({
+  keyframes: [
+    { at: 0, animations: [slideIn, fadeIn] },
+    { gap: -100, animations: [bounce] },
+  ],
+}).play();
 
 console.log("Scene complete");
 ```
