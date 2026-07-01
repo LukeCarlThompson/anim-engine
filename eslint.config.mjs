@@ -6,12 +6,26 @@ export default tseslint.config(
   tseslint.configs.strictTypeChecked,
   {
     rules: {
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/explicit-member-accessibility": "error",
+      // Library-specific: no console.log in published code
+      "no-console": "warn",
+
+      // ESM library — no require()
+      "@typescript-eslint/no-require-imports": "error",
+
+      // All exported functions must have explicit return types
       "@typescript-eslint/explicit-module-boundary-types": "error",
-      "no-unused-private-class-members": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+
+      // Prefer type imports to avoid bundling unused values
       "@typescript-eslint/consistent-type-imports": "error",
+
+      // Underscore-prefixed params are intentionally unused (e.g. cubicBezier stub)
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+
+      // Function-based architecture — no classes, so this rule is irrelevant
+      "@typescript-eslint/explicit-member-accessibility": "off",
+
+      // Allow template expressions like `${value}px`
+      "@typescript-eslint/restrict-template-expressions": "off",
     },
   },
   {
@@ -27,6 +41,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist/"],
+    ignores: ["dist/", "**/*.test.ts", "**/*.stories.ts"],
   }
 );
