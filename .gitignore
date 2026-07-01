@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 *storybook.log
+
+.pi/pi-review
+.pi/review-requests
+.pi/review-results
+.pi/tmp
+.pi/.vscode-ready

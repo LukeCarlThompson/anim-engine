@@ -1,35 +1,23 @@
-import "./style.scss";
+import { animate, getTicker } from ".";
 
-import { createSequence } from "./anim-engine/create-sequence";
+const app = document.getElementById("app");
+if (!app) throw new Error("no app element");
 
-const block: HTMLDivElement | null = document.querySelector(".block");
-const appElement: HTMLDivElement | null = document.querySelector("#app");
+const block = document.createElement("div");
+block.style.cssText =
+  "width:100px;height:100px;background:cornflowerblue;border-radius:10px;margin:auto;margin-top:40vh;";
+app.appendChild(block);
 
-if (!block || !appElement) {
-  throw new Error("unable to find required elements");
-}
+getTicker();
 
-const sequence = createSequence({
-  steps: [
-    {
-      from: 0,
-      to: 90,
-      ease: "inQuart",
-    },
-    {
-      to: 180,
-      ease: "outQuart",
-      durationMs: 1000,
-    },
-    {
-      to: 0,
-      ease: "outElastic",
-      durationMs: 3000,
-    },
-  ],
-  onUpdate: (value, velocity) => {
-    block.style.transform = `rotate(${value}deg) scale(${1 + Math.abs(velocity) * 0.1})`;
+const tween = animate({
+  from: 0,
+  to: 300,
+  durationMs: 1000,
+  ease: "outElastic",
+  onUpdate: (v) => {
+    block.style.transform = `translateX(${v}px)`;
   },
 });
 
-await sequence.play();
+tween.play();

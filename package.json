@@ -16,6 +16,7 @@
     "dev": "npm run lint && npm run test:watch && vite",
     "build": "npm run lint && npm run test && tsc && vite build",
     "preview": "vite preview",
+    "check:types": "tsc --noEmit",
     "lint": "eslint --config ./eslint.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
