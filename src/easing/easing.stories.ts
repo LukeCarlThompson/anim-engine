@@ -264,11 +264,17 @@ const meta = {
         to: 0,
         durationMs,
         ease: ease as EaseName,
-        onUpdate: (value) => {
+        onUpdate: (value, velocity) => {
           block.style.transform = `translateX(${value}px)`;
           if (tween) {
             progressFill.style.width = `${Math.round(tween.progress * 100)}%`;
           }
+          const absVel = Math.abs(velocity);
+          const barPercent = Math.min(absVel * 0.3, 100);
+          velocityBarFill.style.width = `${barPercent}%`;
+          velocityBarFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
+          velocityBarFill.style.background = velocity >= 0 ? "#a8e063" : "#e06c75";
+          velocityValue.textContent = velocity.toFixed(2);
         },
         onEnded: () => {
           tween = null;

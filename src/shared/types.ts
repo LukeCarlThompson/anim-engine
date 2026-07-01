@@ -55,9 +55,9 @@ export type ContinuousControls<T> = {
   status: "active" | "inactive" | "dead";
 };
 
-// === TweenOptions ===
+// === SingleTweenOptions (from/to mode) ===
 
-export type TweenOptions = {
+export type SingleTweenOptions = {
   from?: DynamicValue<number>;
   to: DynamicValue<number>;
   durationMs?: number;
@@ -70,6 +70,24 @@ export type TweenOptions = {
   onEnded?: (value: number) => void;
   onRepeat?: (value: number) => void;
 };
+
+// === KeyframeOptions (keyframe mode) ===
+
+export type Keyframe = {
+  at: number;
+  value: DynamicValue<number>;
+  ease?: EaseName | EaseFunction;
+};
+
+export type KeyframeOptions = {
+  keyframes: Keyframe[];
+  onUpdate?: (value: number, velocity: number) => void;
+  onEnded?: (value: number) => void;
+};
+
+// === AnimateOptions — union of both modes ===
+
+export type AnimateOptions = SingleTweenOptions | KeyframeOptions;
 
 // === SpringOptions ===
 
@@ -102,6 +120,32 @@ export type LerpOptions = {
   to: () => number;
   rate: number;
   onUpdate: (value: number) => void;
+};
+
+// === Timeline ===
+
+export type TimelineKeyframe = {
+  at?: number;
+  gap?: number;
+  animations: AnimControls<number>[];
+};
+
+export type TimelineOptions = {
+  keyframes: TimelineKeyframe[];
+  onStarted?: () => void;
+  onEnded?: () => void;
+};
+
+export type TimelineHandle = {
+  play: () => Promise<TimelineHandle>;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  skipToEnd: () => void;
+  kill: () => void;
+  progress: number;
+  status: "playing" | "paused" | "stopped" | "dead";
+  getDurationMs: () => number;
 };
 
 // === TickerControls ===

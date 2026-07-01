@@ -20,4 +20,4 @@ const tween = animate({
   },
 });
 
-tween.play();
+void tween.play();

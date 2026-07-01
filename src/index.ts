@@ -2,7 +2,8 @@
 
 // Primitives
 export { animate } from "./tween/create-tween";
-// export { createTimeline } from "./timeline/create-timeline";
+export { createTimeline } from "./timeline/create-timeline";
+export type { Timeline } from "./timeline/create-timeline";
 // export { createSpring } from "./spring/create-spring";
 // export { createSmoothDamp } from "./smooth-damp/create-smooth-damp";
 // export { createLerp } from "./lerp/create-lerp";
@@ -16,12 +17,16 @@ export { easingFunctions, EASE_NAMES, resolveEasing, cubicBezier } from "./easin
 // Types
 export type {
   AnimControls,
+  AnimateOptions,
   ContinuousControls,
   EaseName,
+  Keyframe,
+  SingleTweenOptions,
   Status,
-  TweenOptions,
+  TimelineHandle,
+  TimelineOptions,
+  TickerControls,
   SpringOptions,
   SmoothDampOptions,
   LerpOptions,
-  TickerControls,
 } from "./shared/types";

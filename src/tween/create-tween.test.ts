@@ -76,8 +76,8 @@ test("kill leaves promise unresolved and prevents replay", async () => {
 
 test("dynamic from/to functions are evaluated at play time", async () => {
   const ticker = getTicker();
-  let from = 20;
-  let to = 80;
+  const from = 20;
+  const to = 80;
   const tween = animate({ from: () => from, to: () => to, durationMs: 100, ease: "linear" });
   const p = tween.play();
   ticker.update(100);
