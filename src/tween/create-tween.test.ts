@@ -34,7 +34,7 @@ test("pause at 500ms, resume, completes correctly", async () => {
   expect(Math.trunc(tween.currentValue)).toBe(50);
 
   tween.pause();
-  ticker.update(500); // should not advance
+  ticker.update(500);
   expect(Math.trunc(tween.currentValue)).toBe(50);
 
   tween.resume();
@@ -76,8 +76,8 @@ test("kill leaves promise unresolved and prevents replay", async () => {
 
 test("dynamic from/to functions are evaluated at play time", async () => {
   const ticker = getTicker();
-  const from = 20;
-  const to = 80;
+  let from = 20;
+  let to = 80;
   const tween = animate({ from: () => from, to: () => to, durationMs: 100, ease: "linear" });
   const p = tween.play();
   ticker.update(100);
@@ -185,4 +185,39 @@ test("delayMs delays the start", async () => {
   ticker.update(100);
   await p;
   expect(tween.currentValue).toBe(100);
+});
+
+// ─── Keyframe mode ───
+
+test("keyframes with 2 points equals single tween", async () => {
+  const ticker = getTicker();
+  const a = animate({
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 100, value: 100, ease: "linear" },
+    ],
+    onUpdate: () => {},
+  });
+  const p = a.play();
+  ticker.update(100);
+  await p;
+  expect(a.currentValue).toBe(100);
+});
+
+test("keyframes with 3 points interpolates correctly", async () => {
+  const ticker = getTicker();
+  const values: number[] = [];
+  const a = animate({
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 100, value: 100, ease: "linear" },
+      { at: 200, value: 50, ease: "linear" },
+    ],
+    onUpdate: (v) => { values.push(Math.round(v)); },
+  });
+  const p = a.play();
+  ticker.update(100);
+  ticker.update(100);
+  await p;
+  expect(values[values.length - 1]).toBe(50);
 });

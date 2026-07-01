@@ -32,6 +32,6 @@ export const updateTween = (
 
   const eased = easeFn(state.progress);
   state.currentValue = from + (to - from) * eased;
-  state.velocity = state.currentValue - previousValue;
+  state.velocity = (state.currentValue - previousValue) / deltaMs;
   return false;
 };

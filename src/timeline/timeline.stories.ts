@@ -16,55 +16,76 @@ const meta = {
     `;
 
     const title = document.createElement("h2");
-    title.textContent = "Timeline Demo";
+    title.textContent = "Timeline — Multi-Scene Orchestration";
     title.style.cssText = "margin:0;color:#ccc;font-weight:400;font-size:18px;";
     container.appendChild(title);
 
-    const trackContainer = document.createElement("div");
-    trackContainer.style.cssText = "display:flex;flex-direction:column;gap:12px;width:700px;";
+    const info = document.createElement("p");
+    info.textContent = "Multiple tweens, timed with at and gap";
+    info.style.cssText = "margin:0;color:#666;font-size:13px;";
+    container.appendChild(info);
 
-    const colors = ["#667eea", "#a8e063", "#e06c75", "#e5c07b"];
-    const labels = ["Red", "Green", "Blue", "Gold"];
+    const scene = document.createElement("div");
+    scene.style.cssText = `
+      position: relative; width: 700px; height: 180px;
+      background: #1e1e2e; border-radius: 12px; overflow: hidden;
+    `;
 
-    const blocks: HTMLDivElement[] = [];
+    const floor = document.createElement("div");
+    floor.style.cssText = "position:absolute;bottom:30px;left:0;right:0;height:2px;background:#333;";
+    scene.appendChild(floor);
 
-    colors.forEach((color, i) => {
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:center;gap:12px;";
+    const colors = ["#e06c75", "#e5c07b", "#98c379", "#61afef"];
+    const labels = ["A", "B", "C", "D"];
+    const bgs = ["60", "110", "60", "110"];
 
-      const label = document.createElement("span");
-      label.textContent = labels[i];
-      label.style.cssText = "min-width:50px;color:#888;font-size:13px;font-family:monospace;";
-      row.appendChild(label);
-
-      const track = document.createElement("div");
-      track.style.cssText = `
-        flex:1;height:40px;background:#2a2a3d;border-radius:6px;
-        display:flex;align-items:center;padding-left:10px;
+    const els = labels.map((label, i) => {
+      const el = document.createElement("div");
+      el.style.cssText = `
+        position:absolute;bottom:${bgs[i]}px;left:20px;
+        width:36px;height:36px;border-radius:6px;
+        background:${colors[i]};display:flex;align-items:center;
+        justify-content:center;color:#fff;font-size:10px;
+        font-family:monospace;transform:translateX(0px);
       `;
-
-      const block = document.createElement("div");
-      block.style.cssText = `
-        width:30px;height:30px;border-radius:4px;
-        background:${color};transform:translateX(0px);
-      `;
-      blocks.push(block);
-      track.appendChild(block);
-      row.appendChild(track);
-      trackContainer.appendChild(row);
+      el.textContent = label;
+      scene.appendChild(el);
+      return el;
     });
 
-    const progressBar = document.createElement("div");
-    progressBar.style.cssText = "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
-    const progressFill = document.createElement("div");
-    progressFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
-    progressBar.appendChild(progressFill);
-    trackContainer.appendChild(progressBar);
+    container.appendChild(scene);
 
-    container.appendChild(trackContainer);
+    // Legend
+    const legend = document.createElement("div");
+    legend.style.cssText = "display:flex;gap:16px;font-size:11px;color:#888;font-family:monospace;flex-wrap:wrap;";
+    const timingLabels = [
+      "A: at 0, outQuart",
+      "B: at 0, outBounce",
+      "C: gap 200ms, outElastic",
+      "D: gap -300ms, inOutBack",
+    ];
+    colors.forEach((c, i) => {
+      const item = document.createElement("div");
+      item.style.cssText = "display:flex;align-items:center;gap:4px;";
+      const dot = document.createElement("span");
+      dot.style.cssText = `width:8px;height:8px;border-radius:2px;background:${c};display:inline-block;`;
+      item.appendChild(dot);
+      item.appendChild(document.createTextNode(timingLabels[i]));
+      legend.appendChild(item);
+    });
+    container.appendChild(legend);
 
+    // Timeline bar
+    const timeBar = document.createElement("div");
+    timeBar.style.cssText = "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+    const timeFill = document.createElement("div");
+    timeFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
+    timeBar.appendChild(timeFill);
+    container.appendChild(timeBar);
+
+    // Controls
     const controls = document.createElement("div");
-    controls.style.cssText = "display:flex;gap:12px;align-items:center;";
+    controls.style.cssText = "display:flex;gap:12px;";
 
     const playBtn = document.createElement("button");
     playBtn.textContent = "▶ Play";
@@ -75,92 +96,57 @@ const meta = {
 
     const resetBtn = document.createElement("button");
     resetBtn.textContent = "↺ Reset";
-    resetBtn.style.cssText = `
-      padding:8px 16px;border:1px solid #555;border-radius:6px;
-      background:transparent;color:#888;cursor:pointer;font-size:14px;
-    `;
+    resetBtn.style.cssText = "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
 
     controls.appendChild(playBtn);
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
-    // Build animations
-    const resetBlocks = () => {
-      blocks.forEach((b) => { b.style.transform = "translateX(0px)"; });
-      progressFill.style.width = "0%";
-    };
+    // Build tweens
+    const moveA = animate({ from: 0, to: 640, durationMs: 800, ease: "outQuart", onUpdate: (v) => { els[0].style.transform = `translateX(${v}px)`; } });
+    const moveB = animate({ from: 0, to: 640, durationMs: 700, ease: "outBounce", onUpdate: (v) => { els[1].style.transform = `translateX(${v}px)`; } });
+    const moveC = animate({ from: 0, to: 640, durationMs: 1000, ease: "outElastic", onUpdate: (v) => { els[2].style.transform = `translateX(${v}px)`; } });
+    const moveD = animate({ from: 0, to: 640, durationMs: 600, ease: "inOutBack", onUpdate: (v) => { els[3].style.transform = `translateX(${v}px)`; } });
 
-    const red = animate({
-      from: 0, to: 620, durationMs: 800, ease: "outQuart",
-      onUpdate: (v) => { blocks[0].style.transform = `translateX(${v}px)`; },
-    });
-
-    const green = animate({
-      from: 0, to: 620, durationMs: 600, ease: "outElastic",
-      onUpdate: (v) => { blocks[1].style.transform = `translateX(${v}px)`; },
-    });
-
-    const blue = animate({
-      from: 0, to: 620, durationMs: 400, ease: "inOutBack",
-      onUpdate: (v) => { blocks[2].style.transform = `translateX(${v}px)`; },
-    });
-
-    const gold = animate({
-      from: 0, to: 620, durationMs: 700, ease: "outBounce",
-      onUpdate: (v) => { blocks[3].style.transform = `translateX(${v}px)`; },
-    });
+    const resetAll = () => els.forEach((el) => { el.style.transform = "translateX(0px)"; });
 
     let timeline: ReturnType<typeof createTimeline> | null = null;
 
     const play = () => {
       if (timeline) { timeline.kill(); }
-      resetBlocks();
+      resetAll();
 
       timeline = createTimeline({
         keyframes: [
-          { at: 0, animations: [red, gold] },
-          { gap: 200, animations: [green] },
-          { gap: -300, animations: [blue] },
+          { at: 0, animations: [moveA, moveB] },
+          { gap: 200, animations: [moveC] },
+          { gap: -300, animations: [moveD] },
         ],
         onEnded: () => {
           timeline = null;
           playBtn.textContent = "▶ Play";
-          progressFill.style.width = "100%";
         },
       });
 
       const p = timeline.play();
       const interval = setInterval(() => {
-        if (timeline) {
-          progressFill.style.width = `${Math.round(timeline.progress * 100)}%`;
-        } else {
-          clearInterval(interval);
-        }
+        if (timeline) { timeFill.style.width = `${Math.round(timeline.progress * 100)}%`; }
+        else { clearInterval(interval); }
       }, 50);
-
-      void p.then(() => clearInterval(interval));
+      void p.then(() => { clearInterval(interval); timeFill.style.width = "100%"; });
       playBtn.textContent = "⏸ Pause";
     };
 
     const togglePlay = () => {
-      if (!timeline || (timeline.status !== "playing" && timeline.status !== "paused")) {
-        play();
-        return;
-      }
-      if (timeline.status === "playing") {
-        timeline.pause();
-        playBtn.textContent = "▶ Resume";
-      } else {
-        timeline.resume();
-        playBtn.textContent = "⏸ Pause";
-      }
+      if (!timeline || (timeline.status !== "playing" && timeline.status !== "paused")) { play(); return; }
+      if (timeline.status === "playing") { timeline.pause(); playBtn.textContent = "▶ Resume"; }
+      else { timeline.resume(); playBtn.textContent = "⏸ Pause"; }
     };
 
     playBtn.addEventListener("click", togglePlay);
-
     resetBtn.addEventListener("click", () => {
       if (timeline) { timeline.kill(); timeline = null; }
-      resetBlocks();
+      resetAll();
       playBtn.textContent = "▶ Play";
     });
 

@@ -227,7 +227,8 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
   const ticker = getTicker();
   const animationHandle = { update: onTickerUpdate };
 
-  // Track elapsed ms within the current segment
+  // Separate segment progress tracker (state.progress is overridden with global progress)
+  let segmentProgress = 0;
   let segmentElapsed = 0;
 
   const play = (): Promise<AnimControls<number>> => {
@@ -235,6 +236,7 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
     stopped = false;
     currentSegmentIndex = 0;
     segmentElapsed = 0;
+    segmentProgress = 0;
     state.progress = 0;
     state.currentValue = segments[0].from;
     state.velocity = 0;
@@ -293,8 +295,18 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
     const segment = segments[currentSegmentIndex];
     segmentElapsed += deltaMs;
 
-    const completed = updateTween(state, deltaMs, segment.durationMs, segment.easeFn, segment.from, segment.to);
-    // Override progress to be global
+    // Advance segment progress
+    segmentProgress += deltaMs / segment.durationMs;
+    if (segmentProgress >= 1) {
+      segmentProgress = 1;
+    }
+
+    // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
+    const eased = segment.easeFn(segmentProgress);
+    state.currentValue = segment.from + (segment.to - segment.from) * eased;
+    state.velocity = 0; // velocity computed below
+
+    // Compute global progress
     let elapsedTotal = 0;
     for (let i = 0; i < currentSegmentIndex; i++) {
       elapsedTotal += segments[i].durationMs;
@@ -304,21 +316,24 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
 
     onUpdate?.(state.currentValue, state.velocity);
 
-    if (completed) {
-      // Move to next segment
+    // Check if segment completed
+    if (segmentProgress >= 1) {
+      state.currentValue = segment.to;
+      state.velocity = 0;
+
       if (currentSegmentIndex < segments.length - 1) {
         currentSegmentIndex++;
         segmentElapsed = 0;
+        segmentProgress = 0;
         state.currentValue = segments[currentSegmentIndex].from;
         state.velocity = 0;
-        // Recompute global progress
+        // Update global progress to end of previous segment
         let total = 0;
-        for (let i = 0; i <= currentSegmentIndex; i++) {
+        for (let i = 0; i < currentSegmentIndex; i++) {
           total += segments[i].durationMs;
         }
         state.progress = Math.min(total / totalDurationMs, 1);
       } else {
-        // All segments done
         status = "stopped";
         ticker.remove(animationHandle);
         onEnded?.(state.currentValue);
