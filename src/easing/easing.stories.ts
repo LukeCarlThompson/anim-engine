@@ -219,7 +219,7 @@ const meta = {
           }
 
           const absVel = Math.abs(velocity);
-          const barPercent = Math.min(absVel * 0.3, 100);
+          const barPercent = Math.min(absVel * 25, 100);
           velocityBarFill.style.width = `${barPercent}%`;
           velocityBarFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
           velocityBarFill.style.background = velocity >= 0 ? "#a8e063" : "#e06c75";
@@ -270,7 +270,7 @@ const meta = {
             progressFill.style.width = `${Math.round(tween.progress * 100)}%`;
           }
           const absVel = Math.abs(velocity);
-          const barPercent = Math.min(absVel * 0.3, 100);
+          const barPercent = Math.min(absVel * 25, 100);
           velocityBarFill.style.width = `${barPercent}%`;
           velocityBarFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
           velocityBarFill.style.background = velocity >= 0 ? "#a8e063" : "#e06c75";
