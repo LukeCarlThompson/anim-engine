@@ -54,22 +54,13 @@ const meta = {
     // Spring block
     const block = document.createElement("div");
     block.style.cssText = `
-      position: absolute; top: 50%; left: 30px;
+      position: absolute; top: 50%;
       width: 50px; height: 50px; border-radius: 8px;
       background: linear-gradient(135deg, #98c379, #56ab2f);
-      transform: translateY(-50%) translateX(0px);
       pointer-events: none;
     `;
     track.appendChild(block);
     container.appendChild(track);
-
-    // Spring trace canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = 700;
-    canvas.height = 80;
-    canvas.style.cssText = "border-radius:8px;background:#1e1e2e;width:700px;height:80px;";
-    const ctx = canvas.getContext("2d")!;
-    container.appendChild(canvas);
 
     // Velocity indicator
     const velocityRow = document.createElement("div");
@@ -144,13 +135,11 @@ const meta = {
         block.style.transform = `translateY(-50%) translateX(${value}px)`;
 
         const absVel = Math.abs(velocity);
-        const barPercent = Math.min(absVel * 0.4, 100);
+        const barPercent = Math.min(absVel * 0.01, 100);
         velocityFill.style.width = `${barPercent}%`;
         velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
         velocityFill.style.background = velocity >= 0 ? "#98c379" : "#e06c75";
         velocityValue.textContent = velocity.toFixed(2);
-
-        drawTrace(value);
       },
     });
 
@@ -171,45 +160,6 @@ const meta = {
       mouseLine.style.display = "none";
       targetDot.style.display = "none";
     });
-
-    // Trace drawing
-    const tracePoints: { x: number; v: number }[] = [];
-
-    const drawTrace = (x: number) => {
-      tracePoints.push({ x, v: spring.velocity });
-      if (tracePoints.length > 200) tracePoints.shift();
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw the trace line
-      ctx.strokeStyle = "#98c379";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      const startX = canvas.width - tracePoints.length;
-      tracePoints.forEach((pt, i) => {
-        const px = startX + i;
-        const py = canvas.height / 2 - (pt.x - mouseX) * 0.3;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.stroke();
-
-      // Center reference line
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2);
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Labels
-      ctx.fillStyle = "#555";
-      ctx.font = "10px monospace";
-      ctx.fillText("position", 4, 12);
-      ctx.fillText("target", canvas.width - 40, canvas.height / 2 - 4);
-    };
 
     // Update spring params in real time
     const updateSpring = () => {

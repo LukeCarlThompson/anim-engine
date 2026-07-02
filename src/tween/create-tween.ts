@@ -1,4 +1,4 @@
-import type { AnimControls, AnimateOptions, SingleTweenOptions, Keyframe } from "../shared/types";
+import type { AnimControls, AnimateOptions, SingleTweenOptions, KeyframeOptions, Keyframe } from "../shared/types";
 import type { EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { resolveEasing } from "../easing/easing";
@@ -7,13 +7,13 @@ import type { TweenState } from "./update";
 
 type ResolveFunction = (value: AnimControls<number>) => void;
 
-const isKeyframeMode = (options: AnimateOptions): options is SingleTweenOptions & { keyframes: Keyframe[] } => {
+const isKeyframeMode = (options: AnimateOptions): options is KeyframeOptions => {
   return "keyframes" in options && Array.isArray((options as { keyframes: unknown }).keyframes);
 };
 
 export const animate = (options: AnimateOptions): AnimControls<number> => {
   if (isKeyframeMode(options)) {
-    return createKeyframeAnimation(options);
+    return createKeyframeAnimation(options as KeyframeOptions);
   }
   return createSingleTween(options as SingleTweenOptions);
 };
@@ -176,9 +176,10 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyframe[] }): AnimControls<number> => {
+const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number> => {
   const keyframes = options.keyframes;
   const onUpdate = options.onUpdate;
+  const onProgress = options.onProgress;
   const onEnded = options.onEnded;
 
   // Sort keyframes by time
@@ -313,6 +314,7 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
     }
     elapsedTotal += segmentElapsed;
     state.progress = Math.min(elapsedTotal / totalDurationMs, 1);
+    onProgress?.(state.progress);
 
     onUpdate?.(state.currentValue, state.velocity);
 
@@ -333,6 +335,7 @@ const createKeyframeAnimation = (options: SingleTweenOptions & { keyframes: Keyf
           total += segments[i].durationMs;
         }
         state.progress = Math.min(total / totalDurationMs, 1);
+        onProgress?.(state.progress);
       } else {
         status = "stopped";
         ticker.remove(animationHandle);

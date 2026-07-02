@@ -52,39 +52,6 @@ const meta = {
     track.appendChild(block);
     container.appendChild(track);
 
-    // Spring visualization (wiggly line)
-    const canvas = document.createElement("canvas");
-    canvas.width = 700;
-    canvas.height = 60;
-    canvas.style.cssText = "border-radius:8px;background:#1e1e2e;width:700px;height:60px;";
-    const ctx = canvas.getContext("2d")!;
-    container.appendChild(canvas);
-
-    // Draw spring coils
-    const drawSpring = (x: number) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "#98c379";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      const centerY = canvas.height / 2;
-      ctx.moveTo(0, centerY);
-
-            const coilWidth = 20;
-      const amplitude = 8;
-      const startX = Math.max(0, x - 100);
-      const endX = Math.min(canvas.width, x + 100);
-
-      for (let px = startX; px < endX; px += 2) {
-        const dist = Math.abs(px - x);
-        const amp = Math.max(0, 1 - dist / 100) * amplitude;
-        const y = centerY + Math.sin((px / coilWidth) * Math.PI * 2) * amp;
-        if (px === startX) ctx.moveTo(px, y);
-        else ctx.lineTo(px, y);
-      }
-      ctx.stroke();
-    };
-    drawSpring(0);
-
     // Velocity indicator
     const velocityRow = document.createElement("div");
     velocityRow.style.cssText = "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
@@ -133,7 +100,6 @@ const meta = {
       block.style.transform = "translateX(0px)";
       velocityFill.style.width = "0%";
       velocityValue.textContent = "0.00";
-      drawSpring(0);
     };
 
     const play = () => {
@@ -155,8 +121,6 @@ const meta = {
           velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
           velocityFill.style.background = velocity >= 0 ? "#98c379" : "#e06c75";
           velocityValue.textContent = velocity.toFixed(2);
-
-          drawSpring(value);
         },
         onEnded: () => {
           spring = null;

@@ -82,6 +82,7 @@ export type Keyframe = {
 export type KeyframeOptions = {
   keyframes: Keyframe[];
   onUpdate?: (value: number, velocity: number) => void;
+  onProgress?: (progress: number) => void;
   onEnded?: (value: number) => void;
 };
 
@@ -133,6 +134,7 @@ export type TimelineKeyframe = {
 export type TimelineOptions = {
   keyframes: TimelineKeyframe[];
   onStarted?: () => void;
+  onProgress?: (progress: number) => void;
   onEnded?: () => void;
 };
 

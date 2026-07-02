@@ -110,42 +110,22 @@ const meta = {
 
     const resetAll = () => els.forEach((el) => { el.style.transform = "translateX(0px)"; });
 
-    let timeline: ReturnType<typeof createTimeline> | null = null;
-
-    const play = () => {
-      if (timeline) { timeline.kill(); }
-      resetAll();
-
-      timeline = createTimeline({
+    const timeline = createTimeline({
         keyframes: [
           { at: 0, animations: [moveA, moveB] },
           { gap: 200, animations: [moveC] },
-          { gap: -300, animations: [moveD] },
+          { gap: 200, animations: [moveD] },
         ],
-        onEnded: () => {
-          timeline = null;
-          playBtn.textContent = "▶ Play";
-        },
+        onProgress: (progress) => { timeFill.style.width = `${Math.round(progress * 100)}%`; },
       });
 
-      const p = timeline.play();
-      const interval = setInterval(() => {
-        if (timeline) { timeFill.style.width = `${Math.round(timeline.progress * 100)}%`; }
-        else { clearInterval(interval); }
-      }, 50);
-      void p.then(() => { clearInterval(interval); timeFill.style.width = "100%"; });
-      playBtn.textContent = "⏸ Pause";
+    const play = () => {
+      timeline.play();
+      resetAll();
     };
 
-    const togglePlay = () => {
-      if (!timeline || (timeline.status !== "playing" && timeline.status !== "paused")) { play(); return; }
-      if (timeline.status === "playing") { timeline.pause(); playBtn.textContent = "▶ Resume"; }
-      else { timeline.resume(); playBtn.textContent = "⏸ Pause"; }
-    };
-
-    playBtn.addEventListener("click", togglePlay);
+    playBtn.addEventListener("click", play);
     resetBtn.addEventListener("click", () => {
-      if (timeline) { timeline.kill(); timeline = null; }
       resetAll();
       playBtn.textContent = "▶ Play";
     });

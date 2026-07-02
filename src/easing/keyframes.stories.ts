@@ -114,6 +114,7 @@ const meta = {
         { at: times[4], value: 630, ease: "outElastic" },
       ],
       onUpdate: (v) => { block.style.transform = `translateX(${v}px)`; },
+      onProgress: (p) => { progressFill.style.width = `${Math.round(p * 100)}%`; },
       onEnded: () => {
         playBtn.textContent = "▶ Play";
         progressFill.style.width = "100%";
@@ -130,14 +131,7 @@ const meta = {
       reset();
       currentAnim = createKeyframes();
       const p = currentAnim.play();
-      const interval = setInterval(() => {
-        if (currentAnim && (currentAnim.status === "playing" || currentAnim.status === "paused")) {
-          progressFill.style.width = `${Math.round(currentAnim.progress * 100)}%`;
-        } else {
-          clearInterval(interval);
-        }
-      }, 50);
-      void p.then(() => { currentAnim = null; clearInterval(interval); });
+      void p.then(() => { currentAnim = null; });
       playBtn.textContent = "⏸ Pause";
     };
 

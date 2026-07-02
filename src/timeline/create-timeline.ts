@@ -13,7 +13,7 @@ type Resolve = (value: TimelineHandle) => void;
 export type Timeline = TimelineHandle;
 
 export const createTimeline = (options: TimelineOptions): TimelineHandle => {
-  const { onStarted: onStartedCallback, onEnded: onEndedCallback } = options;
+  const { onStarted: onStartedCallback, onProgress: onProgressCallback, onEnded: onEndedCallback } = options;
 
   // Derive batches from keyframes
   const batches: Batch[] = [];
@@ -136,6 +136,8 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
         }
       }
     }
+
+    onProgressCallback?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0);
 
     if (batches.every((b) => b.started) && pendingAnimations <= 0) {
       finish();
