@@ -119,7 +119,7 @@ export type SmoothDampOptions = {
 export type LerpOptions = {
   from: () => number;
   to: () => number;
-  rate: number;
+  rate: DynamicValue<number>;
   onUpdate: (value: number) => void;
 };
 
