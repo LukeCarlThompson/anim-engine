@@ -37,7 +37,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let stopped = false;
-  let resolvePromise: ResolveFunction | null = null;
+  let resolvePromise: ResolveFunction | undefined;
   let repeatCounter = 0;
   let isReversed = false;
   let delayRemainingMs = 0;
@@ -96,7 +96,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     status = "stopped";
     ticker.remove(animationHandle);
     resolvePromise?.(controls);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
@@ -111,14 +111,14 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     status = "stopped";
     ticker.remove(animationHandle);
     resolvePromise?.(controls);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
     ticker.remove(animationHandle);
     stopped = true;
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   function onTickerUpdate(deltaMs: number) {
@@ -151,7 +151,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     status = "stopped";
     ticker.remove(animationHandle);
     resolvePromise?.(controls);
-    resolvePromise = null;
+    resolvePromise = undefined;
   }
 
   const controls: AnimControls<number> = {
@@ -206,6 +206,12 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     });
   }
 
+  // Pre-compute prefix sums for O(1) elapsed-time lookups
+  const prefixSum: number[] = [0];
+  for (let i = 0; i < segments.length; i++) {
+    prefixSum.push(prefixSum[i] + segments[i].durationMs);
+  }
+
   if (segments.length === 0) {
     // Single keyframe — just hold the value
     return createSingleTween({
@@ -222,7 +228,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let stopped = false;
-  let resolvePromise: ResolveFunction | null = null;
+  let resolvePromise: ResolveFunction | undefined;
   let currentSegmentIndex = 0;
 
   const ticker = getTicker();
@@ -265,7 +271,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     status = "stopped";
     ticker.remove(animationHandle);
     resolvePromise?.(controls);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
@@ -280,14 +286,14 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     status = "stopped";
     ticker.remove(animationHandle);
     resolvePromise?.(controls);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
     ticker.remove(animationHandle);
     stopped = true;
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   function onTickerUpdate(deltaMs: number) {
@@ -307,12 +313,8 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     state.currentValue = segment.from + (segment.to - segment.from) * eased;
     state.velocity = 0; // velocity computed below
 
-    // Compute global progress
-    let elapsedTotal = 0;
-    for (let i = 0; i < currentSegmentIndex; i++) {
-      elapsedTotal += segments[i].durationMs;
-    }
-    elapsedTotal += segmentElapsed;
+    // Compute global progress (O(1) via prefix sum)
+    const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
     state.progress = Math.min(elapsedTotal / totalDurationMs, 1);
     onProgress?.(state.progress);
 
@@ -329,19 +331,15 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
         segmentProgress = 0;
         state.currentValue = segments[currentSegmentIndex].from;
         state.velocity = 0;
-        // Update global progress to end of previous segment
-        let total = 0;
-        for (let i = 0; i < currentSegmentIndex; i++) {
-          total += segments[i].durationMs;
-        }
-        state.progress = Math.min(total / totalDurationMs, 1);
+        // Update global progress to end of previous segment (O(1) via prefix sum)
+        state.progress = Math.min(prefixSum[currentSegmentIndex] / totalDurationMs, 1);
         onProgress?.(state.progress);
       } else {
         status = "stopped";
         ticker.remove(animationHandle);
         onEnded?.(state.currentValue);
         resolvePromise?.(controls);
-        resolvePromise = null;
+        resolvePromise = undefined;
       }
     }
   }

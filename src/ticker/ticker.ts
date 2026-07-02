@@ -9,17 +9,20 @@ import type { TickerControls } from "../shared/types";
  *
  * `add()` and `remove()` register/unregister animations without
  * side effects on the rAF loop.
+ *
+ * Uses a flat array with undefined-tombstone removal for safe concurrent
+ * modification during iteration. Compacted after each frame.
  */
 export const createTicker = (): TickerControls => {
-  const activeAnimations = new Set<{ update: (deltaMs: number) => void }>();
-  let animationFrameRequestId: number | null = null;
-  let previousFrameTime: number | null = null;
+  const activeAnimations: ({ update: (deltaMs: number) => void } | undefined)[] = [];
+  let animationFrameRequestId: number | undefined = undefined;
+  let previousFrameTime: number | undefined = undefined;
 
   const start = () => {
-    if (animationFrameRequestId !== null) return;
-    previousFrameTime = null;
+    if (animationFrameRequestId !== undefined) return;
+    previousFrameTime = undefined;
     const tick = (now: number) => {
-      if (previousFrameTime !== null) {
+      if (previousFrameTime !== undefined) {
         const delta = now - previousFrameTime;
         update(delta);
       }
@@ -30,25 +33,36 @@ export const createTicker = (): TickerControls => {
   };
 
   const stop = () => {
-    if (animationFrameRequestId !== null) {
+    if (animationFrameRequestId !== undefined) {
       cancelAnimationFrame(animationFrameRequestId);
-      animationFrameRequestId = null;
+      animationFrameRequestId = undefined;
     }
-    previousFrameTime = null;
+    previousFrameTime = undefined;
   };
 
   const update = (deltaMs: number) => {
-    for (const anim of activeAnimations) {
-      anim.update(deltaMs);
+    for (let i = 0; i < activeAnimations.length; i++) {
+      const anim = activeAnimations[i];
+      if (anim) anim.update(deltaMs);
     }
+    // Compact undefined tombstones
+    let writeIdx = 0;
+    for (let readIdx = 0; readIdx < activeAnimations.length; readIdx++) {
+      const anim = activeAnimations[readIdx];
+      if (anim !== undefined) {
+        activeAnimations[writeIdx++] = anim;
+      }
+    }
+    activeAnimations.length = writeIdx;
   };
 
   const add = (anim: { update: (deltaMs: number) => void }) => {
-    activeAnimations.add(anim);
+    activeAnimations.push(anim);
   };
 
   const remove = (anim: { update: (deltaMs: number) => void }) => {
-    activeAnimations.delete(anim);
+    const idx = activeAnimations.indexOf(anim);
+    if (idx >= 0) activeAnimations[idx] = undefined;
   };
 
   return { start, stop, update, add, remove };

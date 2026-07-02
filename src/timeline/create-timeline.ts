@@ -19,11 +19,11 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   const batches: Batch[] = [];
   let lastBatchEnd = 0;
 
-  for (const kf of options.keyframes) {
-    const startAt = kf.at != null ? kf.at : lastBatchEnd + (kf.gap ?? 0);
-    const maxDuration = Math.max(...kf.animations.map((a) => a.getDurationMs()));
+  for (const keyframe of options.keyframes) {
+    const startAt = keyframe.at !== undefined ? keyframe.at : lastBatchEnd + (keyframe.gap ?? 0);
+    const maxDuration = Math.max(...keyframe.animations.map((a) => a.getDurationMs()));
     const endAt = startAt + maxDuration;
-    batches.push({ anims: kf.animations, startAt, endAt, started: false });
+    batches.push({ anims: keyframe.animations, startAt, endAt, started: false });
     lastBatchEnd = endAt;
   }
 
@@ -33,7 +33,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   // State
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
-  let resolvePromise: Resolve | null = null;
+  let resolvePromise: Resolve | undefined;
   let pendingAnimations = 0;
 
   const ticker = getTicker();
@@ -91,7 +91,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
       }
     }
     resolvePromise?.(handle);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
@@ -104,7 +104,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     }
     onEndedCallback?.();
     resolvePromise?.(handle);
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   const kill = () => {
@@ -115,7 +115,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
         anim.kill();
       }
     }
-    resolvePromise = null;
+    resolvePromise = undefined;
   };
 
   // ─── Ticker callback ───
@@ -155,7 +155,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     ticker.remove(animationHandle);
     onEndedCallback?.();
     resolvePromise?.(handle);
-    resolvePromise = null;
+    resolvePromise = undefined;
   }
 
   const getDurationMs = () => totalDurationMs;
