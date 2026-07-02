@@ -122,7 +122,6 @@ const meta = {
     container.appendChild(controls);
 
     // Spring state
-    let mouseX = 30;
     let targetX = 30;
     const spring = createSpring({
       from: 30,
@@ -149,7 +148,6 @@ const meta = {
       const rect = track.getBoundingClientRect();
       targetX = e.clientX - rect.left - 25;
       targetX = Math.max(0, Math.min(650, targetX));
-      mouseX = targetX;
       mouseLine.style.display = "block";
       targetDot.style.display = "block";
       mouseLine.style.left = `${targetX + 25}px`;
