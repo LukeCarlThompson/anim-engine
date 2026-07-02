@@ -109,8 +109,8 @@ export type SpringOptions = {
 export type SmoothDampOptions = {
   from: () => number;
   to: () => number;
-  smoothTime: number;
-  maxSpeed?: number;
+  smoothTime: DynamicValue<number>;
+  maxSpeed?: DynamicValue<number>;
   onUpdate: (value: number, velocity: number) => void;
 };
 
