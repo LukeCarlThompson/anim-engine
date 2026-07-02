@@ -95,9 +95,9 @@ export type AnimateOptions = SingleTweenOptions | KeyframeOptions;
 export type SpringOptions = {
   from?: DynamicValue<number>;
   to: DynamicValue<number>;
-  stiffness?: number;
-  damping?: number;
-  mass?: number;
+  stiffness?: DynamicValue<number>;
+  damping?: DynamicValue<number>;
+  mass?: DynamicValue<number>;
   precision?: number;
   onStarted?: (value: number) => void;
   onUpdate?: (value: number, velocity: number) => void;

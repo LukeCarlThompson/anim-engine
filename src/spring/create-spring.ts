@@ -3,15 +3,15 @@ import { getTicker } from "../ticker/get-ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
-export const createSpring = (options: SpringOptions): ContinuousControls<number> & { stiffness: number; damping: number; mass: number } => {
-  let stiffness = options.stiffness ?? 100;
-  let damping = options.damping ?? 10;
-  let mass = options.mass ?? 1;
+export const createSpring = (options: SpringOptions): ContinuousControls<number> => {
   const precision = options.precision ?? 0.01;
   const onUpdate = options.onUpdate;
 
   const rawFrom: number | (() => number) = options.from ?? 0;
   const rawTo: number | (() => number) = options.to;
+  const rawStiffness: number | (() => number) = options.stiffness ?? 180;
+  const rawDamping: number | (() => number) = options.damping ?? 12;
+  const rawMass: number | (() => number) = options.mass ?? 1;
 
   const state: SpringState = { current: 0, velocity: 0 };
   let active = true;
@@ -26,9 +26,8 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   // Register immediately (auto-start)
   ticker.add(animationHandle);
 
-  const resolveTo = (): number => {
-    return typeof rawTo === "function" ? (rawTo as () => number)() : rawTo;
-  };
+  const resolveValue = (v: number | (() => number)): number =>
+    typeof v === "function" ? (v as () => number)() : v;
 
   const start = () => {
     if (active) return;
@@ -49,7 +48,10 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   function onTickerUpdate(deltaMs: number) {
     if (!active) return;
 
-    const target = resolveTo();
+    const target = resolveValue(rawTo);
+    const stiffness = resolveValue(rawStiffness);
+    const damping = resolveValue(rawDamping);
+    const mass = resolveValue(rawMass);
     verletStep(state, target, stiffness, damping, mass, deltaMs);
 
     onUpdate?.(state.current, state.velocity);
@@ -63,18 +65,12 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
     }
   }
 
-  const controls: ContinuousControls<number> & { stiffness: number; damping: number; mass: number } = {
+  const controls: ContinuousControls<number> = {
     start, stop, kill,
     setCurrent: (value: number) => { state.current = value; state.velocity = 0; },
     get currentValue() { return state.current; },
     get velocity() { return state.velocity; },
     get status() { return active ? "active" : "inactive"; },
-    get stiffness() { return stiffness; },
-    set stiffness(v: number) { stiffness = v; },
-    get damping() { return damping; },
-    set damping(v: number) { damping = v; },
-    get mass() { return mass; },
-    set mass(v: number) { mass = v; },
   };
 
   return controls;

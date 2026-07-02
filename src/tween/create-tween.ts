@@ -13,9 +13,9 @@ const isKeyframeMode = (options: AnimateOptions): options is KeyframeOptions => 
 
 export const animate = (options: AnimateOptions): AnimControls<number> => {
   if (isKeyframeMode(options)) {
-    return createKeyframeAnimation(options as KeyframeOptions);
+    return createKeyframeAnimation(options);
   }
-  return createSingleTween(options as SingleTweenOptions);
+  return createSingleTween(options);
 };
 
 // ─── Single-tween mode (existing) ───

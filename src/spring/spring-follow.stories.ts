@@ -123,12 +123,16 @@ const meta = {
 
     // Spring state
     let targetX = 30;
-    const spring = createSpring({
+    let currentStiffness = 180;
+    let currentDamping = 12;
+    let currentMass = 1;
+
+    createSpring({
       from: 30,
       to: () => targetX,
-      stiffness: 180,
-      damping: 12,
-      mass: 1,
+      stiffness: () => currentStiffness,
+      damping: () => currentDamping,
+      mass: () => currentMass,
       precision: 0.01,
       onUpdate: (value, velocity) => {
         block.style.transform = `translateY(-50%) translateX(${value}px)`;
@@ -159,13 +163,10 @@ const meta = {
       targetDot.style.display = "none";
     });
 
-    // Update spring params in real time
     const updateSpring = () => {
-      if (spring) {
-        spring.stiffness = Number(stiffnessCtrl.slider.value);
-        spring.damping = Number(dampingCtrl.slider.value);
-        spring.mass = Number(massCtrl.slider.value);
-      }
+      currentStiffness = Number(stiffnessCtrl.slider.value);
+      currentDamping = Number(dampingCtrl.slider.value);
+      currentMass = Number(massCtrl.slider.value);
     };
 
     stiffnessCtrl.slider.addEventListener("input", updateSpring);
