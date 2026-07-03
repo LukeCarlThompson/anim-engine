@@ -46,14 +46,14 @@ export const createTicker = (): TickerControls => {
       if (anim) anim.update(deltaMs);
     }
     // Compact undefined tombstones
-    let writeIdx = 0;
-    for (let readIdx = 0; readIdx < activeAnimations.length; readIdx++) {
-      const anim = activeAnimations[readIdx];
+    let writeIndex = 0;
+    for (let readIndex = 0; readIndex < activeAnimations.length; readIndex++) {
+      const anim = activeAnimations[readIndex];
       if (anim !== undefined) {
-        activeAnimations[writeIdx++] = anim;
+        activeAnimations[writeIndex++] = anim;
       }
     }
-    activeAnimations.length = writeIdx;
+    activeAnimations.length = writeIndex;
   };
 
   const add = (anim: { update: (deltaMs: number) => void }) => {
@@ -61,8 +61,8 @@ export const createTicker = (): TickerControls => {
   };
 
   const remove = (anim: { update: (deltaMs: number) => void }) => {
-    const idx = activeAnimations.indexOf(anim);
-    if (idx >= 0) activeAnimations[idx] = undefined;
+    const index = activeAnimations.indexOf(anim);
+    if (index >= 0) activeAnimations[index] = undefined;
   };
 
   return { start, stop, update, add, remove };
