@@ -128,14 +128,65 @@ export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction => {
 };
 
 /**
- * Cubic bezier easing — returns (t) => t as a placeholder.
- * Full implementation deferred to post-v1.
+ * Cubic bezier easing. Builds a pre-computed lookup table at construction time
+ * for O(log n) binary search at runtime — no Newton iteration, no allocation
+ * per frame.
+ *
+ * @param p1x - First control point x coordinate.
+ * @param p1y - First control point y coordinate.
+ * @param p2x - Second control point x coordinate.
+ * @param p2y - Second control point y coordinate.
+ * @returns An EaseFunction suitable for use with animate() or createTimeline().
  */
 export const cubicBezier = (
-  _p1x: number,
-  _p1y: number,
-  _p2x: number,
-  _p2y: number,
+  p1x: number,
+  p1y: number,
+  p2x: number,
+  p2y: number,
 ): EaseFunction => {
-  return (t: number) => t;
+  // Pre-compute sample points: (x, y) pairs at evenly-spaced t values
+  const sampleSize = 64;
+  const samplesX = new Float64Array(sampleSize);
+  const samplesY = new Float64Array(sampleSize);
+
+  for (let index = 0; index < sampleSize; index++) {
+    const t = index / (sampleSize - 1);
+    const tInv = 1 - t;
+
+    // Cubic bezier evaluation: B(t) = 3*(1-t)²*t*P1 + 3*(1-t)*t²*P2 + t³*P3
+    const tInvSq = tInv * tInv;
+    const tSq = t * t;
+
+    samplesX[index] = 3 * tInvSq * t * p1x + 3 * tInv * tSq * p2x + tSq * t;
+    samplesY[index] = 3 * tInvSq * t * p1y + 3 * tInv * tSq * p2y + tSq * t;
+  }
+
+  return (x: number): number => {
+    // Edge cases
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+
+    // Binary search for the two nearest samples bracketing x
+    let low = 0;
+    let high = sampleSize - 1;
+
+    while (high - low > 1) {
+      const mid = (low + high) >>> 1;
+      if (samplesX[mid] <= x) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    // Linear interpolate y between the two bracketing samples
+    const xLow = samplesX[low];
+    const xHigh = samplesX[high];
+    const fraction = (x - xLow) / (xHigh - xLow);
+
+    const yLow = samplesY[low];
+    const yHigh = samplesY[high];
+
+    return yLow + fraction * (yHigh - yLow);
+  };
 };
