@@ -32,4 +32,5 @@ export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
 export type { TimelineKeyframe, TimelineOptions, TimelineHandle } from "./timeline/create-timeline";
+export { createSmoothClamp } from "./smooth-clamp/smooth-clamp";
 export type { TickerControls } from "./ticker/ticker";

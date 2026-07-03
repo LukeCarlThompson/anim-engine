@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html";
 import { animate } from "./create-tween";
 import { getTicker } from "../ticker/get-ticker";
+import { createSmoothClamp } from "../smooth-clamp/smooth-clamp";
 
 getTicker().start();
 
@@ -80,6 +81,8 @@ const meta = {
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
+    const smoothClamp = createSmoothClamp(45);
+
     let currentAnim: ReturnType<typeof animate> | null = null;
 
     const createKeyframes = () =>
@@ -92,7 +95,8 @@ const meta = {
           { at: 1 * durationMs, value: 630, ease: "outElastic" },
         ],
         onUpdate: (value, velocity) => {
-          block.style.transform = `translateX(${value}px) rotate(${velocity * 0.02}deg)`;
+          const rotation = smoothClamp(velocity * 0.05);
+          block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
         },
         onProgress: (p) => {
           progressFill.style.width = `${Math.round(p * 100)}%`;
