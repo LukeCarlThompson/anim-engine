@@ -10,7 +10,7 @@ const anim = createAnimation({
   to: 100,
   durationMs: 1000,
   ease: "outCubic",
-  onUpdate: (value) => sprite.x = value,
+  onUpdate: (value) => (sprite.x = value),
 });
 
 await anim.play();
@@ -26,16 +26,16 @@ ESM only. Tree-shakeable — import only what you use.
 
 ## Primitives
 
-| Primitive | Description |
-|-----------|-------------|
-| [`createAnimation`](#createanimation) | Timed tween from A to B with easing, repeat, yoyo, delay |
-| [`createAnimation` (keyframes)](#keyframes) | Multi-segment interpolation with per-segment easing |
-| [`createTimeline`](#createtimeline) | Orchestrate multiple animations on a shared timeline |
-| [`createSpring`](#createspring) | Physics-based spring (Verlet integration), auto-chases |
-| [`createSmoothDamp`](#createsmoothdamp) | Unity-style smooth damp, parameter-free chase |
-| [`createLerp`](#createlerp) | First-order exponential chase, single rate parameter |
-| [`createSmoothClamp`](#createsmoothclamp) | Asymptotic clamp — saturates input toward a threshold |
-| [`lerpOklab` / `hexToRgba`](#color) | Perceptually uniform color interpolation (Oklab) |
+| Primitive                                   | Description                                              |
+| ------------------------------------------- | -------------------------------------------------------- |
+| [`createAnimation`](#createanimation)       | Timed tween from A to B with easing, repeat, yoyo, delay |
+| [`createAnimation` (keyframes)](#keyframes) | Multi-segment interpolation with per-segment easing      |
+| [`createTimeline`](#createtimeline)         | Orchestrate multiple animations on a shared timeline     |
+| [`createSpring`](#createspring)             | Physics-based spring (Verlet integration), auto-chases   |
+| [`createSmoothDamp`](#createsmoothdamp)     | Unity-style smooth damp, parameter-free chase            |
+| [`createLerp`](#createlerp)                 | First-order exponential chase, single rate parameter     |
+| [`createSmoothClamp`](#createsmoothclamp)   | Asymptotic clamp — saturates input toward a threshold    |
+| [`lerpOklab` / `hexToRgba`](#color)         | Perceptually uniform color interpolation (Oklab)         |
 
 ## Usage
 
@@ -58,27 +58,27 @@ const anim = createAnimation({
 });
 
 // Promise-based control
-await anim.play();          // plays, resolves when done
+await anim.play(); // plays, resolves when done
 anim.pause();
 anim.resume();
-anim.stop();                // resets to start
-anim.skipToEnd();           // jumps to end, resolves promise
+anim.stop(); // resets to start
+anim.skipToEnd(); // jumps to end, resolves promise
 ```
 
 **Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `from` | `number \| () => number` | — | Start value (static or dynamic) |
-| `to` | `number \| () => number` | — | End value (static or dynamic) |
-| `durationMs` | `number` | — | Duration in milliseconds |
-| `ease` | `EaseName \| EaseFunction` | `"linear"` | Easing function or name |
-| `delay` | `number` | `0` | Delay before starting |
-| `repeat` | `number` | `0` | Times to repeat (set to `Infinity` for infinite) |
-| `yoyo` | `boolean` | `false` | Alternate direction on repeat |
-| `onUpdate` | `(value, velocity) => void` | — | Called every frame with current value and velocity (units/s) |
-| `onEnded` | `() => void` | — | Called when animation completes |
-| `onProgress` | `(progress) => void` | — | Called every frame with 0–1 progress |
+| Option       | Type                        | Default    | Description                                                  |
+| ------------ | --------------------------- | ---------- | ------------------------------------------------------------ |
+| `from`       | `number \| () => number`    | —          | Start value (static or dynamic)                              |
+| `to`         | `number \| () => number`    | —          | End value (static or dynamic)                                |
+| `durationMs` | `number`                    | —          | Duration in milliseconds                                     |
+| `ease`       | `EaseName \| EaseFunction`  | `"linear"` | Easing function or name                                      |
+| `delay`      | `number`                    | `0`        | Delay before starting                                        |
+| `repeat`     | `number`                    | `0`        | Times to repeat (set to `Infinity` for infinite)             |
+| `yoyo`       | `boolean`                   | `false`    | Alternate direction on repeat                                |
+| `onUpdate`   | `(value, velocity) => void` | —          | Called every frame with current value and velocity (units/s) |
+| `onEnded`    | `() => void`                | —          | Called when animation completes                              |
+| `onProgress` | `(progress) => void`        | —          | Called every frame with 0–1 progress                         |
 
 **Returns:** `AnimControls<number>`
 
@@ -96,7 +96,7 @@ const anim = createAnimation({
     { at: 700, value: 80, ease: "inOutQuad" },
     { at: 1000, value: 100 },
   ],
-  onUpdate: (value) => sprite.x = value,
+  onUpdate: (value) => (sprite.x = value),
 });
 ```
 
@@ -110,19 +110,24 @@ Compose multiple animations on a shared timeline with `at` or `gap` positions.
 import { createAnimation, createTimeline } from "anim-engine";
 
 const fadeIn = createAnimation({
-  from: 0, to: 1, durationMs: 500,
-  onUpdate: (v) => sprite.alpha = v,
+  from: 0,
+  to: 1,
+  durationMs: 500,
+  onUpdate: (v) => (sprite.alpha = v),
 });
 
 const slideIn = createAnimation({
-  from: -100, to: 0, durationMs: 800, ease: "outBack",
-  onUpdate: (v) => sprite.x = v,
+  from: -100,
+  to: 0,
+  durationMs: 800,
+  ease: "outBack",
+  onUpdate: (v) => (sprite.x = v),
 });
 
 createTimeline({
   keyframes: [
-    { at: 0, animations: [fadeIn, slideIn] },     // both start together
-    { gap: 0.2, animations: [slideIn] },           // relative gap
+    { at: 0, animations: [fadeIn, slideIn] }, // both start together
+    { gap: 0.2, animations: [slideIn] }, // relative gap
   ],
   onProgress: (progress) => console.log(`overall: ${progress}`),
 }).play();
@@ -130,13 +135,13 @@ createTimeline({
 
 **Timeline options:**
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `keyframes` | `TimelineKeyframe[]` | Array of keyframes with `at` (absolute) or `gap` (relative) positions |
-| `loop` | `boolean` | Whether to loop the timeline |
-| `onStarted` | `() => void` | Called when timeline begins |
-| `onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress |
-| `onEnded` | `() => void` | Called when timeline finishes |
+| Option       | Type                 | Description                                                           |
+| ------------ | -------------------- | --------------------------------------------------------------------- |
+| `keyframes`  | `TimelineKeyframe[]` | Array of keyframes with `at` (absolute) or `gap` (relative) positions |
+| `loop`       | `boolean`            | Whether to loop the timeline                                          |
+| `onStarted`  | `() => void`         | Called when timeline begins                                           |
+| `onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                          |
+| `onEnded`    | `() => void`         | Called when timeline finishes                                         |
 
 ### Continuous primitives
 
@@ -161,14 +166,16 @@ const spring = createSpring({
 
 // Dynamic target — mouse chase
 const targetX = { value: 0 };
-document.addEventListener("mousemove", (e) => { targetX.value = e.clientX; });
+document.addEventListener("mousemove", (e) => {
+  targetX.value = e.clientX;
+});
 
 const follower = createSpring({
   from: 0,
-  to: () => targetX.value,   // re-read every frame
+  to: () => targetX.value, // re-read every frame
   stiffness: 200,
   damping: 15,
-  onUpdate: (v) => sprite.x = v,
+  onUpdate: (v) => (sprite.x = v),
 });
 ```
 
@@ -186,7 +193,7 @@ const damp = createSmoothDamp({
   to: 100,
   smoothTime: 0.3,
   maxSpeed: Infinity,
-  onUpdate: (value, velocity) => sprite.x = value,
+  onUpdate: (value, velocity) => (sprite.x = value),
 });
 ```
 
@@ -202,8 +209,8 @@ import { createLerp } from "anim-engine";
 const lerp = createLerp({
   from: 0,
   to: 100,
-  rate: 3,            // convergence rate (higher = faster)
-  onUpdate: (value, velocity) => sprite.x = value,
+  rate: 3, // convergence rate (higher = faster)
+  onUpdate: (value, velocity) => (sprite.x = value),
 });
 ```
 
@@ -216,10 +223,10 @@ First-order exponential approach: `value += (target - value) * rate * deltaTime`
 ```ts
 import { createSmoothClamp } from "anim-engine";
 
-const clamp = createSmoothClamp(45);      // threshold = 45 units/s
+const clamp = createSmoothClamp(45); // threshold = 45 units/s
 
-const result = clamp(1000);               // → ~44.96 (approaches 45 asymptotically)
-const result2 = clamp(-500);              // → ~-44.96 (symmetric)
+const result = clamp(1000); // → ~44.96 (approaches 45 asymptotically)
+const result2 = clamp(-500); // → ~-44.96 (symmetric)
 ```
 
 Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns `setCurrent(0)` to reset position.
@@ -229,11 +236,14 @@ Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. 
 ```ts
 import { lerpOklab, hexToRgba } from "anim-engine";
 
-const fromColor = hexToRgba("#ff6b6b");   // → [1, 0.42, 0.42, 1]
-const toColor = hexToRgba("#4ecdc4");     // → [0.31, 0.80, 0.77, 1]
+const fromColor = hexToRgba("#ff6b6b"); // → [1, 0.42, 0.42, 1]
+const toColor = hexToRgba("#4ecdc4"); // → [0.31, 0.80, 0.77, 1]
 
 createAnimation({
-  from: 0, to: 1, durationMs: 2000, ease: "outCubic",
+  from: 0,
+  to: 1,
+  durationMs: 2000,
+  ease: "outCubic",
   onUpdate: (t) => {
     const [r, g, b, a] = lerpOklab(fromColor, toColor, t);
     sprite.setColor(r, g, b, a);
@@ -246,14 +256,13 @@ Perceptually uniform Oklab interpolation — avoids muddy brown midpoints that R
 ## Benchmarks
 
 Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
-Each animation runs to natural completion; duration matches frame window.
 
-| Benchmark | anim-engine | GSAP | Ratio |
-|-----------|-------------|------|-------|
-| **Single tween** (1000 frames) | 12,484 ops/s | 11,026 ops/s | 1.13× faster |
-| **Keyframe** (3 segments, 1000 frames) | 13,806 ops/s | 3,557 ops/s | 3.88× faster |
-| **50 concurrent tweens** (500 frames) | 583 ops/s | 472 ops/s | 1.24× faster |
-| **50 concurrent keyframes** (500 frames) | 643 ops/s | 174 ops/s | 3.69× faster |
+| Benchmark                                | anim-engine  | GSAP         | Ratio        |
+| ---------------------------------------- | ------------ | ------------ | ------------ |
+| **Single tween** (1000 frames)           | 12,484 ops/s | 11,026 ops/s | 1.13× faster |
+| **Keyframe** (3 segments, 1000 frames)   | 13,806 ops/s | 3,557 ops/s  | 3.88× faster |
+| **50 concurrent tweens** (500 frames)    | 583 ops/s    | 472 ops/s    | 1.24× faster |
+| **50 concurrent keyframes** (500 frames) | 643 ops/s    | 174 ops/s    | 3.69× faster |
 
 Run locally: `npm run bench`
 
@@ -266,11 +275,14 @@ Primitives register themselves with the ticker on creation — no manual registr
 ```ts
 import { getTicker, createAnimation } from "anim-engine";
 
-getTicker().start();  // starts the rAF loop
+getTicker().start(); // starts the rAF loop
 
 createAnimation({
-  from: 0, to: 100, durationMs: 2000, ease: "outElastic",
-  onUpdate: (v) => sprite.x = v,
+  from: 0,
+  to: 100,
+  durationMs: 2000,
+  ease: "outElastic",
+  onUpdate: (v) => (sprite.x = v),
 }).play();
 ```
 
@@ -297,7 +309,7 @@ function gameLoop(deltaMs: number) {
 ```ts
 import { evaluateEasing, cubicBezier, EASE_NAMES } from "anim-engine";
 
-resolveEasing("outElastic");                   // named ease → function
+resolveEasing("outElastic"); // named ease → function
 resolveEasing(cubicBezier(0.25, 0.1, 0.25, 1)); // custom → function
 ```
 
@@ -312,8 +324,8 @@ All primitives accept `number | (() => number)` for value parameters. Use a func
 ```ts
 const spring = createSpring({
   from: 0,
-  to: () => getMousePosition(),     // re-read every frame
-  stiffness: () => sliderValue,     // dynamic stiffness
+  to: () => getMousePosition(), // re-read every frame
+  stiffness: () => sliderValue, // dynamic stiffness
   damping: () => dampingValue,
 });
 ```
@@ -324,42 +336,42 @@ The function is called every frame inside the ticker update — no getter/setter
 
 ### Functions
 
-| Export | Description |
-|--------|-------------|
-| `createAnimation(options)` | Timed or keyframe animation |
-| `createTimeline(options)` | Composited timeline of animations |
-| `createSpring(options)` | Physics spring (Verlet integration) |
-| `createSmoothDamp(options)` | Unity-style smooth damp |
-| `createLerp(options)` | Exponential lerp chase |
-| `createSmoothClamp(threshold)` | Asymptotic clamp factory |
-| `createTicker()` | Ticker factory for custom game loops |
-| `getTicker()` | Singleton ticker |
-| `resolveEasing(ease)` | Resolve ease name or function |
-| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing |
-| `lerpOklab(from, to, t)` | Oklab color interpolation |
-| `hexToRgba(hex)` | Parse hex color to normalized RGBA |
+| Export                            | Description                          |
+| --------------------------------- | ------------------------------------ |
+| `createAnimation(options)`        | Timed or keyframe animation          |
+| `createTimeline(options)`         | Composited timeline of animations    |
+| `createSpring(options)`           | Physics spring (Verlet integration)  |
+| `createSmoothDamp(options)`       | Unity-style smooth damp              |
+| `createLerp(options)`             | Exponential lerp chase               |
+| `createSmoothClamp(threshold)`    | Asymptotic clamp factory             |
+| `createTicker()`                  | Ticker factory for custom game loops |
+| `getTicker()`                     | Singleton ticker                     |
+| `resolveEasing(ease)`             | Resolve ease name or function        |
+| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing           |
+| `lerpOklab(from, to, t)`          | Oklab color interpolation            |
+| `hexToRgba(hex)`                  | Parse hex color to normalized RGBA   |
 
 ### Type exports
 
-| Type | Description |
-|------|-------------|
-| `AnimControls<T>` | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
-| `ContinuousControls<T>` | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status` |
-| `EaseName` | Union of 31 ease name strings |
-| `EaseFunction` | `(t: number) => number` |
-| `DynamicValue<T>` | `T \| (() => T)` |
-| `Status` | `"playing" \| "paused" \| "stopped" \| "dead"` |
-| `AnimationOptions` | Single tween or keyframe animation options |
-| `SingleTweenOptions` | `from`, `to`, `durationMs`, `ease`, `delay`, `repeat`, `yoyo` |
-| `KeyframeOptions` | `keyframes: Keyframe[]` |
-| `Keyframe` | `{ at, value, ease? }` |
-| `TimelineOptions` | `keyframes: TimelineKeyframe[]`, `loop?`, `onStarted?`, `onProgress?`, `onEnded?` |
-| `TimelineKeyframe` | `{ at?: number, gap?: number, animations }` |
-| `SpringOptions` | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate` |
-| `SmoothDampOptions` | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate` |
-| `LerpOptions` | `from`, `to`, `rate`, `onUpdate` |
-| `RgbaTuple` | `readonly [number, number, number, number]` |
-| `TickerControls` | `start`, `stop`, `update` |
+| Type                    | Description                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `AnimControls<T>`       | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
+| `ContinuousControls<T>` | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                            |
+| `EaseName`              | Union of 31 ease name strings                                                                                          |
+| `EaseFunction`          | `(t: number) => number`                                                                                                |
+| `DynamicValue<T>`       | `T \| (() => T)`                                                                                                       |
+| `Status`                | `"playing" \| "paused" \| "stopped" \| "dead"`                                                                         |
+| `AnimationOptions`      | Single tween or keyframe animation options                                                                             |
+| `SingleTweenOptions`    | `from`, `to`, `durationMs`, `ease`, `delay`, `repeat`, `yoyo`                                                          |
+| `KeyframeOptions`       | `keyframes: Keyframe[]`                                                                                                |
+| `Keyframe`              | `{ at, value, ease? }`                                                                                                 |
+| `TimelineOptions`       | `keyframes: TimelineKeyframe[]`, `loop?`, `onStarted?`, `onProgress?`, `onEnded?`                                      |
+| `TimelineKeyframe`      | `{ at?: number, gap?: number, animations }`                                                                            |
+| `SpringOptions`         | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                 |
+| `SmoothDampOptions`     | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                    |
+| `LerpOptions`           | `from`, `to`, `rate`, `onUpdate`                                                                                       |
+| `RgbaTuple`             | `readonly [number, number, number, number]`                                                                            |
+| `TickerControls`        | `start`, `stop`, `update`                                                                                              |
 
 ## Game engine integration
 
@@ -382,8 +394,11 @@ app.ticker.add((delta) => {
 });
 
 createAnimation({
-  from: 0, to: 300, durationMs: 2000, ease: "outElastic",
-  onUpdate: (x) => sprite.x = x,
+  from: 0,
+  to: 300,
+  durationMs: 2000,
+  ease: "outElastic",
+  onUpdate: (x) => (sprite.x = x),
 }).play();
 ```
 
@@ -414,8 +429,11 @@ function animate() {
 animate();
 
 createAnimation({
-  from: 0, to: Math.PI * 2, durationMs: 3000, ease: "inOutCubic",
-  onUpdate: (angle) => mesh.rotation.y = angle,
+  from: 0,
+  to: Math.PI * 2,
+  durationMs: 3000,
+  ease: "inOutCubic",
+  onUpdate: (angle) => (mesh.rotation.y = angle),
 }).play();
 ```
 
