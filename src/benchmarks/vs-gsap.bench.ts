@@ -110,7 +110,7 @@ describe("keyframe animation (3 segments, 1000 frames to completion)", () => {
 describe("50 concurrent tweens (500 frames to completion)", () => {
   bench("anim-engine", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
-    targets.forEach((t, i) => {
+    targets.forEach((_t, i) => {
       const a = createAnimation({
         from: 0,
         to: 100,
@@ -143,7 +143,7 @@ describe("50 concurrent keyframe animations (500 frames to completion)", () => {
 
   bench("anim-engine", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
-    targets.forEach((t, i) => {
+    targets.forEach((_t, i) => {
       const a = createAnimation({
         keyframes: [
           { at: 0, value: 0 },
