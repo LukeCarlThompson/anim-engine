@@ -33,4 +33,6 @@ export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
 export type { TimelineKeyframe, TimelineOptions, TimelineHandle } from "./timeline/create-timeline";
 export { createSmoothClamp } from "./smooth-clamp/smooth-clamp";
+export { lerpOklab, hexToRgba } from "./color/lerp-oklab";
+export type { RgbaTuple } from "./color/lerp-oklab";
 export type { TickerControls } from "./ticker/ticker";
