@@ -83,29 +83,26 @@ const meta = {
 
     const smoothClamp = createSmoothClamp(45);
 
-    let currentAnim: ReturnType<typeof animate> | null = null;
-
-    const createKeyframes = () =>
-      animate({
-        keyframes: [
-          { at: 0, value: 0 },
-          { at: 0.2 * durationMs, value: 200, ease: "outQuart" },
-          { at: 0.5 * durationMs, value: 450, ease: "outCubic" },
-          { at: 0.75 * durationMs, value: 350, ease: "outQuart" },
-          { at: 1 * durationMs, value: 630, ease: "outElastic" },
-        ],
-        onUpdate: (value, velocity) => {
-          const rotation = smoothClamp(velocity * 0.05);
-          block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
-        },
-        onProgress: (p) => {
-          progressFill.style.width = `${Math.round(p * 100)}%`;
-        },
-        onEnded: () => {
-          playBtn.textContent = "▶ Play";
-          progressFill.style.width = "100%";
-        },
-      });
+    const anim = animate({
+      keyframes: [
+        { at: 0, value: 0 },
+        { at: 0.2 * durationMs, value: 200, ease: "outQuart" },
+        { at: 0.5 * durationMs, value: 450, ease: "outCubic" },
+        { at: 0.75 * durationMs, value: 350, ease: "outQuart" },
+        { at: 1 * durationMs, value: 630, ease: "outElastic" },
+      ],
+      onUpdate: (value, velocity) => {
+        const rotation = smoothClamp(velocity * 0.05);
+        block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
+      },
+      onProgress: (p) => {
+        progressFill.style.width = `${Math.round(p * 100)}%`;
+      },
+      onEnded: () => {
+        playBtn.textContent = "▶ Play";
+        progressFill.style.width = "100%";
+      },
+    });
 
     const reset = () => {
       block.style.transform = "translateX(0px) rotate(0deg)";
@@ -113,38 +110,32 @@ const meta = {
     };
 
     const play = () => {
-      if (currentAnim) {
-        currentAnim.kill();
-      }
       reset();
-      currentAnim = createKeyframes();
-      const p = currentAnim.play();
+      anim.setCurrent(0);
+      const p = anim.play();
       void p.then(() => {
-        currentAnim = null;
+        playBtn.textContent = "▶ Play";
       });
       playBtn.textContent = "⏸ Pause";
     };
 
     const togglePlay = () => {
-      if (!currentAnim || (currentAnim.status !== "playing" && currentAnim.status !== "paused")) {
+      if (anim.status === "stopped" || anim.status === "dead") {
         play();
         return;
       }
-      if (currentAnim.status === "playing") {
-        currentAnim.pause();
+      if (anim.status === "playing") {
+        anim.pause();
         playBtn.textContent = "▶ Resume";
       } else {
-        currentAnim.resume();
+        anim.resume();
         playBtn.textContent = "⏸ Pause";
       }
     };
 
     playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
-      if (currentAnim) {
-        currentAnim.kill();
-        currentAnim = null;
-      }
+      anim.stop();
       reset();
       playBtn.textContent = "▶ Play";
     });
