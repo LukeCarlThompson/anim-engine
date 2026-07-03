@@ -1,4 +1,10 @@
-import type { TickerControls } from "../shared/types";
+export type TickerControls = {
+  start: () => void;
+  stop: () => void;
+  update: (deltaMs: number) => void;
+  add: (anim: { update: (deltaMs: number) => void }) => void;
+  remove: (anim: { update: (deltaMs: number) => void }) => void;
+};
 
 /**
  * Create a ticker that drives active animations.

@@ -1,4 +1,12 @@
-import type { SmoothDampOptions, ContinuousControls } from "../shared/types";
+import type { ContinuousControls, DynamicValue } from "../shared/types";
+
+export type SmoothDampOptions = {
+  from: () => number;
+  to: () => number;
+  smoothTime: DynamicValue<number>;
+  maxSpeed?: DynamicValue<number>;
+  onUpdate: (value: number, velocity: number) => void;
+};
 import { getTicker } from "../ticker/get-ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";

@@ -1,4 +1,4 @@
-import type { TickerControls } from "../shared/types";
+import type { TickerControls } from "./ticker";
 import { createTicker } from "./ticker";
 
 let singleton: TickerControls | undefined;

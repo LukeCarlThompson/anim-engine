@@ -1,4 +1,15 @@
-import type { SpringOptions, ContinuousControls } from "../shared/types";
+import type { ContinuousControls, DynamicValue } from "../shared/types";
+export type SpringOptions = {
+  from?: DynamicValue<number>;
+  to: DynamicValue<number>;
+  stiffness?: DynamicValue<number>;
+  damping?: DynamicValue<number>;
+  mass?: DynamicValue<number>;
+  precision?: number;
+  onStarted?: (value: number) => void;
+  onUpdate?: (value: number, velocity: number) => void;
+  onEnded?: (value: number) => void;
+};
 import { getTicker } from "../ticker/get-ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";

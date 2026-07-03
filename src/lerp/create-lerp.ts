@@ -1,4 +1,11 @@
-import type { LerpOptions, ContinuousControls } from "../shared/types";
+import type { ContinuousControls, DynamicValue } from "../shared/types";
+
+export type LerpOptions = {
+  from: () => number;
+  to: () => number;
+  rate: DynamicValue<number>;
+  onUpdate: (value: number) => void;
+};
 import { getTicker } from "../ticker/get-ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";

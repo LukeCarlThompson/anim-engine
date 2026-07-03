@@ -1,11 +1,39 @@
-import type { AnimControls, AnimateOptions, SingleTweenOptions, KeyframeOptions, Keyframe } from "../shared/types";
-import type { EaseFunction, EaseName } from "../shared/types";
+import type { AnimControls, DynamicValue, EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { resolveEasing } from "../easing/easing";
 import { updateTween } from "./update";
 import type { TweenState } from "./update";
 
 type ResolveFunction = (value: AnimControls<number>) => void;
+
+export type SingleTweenOptions = {
+  from?: DynamicValue<number>;
+  to: DynamicValue<number>;
+  durationMs?: number;
+  ease?: EaseName | EaseFunction;
+  delayMs?: number;
+  repeat?: number;
+  yoyo?: boolean;
+  onStarted?: (value: number) => void;
+  onUpdate?: (value: number, velocity: number) => void;
+  onEnded?: (value: number) => void;
+  onRepeat?: (value: number) => void;
+};
+
+export type Keyframe = {
+  at: number;
+  value: DynamicValue<number>;
+  ease?: EaseName | EaseFunction;
+};
+
+export type KeyframeOptions = {
+  keyframes: Keyframe[];
+  onUpdate?: (value: number, velocity: number) => void;
+  onProgress?: (progress: number) => void;
+  onEnded?: (value: number) => void;
+};
+
+export type AnimateOptions = SingleTweenOptions | KeyframeOptions;
 
 const isKeyframeMode = (options: AnimateOptions): options is KeyframeOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);

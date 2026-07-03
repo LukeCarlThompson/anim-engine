@@ -1,4 +1,29 @@
-import type { AnimControls, TimelineHandle, TimelineOptions } from "../shared/types";
+import type { AnimControls } from "../shared/types";
+
+export type TimelineKeyframe = {
+  at?: number;
+  gap?: number;
+  animations: AnimControls<number>[];
+};
+
+export type TimelineOptions = {
+  keyframes: TimelineKeyframe[];
+  onStarted?: () => void;
+  onProgress?: (progress: number) => void;
+  onEnded?: () => void;
+};
+
+export type TimelineHandle = {
+  play: () => Promise<TimelineHandle>;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  skipToEnd: () => void;
+  kill: () => void;
+  progress: number;
+  status: "playing" | "paused" | "stopped" | "dead";
+  getDurationMs: () => number;
+};
 import { getTicker } from "../ticker/get-ticker";
 
 type Batch = {
