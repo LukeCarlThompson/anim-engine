@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createAnimation } from "./create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { createSmoothClamp } from "../smooth-clamp/smooth-clamp";
@@ -7,7 +7,6 @@ getTicker().start();
 
 const meta = {
   title: "Keyframes",
-  tags: ["autodocs"],
   argTypes: {
     durationMs: {
       control: { type: "range", min: 500, max: 5000, step: 100 },

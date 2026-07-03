@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { easingFunctions, EASE_NAMES } from "./easing";
@@ -9,7 +9,6 @@ getTicker().start();
 
 const meta = {
   title: "Easing Functions",
-  tags: ["autodocs"],
   argTypes: {
     ease: {
       control: "select",

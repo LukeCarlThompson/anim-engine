@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createSmoothDamp } from "./create-smooth-damp";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -6,7 +6,6 @@ getTicker().start();
 
 const meta = {
   title: "Smooth Damp",
-  tags: ["autodocs"],
   argTypes: {
     smoothTime: { control: { type: "range", min: 0.1, max: 2, step: 0.1 } },
     maxSpeed: { control: { type: "range", min: 10, max: 500, step: 10 } },

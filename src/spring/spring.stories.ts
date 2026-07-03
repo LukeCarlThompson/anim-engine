@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createSpring } from "./create-spring";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -6,7 +6,6 @@ getTicker().start();
 
 const meta = {
   title: "Spring",
-  tags: ["autodocs"],
   argTypes: {
     stiffness: { control: { type: "range", min: 10, max: 500, step: 10 } },
     damping: { control: { type: "range", min: 1, max: 50, step: 1 } },

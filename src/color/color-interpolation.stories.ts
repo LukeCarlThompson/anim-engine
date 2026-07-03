@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { lerpOklab, hexToRgba } from "./lerp-oklab";
@@ -8,7 +8,6 @@ getTicker().start();
 
 const meta = {
   title: "Color Interpolation (Oklab)",
-  tags: ["autodocs"],
   argTypes: {
     fromHex: { control: "color" },
     toHex: { control: "color" },
@@ -93,12 +92,13 @@ const meta = {
     for (let i = 0; i < steps; i++) {
       const [r, g, b] = lerpOklab(fromParsed, toParsed, i / (steps - 1));
       const seg = document.createElement("div");
-      seg.style.cssText = `flex:1;background:rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0});`;
+      seg.style.cssText = `flex:1;background:rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0});`;
       oklabGradient.appendChild(seg);
     }
     const oklabLabel = document.createElement("div");
     oklabLabel.textContent = "Oklab";
-    oklabLabel.style.cssText = "color:#666;font-size:11px;font-family:monospace;text-align:center;padding-top:2px;";
+    oklabLabel.style.cssText =
+      "color:#666;font-size:11px;font-family:monospace;text-align:center;padding-top:2px;";
     oklabBar.appendChild(oklabGradient);
     oklabBar.appendChild(oklabLabel);
     gradientBar.appendChild(oklabBar);
@@ -114,12 +114,13 @@ const meta = {
       const g = fromParsed[1] + (toParsed[1] - fromParsed[1]) * t;
       const b = fromParsed[2] + (toParsed[2] - fromParsed[2]) * t;
       const seg = document.createElement("div");
-      seg.style.cssText = `flex:1;background:rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0});`;
+      seg.style.cssText = `flex:1;background:rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0});`;
       rgbGradient.appendChild(seg);
     }
     const rgbLabel = document.createElement("div");
     rgbLabel.textContent = "RGB (linear)";
-    rgbLabel.style.cssText = "color:#666;font-size:11px;font-family:monospace;text-align:center;padding-top:2px;";
+    rgbLabel.style.cssText =
+      "color:#666;font-size:11px;font-family:monospace;text-align:center;padding-top:2px;";
     rgbGradientBar.appendChild(rgbGradient);
     rgbGradientBar.appendChild(rgbLabel);
     gradientBar.appendChild(rgbGradientBar);
@@ -167,14 +168,16 @@ const meta = {
 
     const scrubVal = document.createElement("span");
     scrubVal.textContent = "0%";
-    scrubVal.style.cssText = "color:#a8e063;font-size:13px;font-family:monospace;min-width:42px;text-align:right;";
+    scrubVal.style.cssText =
+      "color:#a8e063;font-size:13px;font-family:monospace;min-width:42px;text-align:right;";
 
     scrubberRow.appendChild(scrubLabel);
     scrubberRow.appendChild(scrubInput);
     scrubberRow.appendChild(scrubVal);
 
     const displayRow = document.createElement("div");
-    displayRow.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:8px;width:600px;";
+    displayRow.style.cssText =
+      "display:flex;flex-direction:column;align-items:center;gap:8px;width:600px;";
     displayRow.appendChild(display);
     displayRow.appendChild(scrubberRow);
     container.appendChild(displayRow);
@@ -197,7 +200,8 @@ const meta = {
       const input = document.createElement("input");
       input.type = "color";
       input.value = initial;
-      input.style.cssText = "width:40px;height:40px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0;";
+      input.style.cssText =
+        "width:40px;height:40px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0;";
 
       const hexDisplay = document.createElement("span");
       hexDisplay.textContent = initial;
@@ -223,14 +227,16 @@ const meta = {
       const children = oklabGradient.children;
       for (let i = 0; i < steps && i < children.length; i++) {
         const [r, g, b] = lerpOklab(f, t, i / (steps - 1));
-        (children[i] as HTMLElement).style.background = `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`;
+        (children[i] as HTMLElement).style.background =
+          `rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0})`;
       }
       for (let i = 0; i < steps && i < rgbGradient.children.length; i++) {
         const p = i / (steps - 1);
         const r = f[0] + (t[0] - f[0]) * p;
         const g = f[1] + (t[1] - f[1]) * p;
         const b = f[2] + (t[2] - f[2]) * p;
-        (rgbGradient.children[i] as HTMLElement).style.background = `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`;
+        (rgbGradient.children[i] as HTMLElement).style.background =
+          `rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0})`;
       }
       fromDisplay.textContent = `From: ${currentFromHex}`;
       toDisplay.textContent = `To: ${currentToHex}`;
@@ -283,7 +289,8 @@ const meta = {
 
     const durVal = document.createElement("span");
     durVal.textContent = `${durationMs}ms`;
-    durVal.style.cssText = "color:#a8e063;font-size:13px;font-family:monospace;min-width:50px;text-align:right;";
+    durVal.style.cssText =
+      "color:#a8e063;font-size:13px;font-family:monospace;min-width:50px;text-align:right;";
 
     let currentDurationMs = durationMs;
     durInput.addEventListener("input", () => {
@@ -327,7 +334,7 @@ const meta = {
 
       // Oklab interpolation
       const [r, g, b, a] = lerpOklab(fromColor, toColor, progress);
-      const rgba = `rgba(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0},${a.toFixed(2)})`;
+      const rgba = `rgba(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0},${a.toFixed(2)})`;
       block.style.background = rgba;
       oklabSwatch.swatch.style.background = rgba;
 
@@ -335,10 +342,16 @@ const meta = {
       const rRgb = fromColor[0] + (toColor[0] - fromColor[0]) * progress;
       const gRgb = fromColor[1] + (toColor[1] - fromColor[1]) * progress;
       const bRgb = fromColor[2] + (toColor[2] - fromColor[2]) * progress;
-      rgbSwatch.swatch.style.background = `rgb(${rRgb * 255 | 0},${gRgb * 255 | 0},${bRgb * 255 | 0})`;
+      rgbSwatch.swatch.style.background = `rgb(${(rRgb * 255) | 0},${(gRgb * 255) | 0},${(bRgb * 255) | 0})`;
 
       // Show midpoint color value
-      const hexStr = `#${[r, g, b].map(c => Math.round(c * 255).toString(16).padStart(2, "0")).join("")}`;
+      const hexStr = `#${[r, g, b]
+        .map((c) =>
+          Math.round(c * 255)
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")}`;
       midDisplay.textContent = `Mid: ${hexStr}`;
       midDisplay.style.color = hexStr;
 

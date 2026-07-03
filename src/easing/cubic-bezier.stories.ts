@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { cubicBezier } from "./easing";
@@ -8,7 +8,6 @@ getTicker().start();
 
 const meta = {
   title: "Cubic Bezier",
-  tags: ["autodocs"],
   argTypes: {
     p1x: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     p1y: { control: { type: "range", min: -1, max: 1.5, step: 0.01 } },
@@ -163,7 +162,14 @@ const meta = {
     container.appendChild(canvas);
 
     // Sliders
-    const makeSlider = (label: string, min: number, max: number, step: number, initial: number, onChange: (v: number) => void) => {
+    const makeSlider = (
+      label: string,
+      min: number,
+      max: number,
+      step: number,
+      initial: number,
+      onChange: (v: number) => void,
+    ) => {
       const row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:10px;width:500px;";
 
@@ -181,7 +187,8 @@ const meta = {
 
       const val = document.createElement("span");
       val.textContent = initial.toFixed(2);
-      val.style.cssText = "min-width:50px;color:#a8e063;font-size:13px;font-family:monospace;text-align:right;";
+      val.style.cssText =
+        "min-width:50px;color:#a8e063;font-size:13px;font-family:monospace;text-align:right;";
 
       input.addEventListener("input", () => {
         const v = parseFloat(input.value);
@@ -198,23 +205,33 @@ const meta = {
       container.appendChild(row);
     };
 
-    makeSlider("P1x", 0, 1, 0.01, currentP1x, (v) => { currentP1x = v; });
-    makeSlider("P1y", -1, 1.5, 0.01, currentP1y, (v) => { currentP1y = v; });
-    makeSlider("P2x", 0, 1, 0.01, currentP2x, (v) => { currentP2x = v; });
-    makeSlider("P2y", -1, 1.5, 0.01, currentP2y, (v) => { currentP2y = v; });
+    makeSlider("P1x", 0, 1, 0.01, currentP1x, (v) => {
+      currentP1x = v;
+    });
+    makeSlider("P1y", -1, 1.5, 0.01, currentP1y, (v) => {
+      currentP1y = v;
+    });
+    makeSlider("P2x", 0, 1, 0.01, currentP2x, (v) => {
+      currentP2x = v;
+    });
+    makeSlider("P2y", -1, 1.5, 0.01, currentP2y, (v) => {
+      currentP2y = v;
+    });
 
     // Preset buttons
     const presets = document.createElement("div");
-    presets.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:500px;";
+    presets.style.cssText =
+      "display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:500px;";
 
-    const presetDefs: Array<{ label: string; p1x: number; p1y: number; p2x: number; p2y: number }> = [
-      { label: "Ease", p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 },
-      { label: "Ease In", p1x: 0.42, p1y: 0, p2x: 1, p2y: 1 },
-      { label: "Ease Out", p1x: 0, p1y: 0, p2x: 0.58, p2y: 1 },
-      { label: "Ease In Out", p1x: 0.42, p1y: 0, p2x: 0.58, p2y: 1 },
-      { label: "Snap", p1x: 0.25, p1y: 1.25, p2x: 0.75, p2y: -0.25 },
-      { label: "Linear", p1x: 0, p1y: 0, p2x: 1, p2y: 1 },
-    ];
+    const presetDefs: Array<{ label: string; p1x: number; p1y: number; p2x: number; p2y: number }> =
+      [
+        { label: "Ease", p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 },
+        { label: "Ease In", p1x: 0.42, p1y: 0, p2x: 1, p2y: 1 },
+        { label: "Ease Out", p1x: 0, p1y: 0, p2x: 0.58, p2y: 1 },
+        { label: "Ease In Out", p1x: 0.42, p1y: 0, p2x: 0.58, p2y: 1 },
+        { label: "Snap", p1x: 0.25, p1y: 1.25, p2x: 0.75, p2y: -0.25 },
+        { label: "Linear", p1x: 0, p1y: 0, p2x: 1, p2y: 1 },
+      ];
 
     for (const preset of presetDefs) {
       const btn = document.createElement("button");
@@ -263,7 +280,8 @@ const meta = {
 
     // Progress bar
     const progressBar = document.createElement("div");
-    progressBar.style.cssText = "width:500px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+    progressBar.style.cssText =
+      "width:500px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
     const progressFill = document.createElement("div");
     progressFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
     progressBar.appendChild(progressFill);

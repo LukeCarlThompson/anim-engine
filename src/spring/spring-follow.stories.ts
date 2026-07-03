@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createSpring } from "./create-spring";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -6,7 +6,6 @@ getTicker().start();
 
 const meta = {
   title: "Spring/Spring Follow",
-  tags: ["autodocs"],
   render: () => {
     const container = document.createElement("div");
     container.style.cssText = `

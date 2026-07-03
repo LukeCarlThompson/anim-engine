@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createLerp } from "./create-lerp";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -6,7 +6,6 @@ getTicker().start();
 
 const meta = {
   title: "Lerp",
-  tags: ["autodocs"],
   argTypes: {
     rate: { control: { type: "range", min: 0, max: 10, step: 0.5 } },
   },

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/html";
+import type { Meta, StoryObj } from "@storybook/html-vite";
 import { createAnimation } from "../animation/create-animation";
 import { createTimeline } from "./create-timeline";
 import { getTicker } from "../ticker/get-ticker";
@@ -7,7 +7,6 @@ getTicker().start();
 
 const meta = {
   title: "Timeline",
-  tags: ["autodocs"],
   render: () => {
     const container = document.createElement("div");
     container.style.cssText = `
