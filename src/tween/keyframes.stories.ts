@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { animate } from "../tween/create-tween";
+import { animate } from "./create-tween";
 import { getTicker } from "../ticker/get-ticker";
 
 getTicker().start();
@@ -49,36 +49,6 @@ const meta = {
     track.appendChild(block);
     container.appendChild(track);
 
-    // Keyframe markers
-    const markers = document.createElement("div");
-    markers.style.cssText = `
-      display: flex; align-items: center; padding-left: 30px;
-      width: 700px; height: 20px; position: relative;
-    `;
-
-    const times = [0, 0.2, 0.5, 0.75, 1].map((f) => f * durationMs);
-    const colors = ["#e06c75", "#e5c07b", "#98c379", "#61afef", "#c678dd"];
-    const labels = [
-      `0ms`,
-      `${Math.round(times[1])}ms`,
-      `${Math.round(times[2])}ms`,
-      `${Math.round(times[3])}ms`,
-      `${Math.round(times[4])}ms`,
-    ];
-
-    times.forEach((t, i) => {
-      const pct = (t / durationMs) * 100;
-      const m = document.createElement("div");
-      m.style.cssText = `
-        position: absolute; left: ${pct}%; top: 0;
-        transform: translateX(-50%); font-size: 10px;
-        color: ${colors[i]}; font-family: monospace;
-      `;
-      m.textContent = `▼ ${labels[i]}`;
-      markers.appendChild(m);
-    });
-    container.appendChild(markers);
-
     // Progress bar
     const progressBar = document.createElement("div");
     progressBar.style.cssText =
@@ -115,14 +85,14 @@ const meta = {
     const createKeyframes = () =>
       animate({
         keyframes: [
-          { at: times[0], value: 0 },
-          { at: times[1], value: 200, ease: "outQuart" },
-          { at: times[2], value: 450, ease: "outCubic" },
-          { at: times[3], value: 350, ease: "outQuart" },
-          { at: times[4], value: 630, ease: "outElastic" },
+          { at: 0, value: 0 },
+          { at: 0.2 * durationMs, value: 200, ease: "outQuart" },
+          { at: 0.5 * durationMs, value: 450, ease: "outCubic" },
+          { at: 0.75 * durationMs, value: 350, ease: "outQuart" },
+          { at: 1 * durationMs, value: 630, ease: "outElastic" },
         ],
-        onUpdate: (v) => {
-          block.style.transform = `translateX(${v}px)`;
+        onUpdate: (value, velocity) => {
+          block.style.transform = `translateX(${value}px) rotate(${velocity}deg)`;
         },
         onProgress: (p) => {
           progressFill.style.width = `${Math.round(p * 100)}%`;
@@ -134,7 +104,7 @@ const meta = {
       });
 
     const reset = () => {
-      block.style.transform = "translateX(0px)";
+      block.style.transform = "translateX(0px) rotate(0deg)";
       progressFill.style.width = "0%";
     };
 
