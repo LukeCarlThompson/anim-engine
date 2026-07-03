@@ -24,7 +24,8 @@
     "build-storybook": "npm run lint && npm run test && storybook build",
     "prepublishOnly": "npm run build",
     "format": "oxfmt src/",
-    "format:check": "oxfmt --check src/"
+    "format:check": "oxfmt --check src/",
+    "fmt": "oxfmt src/"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",

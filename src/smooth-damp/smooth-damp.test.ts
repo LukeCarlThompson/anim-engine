@@ -116,6 +116,24 @@ describe("createSmoothDamp", () => {
     expect(sd.status).toBe("inactive");
   });
 
+
+  it("onUpdate receives velocity", () => {
+    const velocities: number[] = [];
+    const sd = createSmoothDamp({
+      from: () => 0,
+      to: () => 100,
+      smoothTime: 0.3,
+      onUpdate: (_v, vel) => { velocities.push(vel); },
+    });
+
+    getTicker().update(16);
+
+    expect(velocities.length).toBeGreaterThan(0);
+    expect(velocities[0]).not.toBe(0);
+    expect(sd.velocity).toBe(velocities[velocities.length - 1]);
+    sd.kill();
+  });
+
   it("uses maxSpeed to cap velocity", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({

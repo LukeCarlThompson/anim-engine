@@ -117,6 +117,27 @@ describe("createLerp", () => {
     expect(lerp.status).toBe("inactive");
   });
 
+
+  it("onUpdate receives velocity that decreases as it approaches target", () => {
+    const velocities: number[] = [];
+    const lerp = createLerp({
+      from: () => 0,
+      to: () => 100,
+      rate: 3,
+      onUpdate: (_v, vel) => { velocities.push(vel); },
+    });
+
+    for (let i = 0; i < 30; i++) getTicker().update(16);
+
+    // First velocity should be positive (moving toward target)
+    expect(velocities[0]).toBeGreaterThan(0);
+    // Last velocity should be smaller (slowing down as it approaches)
+    expect(velocities[velocities.length - 1]).toBeLessThan(velocities[0]);
+    // velocity getter matches last onUpdate value
+    expect(lerp.velocity).toBe(velocities[velocities.length - 1]);
+    lerp.kill();
+  });
+
   it("rate can be a dynamic accessor function", () => {
     let currentRate = 0.5;
     const values: number[] = [];

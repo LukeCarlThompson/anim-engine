@@ -53,6 +53,24 @@ test("setCurrent teleports mid-animation", async () => {
   expect(spring.velocity).toBe(0);
 });
 
+
+test("onUpdate receives velocity", () => {
+  const ticker = getTicker();
+  const velocities: number[] = [];
+  const spring = createSpring({
+    from: 0, to: 100, stiffness: 200, damping: 15, mass: 1,
+    onUpdate: (_v, vel) => { velocities.push(vel); },
+  });
+
+  ticker.update(16);
+
+  expect(velocities.length).toBeGreaterThan(0);
+  expect(velocities[0]).not.toBe(0);
+  // velocity getter matches
+  expect(spring.velocity).toBe(velocities[velocities.length - 1]);
+  spring.kill();
+});
+
 test("kill removes from ticker", async () => {
   const ticker = getTicker();
   const spring = createSpring({ from: 0, to: 100, stiffness: 100, damping: 10 });

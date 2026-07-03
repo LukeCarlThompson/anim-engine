@@ -1,19 +1,21 @@
 import type { ContinuousControls, DynamicValue } from "../shared/types";
+import { getTicker } from "../ticker/get-ticker";
+import { lerpStep } from "./step";
+import type { LerpState } from "./step";
 
 export type LerpOptions = {
   from: () => number;
   to: () => number;
   rate: DynamicValue<number>;
-  onUpdate: (value: number) => void;
+  onUpdate: (value: number, velocity: number) => void;
 };
-import { getTicker } from "../ticker/get-ticker";
-import { lerpStep } from "./step";
-import type { LerpState } from "./step";
 
 export const createLerp = (options: LerpOptions): ContinuousControls<number> => {
   const onUpdate = options.onUpdate;
 
   const state: LerpState = { current: 0 };
+  let previousValue = 0;
+  let currentVelocity = 0;
   let active = true;
 
   const ticker = getTicker();
@@ -23,6 +25,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
 
   // Initialize with starting position
   state.current = options.from();
+  previousValue = state.current;
 
   // Register immediately (auto-start)
   ticker.add(animationHandle);
@@ -50,7 +53,10 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
     const rate = resolveValue(options.rate);
     lerpStep(state, target, rate, deltaMs);
 
-    onUpdate(state.current);
+    currentVelocity = (state.current - previousValue) / deltaMs;
+    previousValue = state.current;
+
+    onUpdate(state.current, currentVelocity);
   }
 
   const controls: ContinuousControls<number> = {
@@ -59,13 +65,15 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
     kill,
     setCurrent: (value: number) => {
       state.current = value;
+      previousValue = value;
+      currentVelocity = 0;
     },
     get currentValue() {
       return state.current;
     },
     get velocity() {
-      return 0;
-    }, // Lerp has no velocity tracking
+      return currentVelocity;
+    },
     get status() {
       return active ? "active" : "inactive";
     },
