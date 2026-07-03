@@ -243,6 +243,20 @@ createAnimation({
 
 Perceptually uniform Oklab interpolation — avoids muddy brown midpoints that RGB lerp produces. Alpha lerps linearly.
 
+## Benchmarks
+
+Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
+Each animation runs to natural completion; duration matches frame window.
+
+| Benchmark | anim-engine | GSAP | Ratio |
+|-----------|-------------|------|-------|
+| **Single tween** (1000 frames) | 12,484 ops/s | 11,026 ops/s | 1.13× faster |
+| **Keyframe** (3 segments, 1000 frames) | 13,806 ops/s | 3,557 ops/s | 3.88× faster |
+| **50 concurrent tweens** (500 frames) | 583 ops/s | 472 ops/s | 1.24× faster |
+| **50 concurrent keyframes** (500 frames) | 643 ops/s | 174 ops/s | 3.69× faster |
+
+Run locally: `npm run bench`
+
 ### Ticker
 
 Primitives register themselves with the ticker on creation — no manual registration needed.
