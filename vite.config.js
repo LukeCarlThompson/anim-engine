@@ -8,15 +8,20 @@ export default defineConfig({
   plugins: [dts({ tsconfigPath: "tsconfig.build.json" })],
   build: {
     copyPublicDir: false,
-    sourcemap: true,
+    minify: false,
+    sourcemap: false,
     lib: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       entry: resolve(join(import.meta.dirname, "src/index.ts")),
       formats: ["es"],
-      fileName: "index",
     },
     rollupOptions: {
-      treeshake: "smallest",
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: "src",
+        entryFileNames: "[name].js",
+        chunkFileNames: "[name].js",
+      },
+      treeshake: true,
     },
   },
 });
