@@ -20,14 +20,14 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   const animationHandle = { update: onTickerUpdate };
 
   // Initialize
-  const initFrom = typeof rawFrom === "function" ? (rawFrom as () => number)() : rawFrom;
+  const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
   state.current = initFrom;
 
   // Register immediately (auto-start)
   ticker.add(animationHandle);
 
   const resolveValue = (v: number | (() => number)): number =>
-    typeof v === "function" ? (v as () => number)() : v;
+    typeof v === "function" ? v() : v;
 
   const start = () => {
     if (active) return;

@@ -8,7 +8,7 @@ import type { TweenState } from "./update";
 type ResolveFunction = (value: AnimControls<number>) => void;
 
 const isKeyframeMode = (options: AnimateOptions): options is KeyframeOptions => {
-  return "keyframes" in options && Array.isArray((options as { keyframes: unknown }).keyframes);
+  return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
 export const animate = (options: AnimateOptions): AnimControls<number> => {
@@ -47,8 +47,8 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
   const animationHandle = { update: onTickerUpdate };
 
   const resolveValues = () => {
-    const from = typeof rawFrom === "function" ? (rawFrom as () => number)() : rawFrom;
-    const to = typeof rawTo === "function" ? (rawTo as () => number)() : rawTo;
+    const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+    const to = typeof rawTo === "function" ? rawTo() : rawTo;
     return { from, to };
   };
 
@@ -188,7 +188,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
 
   // Resolve a keyframe's value (function or literal)
   const resolveKeyframeValue = (kf: Keyframe): number => {
-    return typeof kf.value === "function" ? (kf.value as () => number)() : kf.value;
+    return typeof kf.value === "function" ? kf.value() : kf.value;
   };
 
   // Create segment from one keyframe to the next

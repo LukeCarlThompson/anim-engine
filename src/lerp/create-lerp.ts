@@ -13,7 +13,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
   const animationHandle = { update: onTickerUpdate };
 
   const resolveValue = (v: number | (() => number)): number =>
-    typeof v === "function" ? (v as () => number)() : v;
+    typeof v === "function" ? v() : v;
 
   // Initialize with starting position
   state.current = options.from();
