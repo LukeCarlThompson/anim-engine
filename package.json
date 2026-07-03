@@ -29,13 +29,13 @@
     "fmt": "oxfmt src/"
   },
   "devDependencies": {
-    "@storybook/addon-docs": "^10.4.6",
-    "@storybook/html": "^10.4.6",
-    "@storybook/html-vite": "^10.4.6",
-    "gsap": "^3.15.0",
+    "@storybook/addon-docs": "10.4.6",
+    "@storybook/html": "10.4.6",
+    "@storybook/html-vite": "10.4.6",
+    "gsap": "3.15.0",
     "oxfmt": "0.57.0",
     "oxlint": "1.72.0",
-    "storybook": "^10.4.6",
+    "storybook": "10.4.6",
     "typescript": "6.0.3",
     "vite": "8.1.3",
     "vite-plugin-dts": "5.0.3",
