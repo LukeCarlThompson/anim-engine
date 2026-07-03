@@ -53,7 +53,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
     const rate = resolveValue(options.rate);
     lerpStep(state, target, rate, deltaMs);
 
-    currentVelocity = (state.current - previousValue) / deltaMs;
+    currentVelocity = (state.current - previousValue) / (deltaMs / 1000);
     previousValue = state.current;
 
     onUpdate(state.current, currentVelocity);

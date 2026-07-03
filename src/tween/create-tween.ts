@@ -292,6 +292,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
   let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
   let currentSegmentIndex = 0;
+  let previousValue = resolveKeyframeValue(sorted[0]);
 
   const ticker = getTicker();
   const animationHandle = { update: onTickerUpdate };
@@ -308,6 +309,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     segmentProgress = 0;
     state.progress = 0;
     state.currentValue = segments[0].from;
+    previousValue = segments[0].from;
     state.velocity = 0;
 
     const promise = new Promise<AnimControls<number>>((resolve) => {
@@ -374,8 +376,15 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
 
     // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
     const eased = segment.easeFn(segmentProgress);
+    previousValue = state.currentValue;
     state.currentValue = segment.from + (segment.to - segment.from) * eased;
-    state.velocity = 0; // velocity computed below
+
+    if (segmentProgress >= 1) {
+      state.currentValue = segment.to;
+      state.velocity = 0;
+    } else {
+      state.velocity = (state.currentValue - previousValue) / (deltaMs / 1000);
+    }
 
     // Compute global progress (O(1) via prefix sum)
     const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
@@ -386,14 +395,12 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
 
     // Check if segment completed
     if (segmentProgress >= 1) {
-      state.currentValue = segment.to;
-      state.velocity = 0;
-
       if (currentSegmentIndex < segments.length - 1) {
         currentSegmentIndex++;
         segmentElapsed = 0;
         segmentProgress = 0;
         state.currentValue = segments[currentSegmentIndex].from;
+        previousValue = state.currentValue;
         state.velocity = 0;
         // Update global progress to end of previous segment (O(1) via prefix sum)
         state.progress = Math.min(prefixSum[currentSegmentIndex] / totalDurationMs, 1);

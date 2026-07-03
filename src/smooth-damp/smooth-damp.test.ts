@@ -129,7 +129,7 @@ describe("createSmoothDamp", () => {
     getTicker().update(16);
 
     expect(velocities.length).toBeGreaterThan(0);
-    expect(velocities[0]).not.toBe(0);
+    expect(velocities[0]).toBeCloseTo(63.93, 1);
     expect(sd.velocity).toBe(velocities[velocities.length - 1]);
     sd.kill();
   });

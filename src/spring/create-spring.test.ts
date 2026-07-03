@@ -65,7 +65,7 @@ test("onUpdate receives velocity", () => {
   ticker.update(16);
 
   expect(velocities.length).toBeGreaterThan(0);
-  expect(velocities[0]).not.toBe(0);
+  expect(velocities[0]).toBeCloseTo(320, 5);
   // velocity getter matches
   expect(spring.velocity).toBe(velocities[velocities.length - 1]);
   spring.kill();

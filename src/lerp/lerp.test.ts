@@ -131,6 +131,7 @@ describe("createLerp", () => {
 
     // First velocity should be positive (moving toward target)
     expect(velocities[0]).toBeGreaterThan(0);
+    expect(velocities[0]).toBeCloseTo(300, 5);
     // Last velocity should be smaller (slowing down as it approaches)
     expect(velocities[velocities.length - 1]).toBeLessThan(velocities[0]);
     // velocity getter matches last onUpdate value

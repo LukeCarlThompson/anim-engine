@@ -92,7 +92,7 @@ const meta = {
           { at: 1 * durationMs, value: 630, ease: "outElastic" },
         ],
         onUpdate: (value, velocity) => {
-          block.style.transform = `translateX(${value}px) rotate(${velocity}deg)`;
+          block.style.transform = `translateX(${value}px) rotate(${velocity * 0.02}deg)`;
         },
         onProgress: (p) => {
           progressFill.style.width = `${Math.round(p * 100)}%`;

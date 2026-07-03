@@ -248,3 +248,32 @@ test("keyframes with 3 points interpolates correctly", async () => {
   await p;
   expect(values[values.length - 1]).toBe(50);
 });
+
+test("keyframe velocity is non-zero during movement", async () => {
+  const ticker = getTicker();
+  const velocities: number[] = [];
+  const a = animate({
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 1000, value: 100, ease: "linear" },
+    ],
+    onUpdate: (_v, vel) => {
+      velocities.push(vel);
+    },
+  });
+  const p = a.play();
+  // Advance by 2 frames (33ms each) — not enough to complete
+  ticker.update(33);
+  ticker.update(33);
+  // Check we got velocity during movement
+  expect(velocities.length).toBeGreaterThan(0);
+  // First velocity should be 100 units/s (linear, 100 units over 1000ms)
+  expect(velocities[0]).toBeCloseTo(100, 5);
+  // Complete the animation to the end
+  ticker.update(1000);
+  await p;
+  // Last velocity should be 0 (at rest)
+  expect(velocities[velocities.length - 1]).toBe(0);
+  // Velocity getter matches last value
+  expect(a.velocity).toBe(velocities[velocities.length - 1]);
+});
