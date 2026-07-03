@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { animate } from "./create-tween";
+import { createAnimation } from "./create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { createSmoothClamp } from "../smooth-clamp/smooth-clamp";
 
@@ -29,7 +29,7 @@ const meta = {
     container.appendChild(title);
 
     const subtitle = document.createElement("p");
-    subtitle.textContent = "A single animate() with multiple keyframes at different times";
+    subtitle.textContent = "A single createAnimation() with multiple keyframes at different times";
     subtitle.style.cssText = "margin:0;color:#666;font-size:13px;";
     container.appendChild(subtitle);
 
@@ -83,7 +83,7 @@ const meta = {
 
     const smoothClamp = createSmoothClamp(45);
 
-    const anim = animate({
+    const anim = createAnimation({
       keyframes: [
         { at: 0, value: 0 },
         { at: 0.2 * durationMs, value: 200, ease: "outQuart" },

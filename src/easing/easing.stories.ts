@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { animate } from "../tween/create-tween";
+import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { easingFunctions, EASE_NAMES } from "./easing";
 import type { AnimControls, EaseName } from "../shared/types";
@@ -209,7 +209,7 @@ const meta = {
       }
       resetPosition();
 
-      tween = animate({
+      tween = createAnimation({
         from: 0,
         to: 640,
         durationMs,
@@ -261,7 +261,7 @@ const meta = {
         tween.kill();
       }
 
-      tween = animate({
+      tween = createAnimation({
         from: startPos,
         to: 0,
         durationMs,

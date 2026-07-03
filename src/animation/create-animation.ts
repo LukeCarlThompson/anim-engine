@@ -33,13 +33,13 @@ export type KeyframeOptions = {
   onEnded?: (value: number) => void;
 };
 
-export type AnimateOptions = SingleTweenOptions | KeyframeOptions;
+export type AnimationOptions = SingleTweenOptions | KeyframeOptions;
 
-const isKeyframeMode = (options: AnimateOptions): options is KeyframeOptions => {
+const isKeyframeMode = (options: AnimationOptions): options is KeyframeOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
-export const animate = (options: AnimateOptions): AnimControls<number> => {
+export const createAnimation = (options: AnimationOptions): AnimControls<number> => {
   if (isKeyframeMode(options)) {
     return createKeyframeAnimation(options);
   }

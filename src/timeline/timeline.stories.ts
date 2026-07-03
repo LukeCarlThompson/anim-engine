@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/html";
-import { animate } from "../tween/create-tween";
+import { createAnimation } from "../animation/create-animation";
 import { createTimeline } from "./create-timeline";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -107,7 +107,7 @@ const meta = {
     container.appendChild(controls);
 
     // Build tweens
-    const moveA = animate({
+    const moveA = createAnimation({
       from: 0,
       to: 640,
       durationMs: 800,
@@ -116,7 +116,7 @@ const meta = {
         els[0].style.transform = `translateX(${v}px)`;
       },
     });
-    const moveB = animate({
+    const moveB = createAnimation({
       from: 0,
       to: 640,
       durationMs: 700,
@@ -125,7 +125,7 @@ const meta = {
         els[1].style.transform = `translateX(${v}px)`;
       },
     });
-    const moveC = animate({
+    const moveC = createAnimation({
       from: 0,
       to: 640,
       durationMs: 1000,
@@ -134,7 +134,7 @@ const meta = {
         els[2].style.transform = `translateX(${v}px)`;
       },
     });
-    const moveD = animate({
+    const moveD = createAnimation({
       from: 0,
       to: 640,
       durationMs: 600,

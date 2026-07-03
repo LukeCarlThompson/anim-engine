@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from "vitest";
-import { animate } from "../tween/create-tween";
+import { createAnimation } from "../animation/create-animation";
 import { createTimeline } from "./create-timeline";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -12,7 +12,7 @@ test("single keyframe at 0 plays all animations", async () => {
   let x = 0;
   let y = 0;
 
-  const a = animate({
+  const a = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -21,7 +21,7 @@ test("single keyframe at 0 plays all animations", async () => {
       x = v;
     },
   });
-  const b = animate({
+  const b = createAnimation({
     from: 0,
     to: 200,
     durationMs: 100,
@@ -45,7 +45,7 @@ test("consecutive keyframes with gap:0 play one after another", async () => {
   const ticker = getTicker();
   const values: number[] = [];
 
-  const a = animate({
+  const a = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -54,7 +54,7 @@ test("consecutive keyframes with gap:0 play one after another", async () => {
       values.push(v);
     },
   });
-  const b = animate({
+  const b = createAnimation({
     from: 0,
     to: 200,
     durationMs: 100,
@@ -85,7 +85,7 @@ test("parallel animations in one keyframe", async () => {
   let step1 = false;
   let step2 = false;
 
-  const a = animate({
+  const a = createAnimation({
     from: 0,
     to: 1,
     durationMs: 50,
@@ -94,7 +94,7 @@ test("parallel animations in one keyframe", async () => {
       if (v >= 1) step1 = true;
     },
   });
-  const b = animate({
+  const b = createAnimation({
     from: 0,
     to: 1,
     durationMs: 100,
@@ -118,7 +118,7 @@ test("gap between keyframes", async () => {
   const ticker = getTicker();
   const times: number[] = [];
 
-  const a = animate({
+  const a = createAnimation({
     from: 0,
     to: 1,
     durationMs: 50,
@@ -127,7 +127,7 @@ test("gap between keyframes", async () => {
       times.push(1);
     },
   });
-  const b = animate({
+  const b = createAnimation({
     from: 0,
     to: 1,
     durationMs: 50,
@@ -160,8 +160,8 @@ test("negative gap for overlap", async () => {
   const ticker = getTicker();
   let overlapDetected = false;
 
-  const a = animate({ from: 0, to: 100, durationMs: 100, ease: "linear" });
-  const b = animate({
+  const a = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
+  const b = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -191,8 +191,8 @@ test("mixed at and gap keyframes", async () => {
   const ticker = getTicker();
   let started = false;
 
-  const a = animate({ from: 0, to: 1, durationMs: 50, ease: "linear" });
-  const b = animate({
+  const a = createAnimation({ from: 0, to: 1, durationMs: 50, ease: "linear" });
+  const b = createAnimation({
     from: 0,
     to: 1,
     durationMs: 50,
@@ -223,7 +223,7 @@ test("mixed at and gap keyframes", async () => {
 test("pause and resume", async () => {
   const ticker = getTicker();
 
-  const a = animate({ from: 0, to: 100, durationMs: 200, ease: "linear" });
+  const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
   const tl = createTimeline({ keyframes: [{ at: 0, animations: [a] }] });
   const p = tl.play();
 
@@ -246,8 +246,8 @@ test("skipToEnd completes all", async () => {
   const ticker = getTicker();
   let ended = false;
 
-  const a = animate({ from: 0, to: 100, durationMs: 200, ease: "linear" });
-  const b = animate({ from: 0, to: 200, durationMs: 300, ease: "linear" });
+  const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
+  const b = createAnimation({ from: 0, to: 200, durationMs: 300, ease: "linear" });
   const tl = createTimeline({
     keyframes: [
       { at: 0, animations: [a] },
@@ -269,7 +269,7 @@ test("skipToEnd completes all", async () => {
 });
 
 test("kill prevents replay", async () => {
-  const a = animate({ from: 0, to: 100, durationMs: 100, ease: "linear" });
+  const a = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
   const tl = createTimeline({ keyframes: [{ at: 0, animations: [a] }] });
   void tl.play();
 
@@ -281,8 +281,8 @@ test("kill prevents replay", async () => {
 });
 
 test("getDurationMs returns total timeline length", () => {
-  const a = animate({ from: 0, to: 100, durationMs: 200, ease: "linear" });
-  const b = animate({ from: 0, to: 100, durationMs: 300, ease: "linear" });
+  const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
+  const b = createAnimation({ from: 0, to: 100, durationMs: 300, ease: "linear" });
 
   const tl = createTimeline({
     keyframes: [

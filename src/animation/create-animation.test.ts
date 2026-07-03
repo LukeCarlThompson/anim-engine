@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from "vitest";
-import { animate } from "./create-tween";
+import { createAnimation } from "./create-animation";
 import { getTicker } from "../ticker/get-ticker";
 
 beforeEach(() => {
@@ -8,7 +8,7 @@ beforeEach(() => {
 
 test("tween from 0 to 100 over 1000ms finishes at 100", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
   ticker.update(1000);
   await p;
@@ -18,7 +18,7 @@ test("tween from 0 to 100 over 1000ms finishes at 100", async () => {
 
 test("tween resolves to end value with outElastic ease", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 200, durationMs: 500, ease: "outElastic" });
+  const tween = createAnimation({ from: 0, to: 200, durationMs: 500, ease: "outElastic" });
   const p = tween.play();
   ticker.update(500);
   await p;
@@ -27,7 +27,7 @@ test("tween resolves to end value with outElastic ease", async () => {
 
 test("pause at 500ms, resume, completes correctly", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
 
   ticker.update(500);
@@ -45,7 +45,7 @@ test("pause at 500ms, resume, completes correctly", async () => {
 
 test("stop mid-tween resolves promise at current value", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
   ticker.update(400);
   tween.stop();
@@ -55,7 +55,7 @@ test("stop mid-tween resolves promise at current value", async () => {
 
 test("skipToEnd resolves at end value", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
   ticker.update(300);
   tween.skipToEnd();
@@ -65,7 +65,7 @@ test("skipToEnd resolves at end value", async () => {
 
 test("kill leaves promise unresolved and prevents replay", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   tween.play();
   ticker.update(300);
   tween.kill();
@@ -78,7 +78,7 @@ test("dynamic from/to functions are evaluated at play time", async () => {
   const ticker = getTicker();
   let from = 20;
   let to = 80;
-  const tween = animate({ from: () => from, to: () => to, durationMs: 100, ease: "linear" });
+  const tween = createAnimation({ from: () => from, to: () => to, durationMs: 100, ease: "linear" });
   const p = tween.play();
   ticker.update(100);
   await p;
@@ -87,7 +87,7 @@ test("dynamic from/to functions are evaluated at play time", async () => {
 
 test("changing to mid-play resets progress", async () => {
   const ticker = getTicker();
-  const tween = animate({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   tween.play();
   ticker.update(500);
   expect(Math.trunc(tween.currentValue)).toBe(50);
@@ -98,7 +98,7 @@ test("changing to mid-play resets progress", async () => {
 });
 
 test("dead status throws on play()", () => {
-  const tween = animate({ from: 0, to: 100, durationMs: 100, ease: "linear" });
+  const tween = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
   tween.kill();
   expect(() => tween.play()).toThrow();
 });
@@ -106,7 +106,7 @@ test("dead status throws on play()", () => {
 test("onStarted fires when playback begins", async () => {
   const ticker = getTicker();
   let startedValue = -1;
-  const tween = animate({
+  const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -124,7 +124,7 @@ test("onStarted fires when playback begins", async () => {
 test("onEnded fires on completion", async () => {
   const ticker = getTicker();
   let endedValue = -1;
-  const tween = animate({
+  const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -142,7 +142,7 @@ test("onEnded fires on completion", async () => {
 test("onUpdate receives correct intermediate values", async () => {
   const ticker = getTicker();
   const updates: number[] = [];
-  const tween = animate({
+  const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 1000,
@@ -166,7 +166,7 @@ test("onUpdate receives correct intermediate values", async () => {
 test("repeats specified number of times", async () => {
   const ticker = getTicker();
   let count = 0;
-  const tween = animate({
+  const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -188,7 +188,7 @@ test("repeats specified number of times", async () => {
 test("delayMs delays the start", async () => {
   const ticker = getTicker();
   let started = false;
-  const tween = animate({
+  const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
@@ -216,7 +216,7 @@ test("delayMs delays the start", async () => {
 
 test("keyframes with 2 points equals single tween", async () => {
   const ticker = getTicker();
-  const a = animate({
+  const a = createAnimation({
     keyframes: [
       { at: 0, value: 0 },
       { at: 100, value: 100, ease: "linear" },
@@ -232,7 +232,7 @@ test("keyframes with 2 points equals single tween", async () => {
 test("keyframes with 3 points interpolates correctly", async () => {
   const ticker = getTicker();
   const values: number[] = [];
-  const a = animate({
+  const a = createAnimation({
     keyframes: [
       { at: 0, value: 0 },
       { at: 100, value: 100, ease: "linear" },
@@ -252,7 +252,7 @@ test("keyframes with 3 points interpolates correctly", async () => {
 test("keyframe velocity is non-zero during movement", async () => {
   const ticker = getTicker();
   const velocities: number[] = [];
-  const a = animate({
+  const a = createAnimation({
     keyframes: [
       { at: 0, value: 0 },
       { at: 1000, value: 100, ease: "linear" },

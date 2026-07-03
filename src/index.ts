@@ -1,7 +1,7 @@
 // Anim Engine — Public API
 
 // Primitives
-export { animate } from "./tween/create-tween";
+export { createAnimation } from "./animation/create-animation";
 export { createTimeline } from "./timeline/create-timeline";
 export type { Timeline } from "./timeline/create-timeline";
 export { createSpring } from "./spring/create-spring";
@@ -26,8 +26,8 @@ export type {
   SingleTweenOptions,
   Keyframe,
   KeyframeOptions,
-  AnimateOptions,
-} from "./tween/create-tween";
+  AnimationOptions,
+} from "./animation/create-animation";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
