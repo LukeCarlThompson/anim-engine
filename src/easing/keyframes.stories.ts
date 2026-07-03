@@ -58,7 +58,13 @@ const meta = {
 
     const times = [0, 0.2, 0.5, 0.75, 1].map((f) => f * durationMs);
     const colors = ["#e06c75", "#e5c07b", "#98c379", "#61afef", "#c678dd"];
-    const labels = [`0ms`, `${Math.round(times[1])}ms`, `${Math.round(times[2])}ms`, `${Math.round(times[3])}ms`, `${Math.round(times[4])}ms`];
+    const labels = [
+      `0ms`,
+      `${Math.round(times[1])}ms`,
+      `${Math.round(times[2])}ms`,
+      `${Math.round(times[3])}ms`,
+      `${Math.round(times[4])}ms`,
+    ];
 
     times.forEach((t, i) => {
       const pct = (t / durationMs) * 100;
@@ -75,7 +81,8 @@ const meta = {
 
     // Progress bar
     const progressBar = document.createElement("div");
-    progressBar.style.cssText = "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+    progressBar.style.cssText =
+      "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
     const progressFill = document.createElement("div");
     progressFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
     progressBar.appendChild(progressFill);
@@ -105,21 +112,26 @@ const meta = {
 
     let currentAnim: ReturnType<typeof animate> | null = null;
 
-    const createKeyframes = () => animate({
-      keyframes: [
-        { at: times[0], value: 0 },
-        { at: times[1], value: 200, ease: "outQuart" },
-        { at: times[2], value: 450, ease: "outCubic" },
-        { at: times[3], value: 350, ease: "outQuart" },
-        { at: times[4], value: 630, ease: "outElastic" },
-      ],
-      onUpdate: (v) => { block.style.transform = `translateX(${v}px)`; },
-      onProgress: (p) => { progressFill.style.width = `${Math.round(p * 100)}%`; },
-      onEnded: () => {
-        playBtn.textContent = "▶ Play";
-        progressFill.style.width = "100%";
-      },
-    });
+    const createKeyframes = () =>
+      animate({
+        keyframes: [
+          { at: times[0], value: 0 },
+          { at: times[1], value: 200, ease: "outQuart" },
+          { at: times[2], value: 450, ease: "outCubic" },
+          { at: times[3], value: 350, ease: "outQuart" },
+          { at: times[4], value: 630, ease: "outElastic" },
+        ],
+        onUpdate: (v) => {
+          block.style.transform = `translateX(${v}px)`;
+        },
+        onProgress: (p) => {
+          progressFill.style.width = `${Math.round(p * 100)}%`;
+        },
+        onEnded: () => {
+          playBtn.textContent = "▶ Play";
+          progressFill.style.width = "100%";
+        },
+      });
 
     const reset = () => {
       block.style.transform = "translateX(0px)";
@@ -127,11 +139,15 @@ const meta = {
     };
 
     const play = () => {
-      if (currentAnim) { currentAnim.kill(); }
+      if (currentAnim) {
+        currentAnim.kill();
+      }
       reset();
       currentAnim = createKeyframes();
       const p = currentAnim.play();
-      void p.then(() => { currentAnim = null; });
+      void p.then(() => {
+        currentAnim = null;
+      });
       playBtn.textContent = "⏸ Pause";
     };
 
@@ -151,7 +167,10 @@ const meta = {
 
     playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
-      if (currentAnim) { currentAnim.kill(); currentAnim = null; }
+      if (currentAnim) {
+        currentAnim.kill();
+        currentAnim = null;
+      }
       reset();
       playBtn.textContent = "▶ Play";
     });

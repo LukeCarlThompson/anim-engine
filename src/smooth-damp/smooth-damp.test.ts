@@ -9,7 +9,9 @@ describe("createSmoothDamp", () => {
       from: () => 0,
       to: () => 100,
       smoothTime: 0.3,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     // Simulate frames
@@ -29,7 +31,9 @@ describe("createSmoothDamp", () => {
       from: () => 0,
       to: () => target,
       smoothTime: 0.5,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     // Simulate frames with target moving
@@ -49,7 +53,9 @@ describe("createSmoothDamp", () => {
       from: () => 0,
       to: () => 100,
       smoothTime: 1,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     getTicker().update(16);
@@ -66,7 +72,9 @@ describe("createSmoothDamp", () => {
       from: () => 0,
       to: () => 100,
       smoothTime: 0.2,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     // Let it move for 10 frames
@@ -93,7 +101,9 @@ describe("createSmoothDamp", () => {
       from: () => 0,
       to: () => 100,
       smoothTime: 0.3,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     getTicker().update(16);
@@ -113,7 +123,9 @@ describe("createSmoothDamp", () => {
       to: () => 1000,
       smoothTime: 0.1,
       maxSpeed: 10,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     // Single large frame

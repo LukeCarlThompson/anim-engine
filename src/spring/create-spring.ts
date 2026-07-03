@@ -37,8 +37,7 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   // Register immediately (auto-start)
   ticker.add(animationHandle);
 
-  const resolveValue = (v: number | (() => number)): number =>
-    typeof v === "function" ? v() : v;
+  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   const start = () => {
     if (active) return;
@@ -69,7 +68,11 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
 
     // Auto-stop when near rest (only for static targets)
     const isStatic = typeof rawTo !== "function";
-    if (isStatic && Math.abs(state.current - target) < precision && Math.abs(state.velocity) < precision) {
+    if (
+      isStatic &&
+      Math.abs(state.current - target) < precision &&
+      Math.abs(state.velocity) < precision
+    ) {
       state.current = target;
       state.velocity = 0;
       stop();
@@ -77,11 +80,22 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   }
 
   const controls: ContinuousControls<number> = {
-    start, stop, kill,
-    setCurrent: (value: number) => { state.current = value; state.velocity = 0; },
-    get currentValue() { return state.current; },
-    get velocity() { return state.velocity; },
-    get status() { return active ? "active" : "inactive"; },
+    start,
+    stop,
+    kill,
+    setCurrent: (value: number) => {
+      state.current = value;
+      state.velocity = 0;
+    },
+    get currentValue() {
+      return state.current;
+    },
+    get velocity() {
+      return state.velocity;
+    },
+    get status() {
+      return active ? "active" : "inactive";
+    },
   };
 
   return controls;

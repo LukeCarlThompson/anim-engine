@@ -15,8 +15,19 @@ export { getTicker, createTicker } from "./ticker/get-ticker";
 export { easingFunctions, EASE_NAMES, resolveEasing, cubicBezier } from "./easing/easing";
 
 // Types
-export type { AnimControls, ContinuousControls, EaseName, Status, DynamicValue } from "./shared/types";
-export type { SingleTweenOptions, Keyframe, KeyframeOptions, AnimateOptions } from "./tween/create-tween";
+export type {
+  AnimControls,
+  ContinuousControls,
+  EaseName,
+  Status,
+  DynamicValue,
+} from "./shared/types";
+export type {
+  SingleTweenOptions,
+  Keyframe,
+  KeyframeOptions,
+  AnimateOptions,
+} from "./tween/create-tween";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";

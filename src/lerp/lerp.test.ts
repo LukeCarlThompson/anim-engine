@@ -9,7 +9,9 @@ describe("createLerp", () => {
       from: () => 0,
       to: () => 100,
       rate: 2,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     for (let i = 0; i < 120; i++) {
@@ -28,7 +30,9 @@ describe("createLerp", () => {
       from: () => 0,
       to: () => target,
       rate: 3,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     for (let t = 0; t < 120; t++) {
@@ -46,7 +50,9 @@ describe("createLerp", () => {
       from: () => 0,
       to: () => 100,
       rate: 0,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     for (let i = 0; i < 30; i++) getTicker().update(16);
@@ -118,7 +124,9 @@ describe("createLerp", () => {
       from: () => 0,
       to: () => 100,
       rate: () => currentRate,
-      onUpdate: (v) => { values.push(v); },
+      onUpdate: (v) => {
+        values.push(v);
+      },
     });
 
     for (let i = 0; i < 60; i++) getTicker().update(16);

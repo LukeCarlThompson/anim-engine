@@ -8,7 +8,14 @@ beforeEach(() => {
 
 test("spring settles at target", async () => {
   const ticker = getTicker();
-  const spring = createSpring({ from: 0, to: 100, stiffness: 100, damping: 10, mass: 1, precision: 0.01 });
+  const spring = createSpring({
+    from: 0,
+    to: 100,
+    stiffness: 100,
+    damping: 10,
+    mass: 1,
+    precision: 0.01,
+  });
 
   for (let i = 0; i < 200; i++) {
     ticker.update(16);
@@ -20,7 +27,14 @@ test("spring settles at target", async () => {
 
 test("spring with high stiffness settles faster", async () => {
   const ticker = getTicker();
-  const spring = createSpring({ from: 0, to: 100, stiffness: 400, damping: 20, mass: 1, precision: 0.01 });
+  const spring = createSpring({
+    from: 0,
+    to: 100,
+    stiffness: 400,
+    damping: 20,
+    mass: 1,
+    precision: 0.01,
+  });
 
   for (let i = 0; i < 100; i++) {
     ticker.update(16);
@@ -53,8 +67,13 @@ test("start and stop control the spring", async () => {
   const ticker = getTicker();
   const values: number[] = [];
   const spring = createSpring({
-    from: 0, to: 100, stiffness: 200, damping: 15,
-    onUpdate: (v) => { values.push(Math.round(v)); },
+    from: 0,
+    to: 100,
+    stiffness: 200,
+    damping: 15,
+    onUpdate: (v) => {
+      values.push(Math.round(v));
+    },
   });
 
   ticker.update(16);

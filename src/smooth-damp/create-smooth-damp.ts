@@ -20,8 +20,7 @@ export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls
   const ticker = getTicker();
   const animationHandle = { update: onTickerUpdate };
 
-  const resolveValue = (v: number | (() => number)): number =>
-    typeof v === "function" ? v() : v;
+  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   // Initialize with starting position
   state.current = options.from();
@@ -57,11 +56,22 @@ export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls
   }
 
   const controls: ContinuousControls<number> = {
-    start, stop, kill,
-    setCurrent: (value: number) => { state.current = value; state.velocity = 0; },
-    get currentValue() { return state.current; },
-    get velocity() { return state.velocity; },
-    get status() { return active ? "active" : "inactive"; },
+    start,
+    stop,
+    kill,
+    setCurrent: (value: number) => {
+      state.current = value;
+      state.velocity = 0;
+    },
+    get currentValue() {
+      return state.current;
+    },
+    get velocity() {
+      return state.velocity;
+    },
+    get status() {
+      return active ? "active" : "inactive";
+    },
   };
 
   return controls;

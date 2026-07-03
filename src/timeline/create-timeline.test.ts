@@ -12,8 +12,24 @@ test("single keyframe at 0 plays all animations", async () => {
   let x = 0;
   let y = 0;
 
-  const a = animate({ from: 0, to: 100, durationMs: 100, ease: "linear", onUpdate: (v) => { x = v; } });
-  const b = animate({ from: 0, to: 200, durationMs: 100, ease: "linear", onUpdate: (v) => { y = v; } });
+  const a = animate({
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: (v) => {
+      x = v;
+    },
+  });
+  const b = animate({
+    from: 0,
+    to: 200,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: (v) => {
+      y = v;
+    },
+  });
 
   const tl = createTimeline({ keyframes: [{ at: 0, animations: [a, b] }] });
   const p = tl.play();
@@ -29,8 +45,24 @@ test("consecutive keyframes with gap:0 play one after another", async () => {
   const ticker = getTicker();
   const values: number[] = [];
 
-  const a = animate({ from: 0, to: 100, durationMs: 100, ease: "linear", onUpdate: (v) => { values.push(v); } });
-  const b = animate({ from: 0, to: 200, durationMs: 100, ease: "linear", onUpdate: (v) => { values.push(v); } });
+  const a = animate({
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: (v) => {
+      values.push(v);
+    },
+  });
+  const b = animate({
+    from: 0,
+    to: 200,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: (v) => {
+      values.push(v);
+    },
+  });
 
   const tl = createTimeline({
     keyframes: [
@@ -53,8 +85,24 @@ test("parallel animations in one keyframe", async () => {
   let step1 = false;
   let step2 = false;
 
-  const a = animate({ from: 0, to: 1, durationMs: 50, ease: "linear", onUpdate: (v) => { if (v >= 1) step1 = true; } });
-  const b = animate({ from: 0, to: 1, durationMs: 100, ease: "linear", onUpdate: (v) => { if (v >= 1) step2 = true; } });
+  const a = animate({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onUpdate: (v) => {
+      if (v >= 1) step1 = true;
+    },
+  });
+  const b = animate({
+    from: 0,
+    to: 1,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: (v) => {
+      if (v >= 1) step2 = true;
+    },
+  });
 
   const tl = createTimeline({ keyframes: [{ at: 0, animations: [a, b] }] });
   const p = tl.play();
@@ -70,8 +118,24 @@ test("gap between keyframes", async () => {
   const ticker = getTicker();
   const times: number[] = [];
 
-  const a = animate({ from: 0, to: 1, durationMs: 50, ease: "linear", onUpdate: () => { times.push(1); } });
-  const b = animate({ from: 0, to: 1, durationMs: 50, ease: "linear", onUpdate: () => { times.push(2); } });
+  const a = animate({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onUpdate: () => {
+      times.push(1);
+    },
+  });
+  const b = animate({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onUpdate: () => {
+      times.push(2);
+    },
+  });
 
   const tl = createTimeline({
     keyframes: [
@@ -98,8 +162,13 @@ test("negative gap for overlap", async () => {
 
   const a = animate({ from: 0, to: 100, durationMs: 100, ease: "linear" });
   const b = animate({
-    from: 0, to: 100, durationMs: 100, ease: "linear",
-    onUpdate: () => { overlapDetected = true; },
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
+    onUpdate: () => {
+      overlapDetected = true;
+    },
   });
 
   const tl = createTimeline({
@@ -124,8 +193,13 @@ test("mixed at and gap keyframes", async () => {
 
   const a = animate({ from: 0, to: 1, durationMs: 50, ease: "linear" });
   const b = animate({
-    from: 0, to: 1, durationMs: 50, ease: "linear",
-    onUpdate: () => { started = true; },
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onUpdate: () => {
+      started = true;
+    },
   });
 
   const tl = createTimeline({
@@ -179,7 +253,9 @@ test("skipToEnd completes all", async () => {
       { at: 0, animations: [a] },
       { gap: 0, animations: [b] },
     ],
-    onEnded: () => { ended = true; },
+    onEnded: () => {
+      ended = true;
+    },
   });
   const p = tl.play();
 

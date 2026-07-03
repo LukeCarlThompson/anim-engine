@@ -17,12 +17,14 @@
     "build": "npm run lint && npm run test && tsc && vite build",
     "preview": "vite preview",
     "check:types": "tsc --noEmit",
-    "lint": "eslint --config ./eslint.config.mjs",
+    "lint": "oxlint -c .oxlintrc.json src/",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "npm run lint && npm run test && storybook build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "format": "oxfmt src/",
+    "format:check": "oxfmt --check src/"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
@@ -34,8 +36,9 @@
     "@storybook/html-vite": "^8.4.5",
     "@storybook/test": "^8.4.5",
     "@tweakpane/core": "^2.0.5",
-    "eslint": "^9.15.0",
     "eslint-plugin-storybook": "^0.11.1",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
     "sass-embedded": "^1.81.0",
     "storybook": "^8.4.5",
     "tweakpane": "^4.0.5",

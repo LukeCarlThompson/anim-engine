@@ -11,12 +11,7 @@ export type LerpState = {
  * Frame-rate independent. Approaches target asymptotically:
  *   current += (target - current) * rate * deltaTime
  */
-export const lerpStep = (
-  state: LerpState,
-  target: number,
-  rate: number,
-  deltaMs: number,
-): void => {
+export const lerpStep = (state: LerpState, target: number, rate: number, deltaMs: number): void => {
   const deltaTime = deltaMs / 1000;
   state.current += (target - state.current) * rate * deltaTime;
 };

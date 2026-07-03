@@ -107,8 +107,13 @@ test("onStarted fires when playback begins", async () => {
   const ticker = getTicker();
   let startedValue = -1;
   const tween = animate({
-    from: 0, to: 100, durationMs: 100, ease: "linear",
-    onStarted: (v) => { startedValue = v; },
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
+    onStarted: (v) => {
+      startedValue = v;
+    },
   });
   const p = tween.play();
   expect(startedValue).toBe(0);
@@ -120,8 +125,13 @@ test("onEnded fires on completion", async () => {
   const ticker = getTicker();
   let endedValue = -1;
   const tween = animate({
-    from: 0, to: 100, durationMs: 100, ease: "linear",
-    onEnded: (v) => { endedValue = v; },
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
+    onEnded: (v) => {
+      endedValue = v;
+    },
   });
   const p = tween.play();
   ticker.update(100);
@@ -133,8 +143,13 @@ test("onUpdate receives correct intermediate values", async () => {
   const ticker = getTicker();
   const updates: number[] = [];
   const tween = animate({
-    from: 0, to: 100, durationMs: 1000, ease: "linear",
-    onUpdate: (v) => { updates.push(Math.round(v)); },
+    from: 0,
+    to: 100,
+    durationMs: 1000,
+    ease: "linear",
+    onUpdate: (v) => {
+      updates.push(Math.round(v));
+    },
   });
   const p = tween.play();
   ticker.update(250);
@@ -152,9 +167,14 @@ test("repeats specified number of times", async () => {
   const ticker = getTicker();
   let count = 0;
   const tween = animate({
-    from: 0, to: 100, durationMs: 100, ease: "linear",
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
     repeat: 2,
-    onUpdate: () => { count++; },
+    onUpdate: () => {
+      count++;
+    },
   });
   const p = tween.play();
   ticker.update(100);
@@ -169,9 +189,14 @@ test("delayMs delays the start", async () => {
   const ticker = getTicker();
   let started = false;
   const tween = animate({
-    from: 0, to: 100, durationMs: 100, ease: "linear",
+    from: 0,
+    to: 100,
+    durationMs: 100,
+    ease: "linear",
     delayMs: 200,
-    onStarted: () => { started = true; },
+    onStarted: () => {
+      started = true;
+    },
   });
   const p = tween.play();
 
@@ -213,7 +238,9 @@ test("keyframes with 3 points interpolates correctly", async () => {
       { at: 100, value: 100, ease: "linear" },
       { at: 200, value: 50, ease: "linear" },
     ],
-    onUpdate: (v) => { values.push(Math.round(v)); },
+    onUpdate: (v) => {
+      values.push(Math.round(v));
+    },
   });
   const p = a.play();
   ticker.update(100);

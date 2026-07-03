@@ -82,17 +82,19 @@ const meta = {
       const plotHeight = canvas.height - topPadding - bottomPadding;
 
       // Reference lines at 0 and 1
-      const y0 = canvas.height - bottomPadding - (0 - yMin) / yRange * plotHeight;
-      const y1 = canvas.height - bottomPadding - (1 - yMin) / yRange * plotHeight;
+      const y0 = canvas.height - bottomPadding - ((0 - yMin) / yRange) * plotHeight;
+      const y1 = canvas.height - bottomPadding - ((1 - yMin) / yRange) * plotHeight;
 
       ctx.strokeStyle = "#333";
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      ctx.moveTo(0, y0); ctx.lineTo(canvas.width, y0);
+      ctx.moveTo(0, y0);
+      ctx.lineTo(canvas.width, y0);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(0, y1); ctx.lineTo(canvas.width, y1);
+      ctx.moveTo(0, y1);
+      ctx.lineTo(canvas.width, y1);
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -104,7 +106,7 @@ const meta = {
         const t = x / canvas.width;
         const y = easeFn(t);
         const px = x;
-        const py = canvas.height - bottomPadding - (y - yMin) / yRange * plotHeight;
+        const py = canvas.height - bottomPadding - ((y - yMin) / yRange) * plotHeight;
         if (x === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
@@ -288,7 +290,6 @@ const meta = {
 
     return container;
   },
-
 } satisfies Meta;
 
 export default meta;

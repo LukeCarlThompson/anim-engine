@@ -38,7 +38,11 @@ type Resolve = (value: TimelineHandle) => void;
 export type Timeline = TimelineHandle;
 
 export const createTimeline = (options: TimelineOptions): TimelineHandle => {
-  const { onStarted: onStartedCallback, onProgress: onProgressCallback, onEnded: onEndedCallback } = options;
+  const {
+    onStarted,
+    onProgress,
+    onEnded,
+  } = options;
 
   // Derive batches from keyframes
   const batches: Batch[] = [];
@@ -70,10 +74,14 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     if (status === "dead") throw new Error("Cannot play a dead timeline");
     elapsedMs = 0;
     pendingAnimations = 0;
-    batches.forEach((b) => { b.started = false; });
-    const promise = new Promise<TimelineHandle>((resolve) => { resolvePromise = resolve; });
+    batches.forEach((b) => {
+      b.started = false;
+    });
+    const promise = new Promise<TimelineHandle>((resolve) => {
+      resolvePromise = resolve;
+    });
     status = "playing";
-    onStartedCallback?.();
+    onStarted?.();
     ticker.add(animationHandle);
     return promise;
   };
@@ -127,7 +135,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
         anim.skipToEnd();
       }
     }
-    onEndedCallback?.();
+    onEnded?.();
     resolvePromise?.(handle);
     resolvePromise = undefined;
   };
@@ -162,7 +170,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
       }
     }
 
-    onProgressCallback?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0);
+    onProgress?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0);
 
     if (batches.every((b) => b.started) && pendingAnimations <= 0) {
       finish();
@@ -178,7 +186,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   function finish() {
     status = "stopped";
     ticker.remove(animationHandle);
-    onEndedCallback?.();
+    onEnded?.();
     resolvePromise?.(handle);
     resolvePromise = undefined;
   }
@@ -186,9 +194,18 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   const getDurationMs = () => totalDurationMs;
 
   const handle: TimelineHandle = {
-    play, pause, resume, stop, skipToEnd, kill,
-    get progress() { return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0; },
-    get status() { return status; },
+    play,
+    pause,
+    resume,
+    stop,
+    skipToEnd,
+    kill,
+    get progress() {
+      return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0;
+    },
+    get status() {
+      return status;
+    },
     getDurationMs,
   };
 

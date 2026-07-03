@@ -20,7 +20,8 @@ const meta = {
     container.appendChild(title);
 
     const description = document.createElement("p");
-    description.textContent = "Move your mouse over the track — the block chases it with spring physics";
+    description.textContent =
+      "Move your mouse over the track — the block chases it with spring physics";
     description.style.cssText = "margin:0;color:#666;font-size:13px;";
     container.appendChild(description);
 
@@ -64,16 +65,19 @@ const meta = {
 
     // Velocity indicator
     const velocityRow = document.createElement("div");
-    velocityRow.style.cssText = "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
+    velocityRow.style.cssText =
+      "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
 
     const velocityLabel = document.createElement("span");
     velocityLabel.textContent = "velocity";
     velocityLabel.style.cssText = "min-width:60px;color:#666;";
 
     const velocityBar = document.createElement("div");
-    velocityBar.style.cssText = "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
+    velocityBar.style.cssText =
+      "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
     const velocityFill = document.createElement("div");
-    velocityFill.style.cssText = "position:absolute;top:0;left:50%;height:100%;width:0%;background:#98c379;border-radius:3px;";
+    velocityFill.style.cssText =
+      "position:absolute;top:0;left:50%;height:100%;width:0%;background:#98c379;border-radius:3px;";
     velocityBar.appendChild(velocityFill);
 
     const velocityValue = document.createElement("span");
@@ -89,9 +93,17 @@ const meta = {
     const controls = document.createElement("div");
     controls.style.cssText = "display:flex;gap:16px;align-items:center;flex-wrap:wrap;";
 
-    const makeSlider = (label: string, min: number, max: number, step: number, value: number, color: string) => {
+    const makeSlider = (
+      label: string,
+      min: number,
+      max: number,
+      step: number,
+      value: number,
+      color: string,
+    ) => {
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:#888;font-family:monospace;";
+      wrapper.style.cssText =
+        "display:flex;align-items:center;gap:8px;font-size:12px;color:#888;font-family:monospace;";
       const lbl = document.createElement("span");
       lbl.textContent = label;
       lbl.style.cssText = "min-width:60px;";
@@ -105,7 +117,9 @@ const meta = {
       const val = document.createElement("span");
       val.textContent = String(value);
       val.style.cssText = "min-width:30px;color:" + color + ";";
-      slider.addEventListener("input", () => { val.textContent = slider.value; });
+      slider.addEventListener("input", () => {
+        val.textContent = slider.value;
+      });
       wrapper.appendChild(lbl);
       wrapper.appendChild(slider);
       wrapper.appendChild(val);
@@ -145,7 +159,6 @@ const meta = {
         velocityValue.textContent = velocity.toFixed(2);
       },
     });
-
 
     // Update target on mouse move — spring auto-chases
     track.addEventListener("mousemove", (e) => {

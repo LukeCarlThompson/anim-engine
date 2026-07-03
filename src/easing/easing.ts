@@ -30,16 +30,36 @@ const bounceOut: EaseFunction = (x) => {
 /** All 31 named easing identifiers, ordered by type. */
 export const EASE_NAMES: EaseName[] = [
   "linear",
-  "inQuad", "outQuad", "inOutQuad",
-  "inCubic", "outCubic", "inOutCubic",
-  "inQuart", "outQuart", "inOutQuart",
-  "inQuint", "outQuint", "inOutQuint",
-  "inSine", "outSine", "inOutSine",
-  "inExpo", "outExpo", "inOutExpo",
-  "inCirc", "outCirc", "inOutCirc",
-  "inBack", "outBack", "inOutBack",
-  "inElastic", "outElastic", "inOutElastic",
-  "inBounce", "outBounce", "inOutBounce",
+  "inQuad",
+  "outQuad",
+  "inOutQuad",
+  "inCubic",
+  "outCubic",
+  "inOutCubic",
+  "inQuart",
+  "outQuart",
+  "inOutQuart",
+  "inQuint",
+  "outQuint",
+  "inOutQuint",
+  "inSine",
+  "outSine",
+  "inOutSine",
+  "inExpo",
+  "outExpo",
+  "inOutExpo",
+  "inCirc",
+  "outCirc",
+  "inOutCirc",
+  "inBack",
+  "outBack",
+  "inOutBack",
+  "inElastic",
+  "outElastic",
+  "inOutElastic",
+  "inBounce",
+  "outBounce",
+  "inOutBounce",
 ];
 
 export const easingFunctions: Record<EaseName, EaseFunction> = {
@@ -82,10 +102,8 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
       ? (pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
       : (pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2,
 
-  inElastic: (x) =>
-    x === 0 ? 0 : x === 1 ? 1 : -pow(2, 10 * x - 10) * sin((x * 10 - 10.75) * c4),
-  outElastic: (x) =>
-    x === 0 ? 0 : x === 1 ? 1 : pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1,
+  inElastic: (x) => (x === 0 ? 0 : x === 1 ? 1 : -pow(2, 10 * x - 10) * sin((x * 10 - 10.75) * c4)),
+  outElastic: (x) => (x === 0 ? 0 : x === 1 ? 1 : pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1),
   inOutElastic: (x) =>
     x === 0
       ? 0
@@ -113,6 +131,11 @@ export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction => {
  * Cubic bezier easing — returns (t) => t as a placeholder.
  * Full implementation deferred to post-v1.
  */
-export const cubicBezier = (_p1x: number, _p1y: number, _p2x: number, _p2y: number): EaseFunction => {
+export const cubicBezier = (
+  _p1x: number,
+  _p1y: number,
+  _p2x: number,
+  _p2y: number,
+): EaseFunction => {
   return (t: number) => t;
 };

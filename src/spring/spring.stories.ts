@@ -54,16 +54,19 @@ const meta = {
 
     // Velocity indicator
     const velocityRow = document.createElement("div");
-    velocityRow.style.cssText = "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
+    velocityRow.style.cssText =
+      "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
 
     const velocityLabel = document.createElement("span");
     velocityLabel.textContent = "velocity";
     velocityLabel.style.cssText = "min-width:60px;color:#666;";
 
     const velocityBar = document.createElement("div");
-    velocityBar.style.cssText = "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
+    velocityBar.style.cssText =
+      "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
     const velocityFill = document.createElement("div");
-    velocityFill.style.cssText = "position:absolute;top:0;left:50%;height:100%;width:0%;background:#98c379;border-radius:3px;";
+    velocityFill.style.cssText =
+      "position:absolute;top:0;left:50%;height:100%;width:0%;background:#98c379;border-radius:3px;";
     velocityBar.appendChild(velocityFill);
 
     const velocityValue = document.createElement("span");
@@ -88,7 +91,8 @@ const meta = {
 
     const resetBtn = document.createElement("button");
     resetBtn.textContent = "↺ Reset";
-    resetBtn.style.cssText = "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
+    resetBtn.style.cssText =
+      "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
 
     controls.appendChild(playBtn);
     controls.appendChild(resetBtn);
@@ -103,7 +107,9 @@ const meta = {
     };
 
     const play = () => {
-      if (spring) { spring.kill(); }
+      if (spring) {
+        spring.kill();
+      }
       reset();
 
       spring = createSpring({
@@ -148,7 +154,10 @@ const meta = {
 
     playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
-      if (spring) { spring.kill(); spring = null; }
+      if (spring) {
+        spring.kill();
+        spring = null;
+      }
       reset();
       playBtn.textContent = "▶ Play";
     });

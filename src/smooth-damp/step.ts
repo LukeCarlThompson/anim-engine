@@ -37,7 +37,7 @@ export const smoothDampStep = (
   state.current = target + (clampedChange + temp) * exp;
 
   // Prevent overshoot
-  if ((originalTo - state.current > 0) === (state.current > originalTo)) {
+  if (originalTo - state.current > 0 === state.current > originalTo) {
     state.current = originalTo;
     state.velocity = (originalTo - state.current) / deltaTime;
   }

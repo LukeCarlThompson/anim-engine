@@ -100,7 +100,9 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
       delayRemainingMs = 0;
     }
 
-    const promise = new Promise<AnimControls<number>>((resolve) => { resolvePromise = resolve; });
+    const promise = new Promise<AnimControls<number>>((resolve) => {
+      resolvePromise = resolve;
+    });
     status = "playing";
     ticker.add(animationHandle);
     if (delayRemainingMs <= 0) onStarted?.(state.currentValue);
@@ -183,19 +185,51 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
   }
 
   const controls: AnimControls<number> = {
-    play, pause, resume, stop, skipToEnd, kill,
-    get from() { return rawFrom; },
-    set from(value: number | (() => number)) { rawFrom = value; if (status === "playing") state.progress = 0; },
-    get to() { return rawTo; },
-    set to(value: number | (() => number)) { rawTo = value; if (status === "playing") state.progress = 0; },
-    get ease() { return currentEase; },
-    set ease(value: EaseName | EaseFunction) { currentEase = resolveEasing(value); },
-    setCurrent: (value: number) => { state.currentValue = value; state.velocity = 0; },
-    get currentValue() { return state.currentValue; },
-    get velocity() { return state.velocity; },
-    get progress() { return state.progress; },
-    set progress(value: number) { state.progress = Math.max(0, Math.min(1, value)); },
-    get status() { return status; },
+    play,
+    pause,
+    resume,
+    stop,
+    skipToEnd,
+    kill,
+    get from() {
+      return rawFrom;
+    },
+    set from(value: number | (() => number)) {
+      rawFrom = value;
+      if (status === "playing") state.progress = 0;
+    },
+    get to() {
+      return rawTo;
+    },
+    set to(value: number | (() => number)) {
+      rawTo = value;
+      if (status === "playing") state.progress = 0;
+    },
+    get ease() {
+      return currentEase;
+    },
+    set ease(value: EaseName | EaseFunction) {
+      currentEase = resolveEasing(value);
+    },
+    setCurrent: (value: number) => {
+      state.currentValue = value;
+      state.velocity = 0;
+    },
+    get currentValue() {
+      return state.currentValue;
+    },
+    get velocity() {
+      return state.velocity;
+    },
+    get progress() {
+      return state.progress;
+    },
+    set progress(value: number) {
+      state.progress = Math.max(0, Math.min(1, value));
+    },
+    get status() {
+      return status;
+    },
     getDurationMs: () => durationMs,
   };
 
@@ -276,7 +310,9 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     state.currentValue = segments[0].from;
     state.velocity = 0;
 
-    const promise = new Promise<AnimControls<number>>((resolve) => { resolvePromise = resolve; });
+    const promise = new Promise<AnimControls<number>>((resolve) => {
+      resolvePromise = resolve;
+    });
     status = "playing";
     ticker.add(animationHandle);
     return promise;
@@ -373,19 +409,49 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
   }
 
   const controls: AnimControls<number> = {
-    play, pause, resume, stop, skipToEnd, kill,
-    get from() { return segments[0]?.from ?? 0; },
-    set from(_v: number | (() => number)) { /* no-op */ },
-    get to() { return segments[segments.length - 1]?.to ?? 0; },
-    set to(_v: number | (() => number)) { /* no-op */ },
-    get ease() { return segments[segments.length - 1]?.easeFn ?? ((t: number) => t); },
-    set ease(_v: EaseName | EaseFunction) { /* no-op */ },
-    setCurrent: (value: number) => { state.currentValue = value; state.velocity = 0; },
-    get currentValue() { return state.currentValue; },
-    get velocity() { return state.velocity; },
-    get progress() { return state.progress; },
-    set progress(value: number) { state.progress = Math.max(0, Math.min(1, value)); },
-    get status() { return status; },
+    play,
+    pause,
+    resume,
+    stop,
+    skipToEnd,
+    kill,
+    get from() {
+      return segments[0]?.from ?? 0;
+    },
+    set from(_v: number | (() => number)) {
+      /* no-op */
+    },
+    get to() {
+      return segments[segments.length - 1]?.to ?? 0;
+    },
+    set to(_v: number | (() => number)) {
+      /* no-op */
+    },
+    get ease() {
+      return segments[segments.length - 1]?.easeFn ?? ((t: number) => t);
+    },
+    set ease(_v: EaseName | EaseFunction) {
+      /* no-op */
+    },
+    setCurrent: (value: number) => {
+      state.currentValue = value;
+      state.velocity = 0;
+    },
+    get currentValue() {
+      return state.currentValue;
+    },
+    get velocity() {
+      return state.velocity;
+    },
+    get progress() {
+      return state.progress;
+    },
+    set progress(value: number) {
+      state.progress = Math.max(0, Math.min(1, value));
+    },
+    get status() {
+      return status;
+    },
     getDurationMs: () => totalDurationMs,
   };
 

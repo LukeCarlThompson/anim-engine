@@ -19,8 +19,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
   const ticker = getTicker();
   const animationHandle = { update: onTickerUpdate };
 
-  const resolveValue = (v: number | (() => number)): number =>
-    typeof v === "function" ? v() : v;
+  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   // Initialize with starting position
   state.current = options.from();
@@ -55,11 +54,21 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
   }
 
   const controls: ContinuousControls<number> = {
-    start, stop, kill,
-    setCurrent: (value: number) => { state.current = value; },
-    get currentValue() { return state.current; },
-    get velocity() { return 0; }, // Lerp has no velocity tracking
-    get status() { return active ? "active" : "inactive"; },
+    start,
+    stop,
+    kill,
+    setCurrent: (value: number) => {
+      state.current = value;
+    },
+    get currentValue() {
+      return state.current;
+    },
+    get velocity() {
+      return 0;
+    }, // Lerp has no velocity tracking
+    get status() {
+      return active ? "active" : "inactive";
+    },
   };
 
   return controls;

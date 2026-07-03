@@ -32,7 +32,8 @@ const meta = {
     `;
 
     const floor = document.createElement("div");
-    floor.style.cssText = "position:absolute;bottom:30px;left:0;right:0;height:2px;background:#333;";
+    floor.style.cssText =
+      "position:absolute;bottom:30px;left:0;right:0;height:2px;background:#333;";
     scene.appendChild(floor);
 
     const colors = ["#e06c75", "#e5c07b", "#98c379", "#61afef"];
@@ -57,7 +58,8 @@ const meta = {
 
     // Legend
     const legend = document.createElement("div");
-    legend.style.cssText = "display:flex;gap:16px;font-size:11px;color:#888;font-family:monospace;flex-wrap:wrap;";
+    legend.style.cssText =
+      "display:flex;gap:16px;font-size:11px;color:#888;font-family:monospace;flex-wrap:wrap;";
     const timingLabels = [
       "A: at 0, outQuart",
       "B: at 0, outBounce",
@@ -77,7 +79,8 @@ const meta = {
 
     // Timeline bar
     const timeBar = document.createElement("div");
-    timeBar.style.cssText = "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+    timeBar.style.cssText =
+      "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
     const timeFill = document.createElement("div");
     timeFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
     timeBar.appendChild(timeFill);
@@ -96,28 +99,66 @@ const meta = {
 
     const resetBtn = document.createElement("button");
     resetBtn.textContent = "↺ Reset";
-    resetBtn.style.cssText = "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
+    resetBtn.style.cssText =
+      "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
 
     controls.appendChild(playBtn);
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
     // Build tweens
-    const moveA = animate({ from: 0, to: 640, durationMs: 800, ease: "outQuart", onUpdate: (v) => { els[0].style.transform = `translateX(${v}px)`; } });
-    const moveB = animate({ from: 0, to: 640, durationMs: 700, ease: "outBounce", onUpdate: (v) => { els[1].style.transform = `translateX(${v}px)`; } });
-    const moveC = animate({ from: 0, to: 640, durationMs: 1000, ease: "outElastic", onUpdate: (v) => { els[2].style.transform = `translateX(${v}px)`; } });
-    const moveD = animate({ from: 0, to: 640, durationMs: 600, ease: "inOutBack", onUpdate: (v) => { els[3].style.transform = `translateX(${v}px)`; } });
+    const moveA = animate({
+      from: 0,
+      to: 640,
+      durationMs: 800,
+      ease: "outQuart",
+      onUpdate: (v) => {
+        els[0].style.transform = `translateX(${v}px)`;
+      },
+    });
+    const moveB = animate({
+      from: 0,
+      to: 640,
+      durationMs: 700,
+      ease: "outBounce",
+      onUpdate: (v) => {
+        els[1].style.transform = `translateX(${v}px)`;
+      },
+    });
+    const moveC = animate({
+      from: 0,
+      to: 640,
+      durationMs: 1000,
+      ease: "outElastic",
+      onUpdate: (v) => {
+        els[2].style.transform = `translateX(${v}px)`;
+      },
+    });
+    const moveD = animate({
+      from: 0,
+      to: 640,
+      durationMs: 600,
+      ease: "inOutBack",
+      onUpdate: (v) => {
+        els[3].style.transform = `translateX(${v}px)`;
+      },
+    });
 
-    const resetAll = () => els.forEach((el) => { el.style.transform = "translateX(0px)"; });
+    const resetAll = () =>
+      els.forEach((el) => {
+        el.style.transform = "translateX(0px)";
+      });
 
     const timeline = createTimeline({
-        keyframes: [
-          { at: 0, animations: [moveA, moveB] },
-          { gap: 200, animations: [moveC] },
-          { gap: 200, animations: [moveD] },
-        ],
-        onProgress: (progress) => { timeFill.style.width = `${Math.round(progress * 100)}%`; },
-      });
+      keyframes: [
+        { at: 0, animations: [moveA, moveB] },
+        { gap: 200, animations: [moveC] },
+        { gap: 200, animations: [moveD] },
+      ],
+      onProgress: (progress) => {
+        timeFill.style.width = `${Math.round(progress * 100)}%`;
+      },
+    });
 
     const play = () => {
       timeline.play();
