@@ -1,21 +1,14 @@
 import type { Animation } from "../shared/types";
 
-export type TimelineKeyframe =
+export type TimelineLayer =
   | {
       at: number;
-      animations: Animation[];
+      animation: Animation | Animation[];
     }
   | {
       gap: number;
-      animations: Animation[];
+      animation: Animation | Animation[];
     };
-
-export type TimelineOptions = {
-  keyframes: TimelineKeyframe[];
-  onStarted?: () => void;
-  onProgress?: (progress: number) => void;
-  onEnded?: () => void;
-};
 
 export type Timeline = {
   play: () => Promise<Timeline>;
@@ -39,18 +32,26 @@ type Batch = {
 
 type Resolve = (value: Timeline) => void;
 
-export const createTimeline = (options: TimelineOptions): Timeline => {
-  const { onStarted, onProgress, onEnded } = options;
+export const createTimeline = (
+  layers: TimelineLayer[],
+  options?: {
+    onStarted?: () => void;
+    onProgress?: (progress: number) => void;
+    onEnded?: () => void;
+  },
+): Timeline => {
+  const { onStarted, onProgress, onEnded } = options ?? {};
 
-  // Derive batches from keyframes
+  // Derive batches from layers
   const batches: Batch[] = [];
   let lastBatchEnd = 0;
 
-  for (const keyframe of options.keyframes) {
-    const startAt = "at" in keyframe ? keyframe.at : lastBatchEnd + keyframe.gap;
-    const maxDuration = Math.max(...keyframe.animations.map((a) => a.getDurationMs()));
+  for (const layer of layers) {
+    const anims = Array.isArray(layer.animation) ? layer.animation : [layer.animation];
+    const startAt = "at" in layer ? layer.at : lastBatchEnd + layer.gap;
+    const maxDuration = Math.max(...anims.map((a) => a.getDurationMs()));
     const endAt = startAt + maxDuration;
-    batches.push({ animations: keyframe.animations, startAt, endAt, started: false });
+    batches.push({ animations: anims, startAt, endAt, started: false });
     lastBatchEnd = endAt;
   }
 

@@ -124,26 +124,32 @@ const slideIn = createAnimation({
   onUpdate: (v) => (sprite.x = v),
 });
 
-const timeline = createTimeline({
-  keyframes: [
-    { at: 0, animations: [fadeIn, slideIn] }, // both start together
-    { gap: 0.2, animations: [slideIn] }, // relative gap
-  ],
+const timeline = createTimeline([
+  { at: 0, animation: [fadeIn, slideIn] }, // both start together
+  { gap: 200, animation: slideIn }, // single animation — no array needed
+], {
   onProgress: (progress) => console.log(`overall: ${progress}`),
 });
 
 timeline.play();
 ```
 
-**Timeline options:**
+**Parameters:**
 
-| Option       | Type                 | Description                                                           |
-| ------------ | -------------------- | --------------------------------------------------------------------- |
-| `keyframes`  | `TimelineKeyframe[]` | Array of keyframes with `at` (absolute) or `gap` (relative) positions |
-| `loop`       | `boolean`            | Whether to loop the timeline                                          |
-| `onStarted`  | `() => void`         | Called when timeline begins                                           |
-| `onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                          |
-| `onEnded`    | `() => void`         | Called when timeline finishes                                         |
+```ts
+type TimelineLayer =
+  | { at: number; animation: Animation | Animation[] }
+  | { gap: number; animation: Animation | Animation[] };
+```
+
+| Parameter   | Type                 | Description                                                    |
+| ----------- | -------------------- | -------------------------------------------------------------- |
+| `layers`    | `TimelineLayer[]`    | Array of layers with `at` (absolute) or `gap` (relative) start |
+| `options.onStarted`  | `() => void` | Called when timeline begins                                    |
+| `options.onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                   |
+| `options.onEnded`    | `() => void` | Called when timeline finishes                                  |
+
+`gap` is relative to the end of all animations in the previous layer. Pass a single `Animation` or an array for parallel animations within the layer.
 
 ### Continuous primitives
 
@@ -351,7 +357,7 @@ The function is called every frame inside the ticker update — no getter/setter
 | Export                            | Description                         |
 | --------------------------------- | ----------------------------------- |
 | `createAnimation(options)`        | Timed or keyframe animation         |
-| `createTimeline(options)`         | Composited timeline of animations   |
+| `createTimeline(layers, options?)` | Composited timeline of animations   |
 | `createSpring(options)`           | Physics spring (Verlet integration) |
 | `createSmoothDamp(options)`       | Unity-style smooth damp             |
 | `createLerp(options)`             | Exponential lerp chase              |
@@ -375,8 +381,7 @@ The function is called every frame inside the ticker update — no getter/setter
 | `SingleTweenOptions` | `from`, `to`, `durationMs`, `ease`, `delay`, `repeat`, `yoyo`                                                          |
 | `KeyframeOptions`    | `keyframes: Keyframe[]`                                                                                                |
 | `Keyframe`           | `{ at, value, ease? }`                                                                                                 |
-| `TimelineOptions`    | `keyframes: TimelineKeyframe[]`, `loop?`, `onStarted?`, `onProgress?`, `onEnded?`                                      |
-| `TimelineKeyframe`   | `{ at?: number, gap?: number, animations }`                                                                            |
+| `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`          |
 | `SpringOptions`      | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                 |
 | `SmoothDampOptions`  | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                    |
 | `LerpOptions`        | `from`, `to`, `rate`, `onUpdate`                                                                                       |

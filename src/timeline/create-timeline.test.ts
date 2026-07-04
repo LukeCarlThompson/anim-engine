@@ -32,7 +32,7 @@ test("single keyframe at 0 plays all animations", async () => {
     },
   });
 
-  const tl = createTimeline({ keyframes: [{ at: 0, animations: [a, b] }] });
+  const tl = createTimeline([{ at: 0, animation: [a, b] }]);
   const p = tl.play();
 
   ticker.update(100);
@@ -65,12 +65,10 @@ test("consecutive keyframes with gap:0 play one after another", async () => {
     },
   });
 
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { gap: 0, animations: [b] },
-    ],
-  });
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 0, animation: [b] },
+  ]);
   const p = tl.play();
 
   ticker.update(100);
@@ -105,7 +103,7 @@ test("parallel animations in one keyframe", async () => {
     },
   });
 
-  const tl = createTimeline({ keyframes: [{ at: 0, animations: [a, b] }] });
+  const tl = createTimeline([{ at: 0, animation: [a, b] }]);
   const p = tl.play();
 
   ticker.update(100);
@@ -138,12 +136,10 @@ test("gap between keyframes", async () => {
     },
   });
 
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { gap: 100, animations: [b] },
-    ],
-  });
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 100, animation: [b] },
+  ]);
   const p = tl.play();
 
   ticker.update(50);
@@ -172,12 +168,10 @@ test("negative gap for overlap", async () => {
     },
   });
 
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { gap: -50, animations: [b] },
-    ],
-  });
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: -50, animation: [b] },
+  ]);
   const p = tl.play();
 
   ticker.update(80);
@@ -203,12 +197,10 @@ test("mixed at and gap keyframes", async () => {
     },
   });
 
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { at: 100, animations: [b] },
-    ],
-  });
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { at: 100, animation: [b] },
+  ]);
   const p = tl.play();
 
   ticker.update(50);
@@ -225,7 +217,7 @@ test("pause and resume", async () => {
   const ticker = getTicker();
 
   const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
-  const tl = createTimeline({ keyframes: [{ at: 0, animations: [a] }] });
+  const tl = createTimeline([{ at: 0, animation: [a] }]);
   const p = tl.play();
 
   ticker.update(100);
@@ -249,15 +241,17 @@ test("skipToEnd completes all", async () => {
 
   const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
   const b = createAnimation({ from: 0, to: 200, durationMs: 300, ease: "linear" });
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { gap: 0, animations: [b] },
+  const tl = createTimeline(
+    [
+      { at: 0, animation: [a] },
+      { gap: 0, animation: [b] },
     ],
-    onEnded: () => {
-      ended = true;
+    {
+      onEnded: () => {
+        ended = true;
+      },
     },
-  });
+  );
   const p = tl.play();
 
   ticker.update(50);
@@ -271,7 +265,7 @@ test("skipToEnd completes all", async () => {
 
 test("kill prevents replay", async () => {
   const a = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
-  const tl = createTimeline({ keyframes: [{ at: 0, animations: [a] }] });
+  const tl = createTimeline([{ at: 0, animation: [a] }]);
   void tl.play();
 
   tl.kill();
@@ -285,12 +279,10 @@ test("getDurationMs returns total timeline length", () => {
   const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
   const b = createAnimation({ from: 0, to: 100, durationMs: 300, ease: "linear" });
 
-  const tl = createTimeline({
-    keyframes: [
-      { at: 0, animations: [a] },
-      { gap: 100, animations: [b] },
-    ],
-  });
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 100, animation: [b] },
+  ]);
 
   expect(tl.getDurationMs()).toBe(200 + 100 + 300);
 });

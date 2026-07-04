@@ -26,6 +26,6 @@ export type { Animation, Interpolation, EaseName, Status, DynamicValue } from ".
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
-export type { TimelineKeyframe, TimelineOptions, Timeline } from "./timeline/create-timeline";
+export type { TimelineLayer, Timeline } from "./timeline/create-timeline";
 export type { RgbaTuple } from "./color/lerp-oklab";
 export type { TickerControls } from "./ticker/ticker";

@@ -149,16 +149,18 @@ const meta = {
         el.style.transform = "translateX(0px)";
       });
 
-    const timeline = createTimeline({
-      keyframes: [
-        { at: 0, animations: [moveA, moveB] },
-        { gap: 200, animations: [moveC] },
-        { gap: 200, animations: [moveD] },
+    const timeline = createTimeline(
+      [
+        { at: 0, animation: [moveA, moveB] },
+        { gap: 200, animation: [moveC] },
+        { gap: 200, animation: [moveD] },
       ],
-      onProgress: (progress) => {
-        timeFill.style.width = `${Math.round(progress * 100)}%`;
+      {
+        onProgress: (progress) => {
+          timeFill.style.width = `${Math.round(progress * 100)}%`;
+        },
       },
-    });
+    );
 
     const play = () => {
       timeline.play();
