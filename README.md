@@ -265,12 +265,15 @@ Perceptually uniform Oklab interpolation — avoids muddy brown midpoints that R
 
 Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
 
-| Benchmark                                | anim-engine  | GSAP         | Ratio        |
-| ---------------------------------------- | ------------ | ------------ | ------------ |
-| **Single tween** (1000 frames)           | 41,936 ops/s | 10,880 ops/s | 3.85× faster |
-| **Keyframe** (3 segments, 1000 frames)   | 34,690 ops/s | 3,566 ops/s  | 9.73× faster |
-| **50 concurrent tweens** (500 frames)    | 1,114 ops/s  | 468 ops/s    | 2.38× faster |
-| **50 concurrent keyframes** (500 frames) | 1,052 ops/s  | 174 ops/s    | 6.06× faster |
+| Benchmark                                       | anim-engine  | GSAP         | Ratio        |
+| ----------------------------------------------- | ------------ | ------------ | ------------ |
+| **Single tween** (cubic, 1000 frames)           | 42,533 ops/s | 10,654 ops/s | 3.99× faster |
+| **Single tween** (linear, 1000 frames)          | 30,576 ops/s | 16,721 ops/s | 1.83× faster |
+| **Keyframe** (3 segments, 1000 frames)          | 35,185 ops/s | 3,573 ops/s  | 9.85× faster |
+| **50 concurrent tweens** (500 frames)           | 961 ops/s    | 468 ops/s    | 2.05× faster |
+| **50 concurrent keyframes** (500 frames)        | 1,060 ops/s  | 171 ops/s    | 6.22× faster |
+
+Easing functions are matched between libraries (cubic = GSAP `power2`). The linear benchmark strips out easing computation to show pure framework overhead.
 
 Run locally: `npm run bench`
 

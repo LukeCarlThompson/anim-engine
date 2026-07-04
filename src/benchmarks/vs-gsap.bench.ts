@@ -63,9 +63,36 @@ describe("single tween (1000 frames to completion)", () => {
 
   bench("gsap", () => {
     const target = { x: 0 };
-    gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: "power3.out" });
+    gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: "power2.out" });
     advanceGSAPFrames(SINGLE_FRAMES);
     // tween auto-completes
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  LINEAR SINGLE TWEEN — no easing overhead
+// ═══════════════════════════════════════════════════
+
+describe("linear single tween (1000 frames to completion)", () => {
+  bench("anim-engine", () => {
+    const target = { x: 0 };
+    const a = createAnimation({
+      from: 0,
+      to: 100,
+      durationMs: SINGLE_DURATION_MS,
+      ease: "linear",
+      onUpdate: (v) => {
+        target.x = v;
+      },
+    });
+    a.play();
+    advanceAnimEngineFrames(SINGLE_FRAMES);
+  });
+
+  bench("gsap", () => {
+    const target = { x: 0 };
+    gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: "none" });
+    advanceGSAPFrames(SINGLE_FRAMES);
   });
 });
 
@@ -97,7 +124,7 @@ describe("keyframe animation (3 segments, 1000 frames to completion)", () => {
     const target = { x: 0 };
     const d = SINGLE_DURATION_MS / 1000;
     const tl = gsap.timeline();
-    tl.to(target, { x: 50, duration: d * 0.3, ease: "power3.out" }, 0)
+    tl.to(target, { x: 50, duration: d * 0.3, ease: "power2.out" }, 0)
       .to(target, { x: 80, duration: d * 0.4, ease: "power1.inOut" }, d * 0.3)
       .to(target, { x: 100, duration: d * 0.3, ease: "power2.out" }, d * 0.7);
     advanceGSAPFrames(SINGLE_FRAMES);
