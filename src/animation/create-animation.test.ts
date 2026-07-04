@@ -269,37 +269,35 @@ test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue 
   expect(tween.currentValue).toBeLessThan(90);
 });
 
-test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and playback starts after the delay", async () => {
-  // GIVEN
+test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like a delayed tween", async () => {
+  // GIVEN — hold at 0 for 200ms, then animate to 100 over 100ms
   const ticker = getTicker();
-  let started = false;
   const tween = createAnimation({
-    from: 0,
-    to: 100,
-    durationMs: 100,
-    ease: "linear",
-    delayMs: 200,
-    onStarted: () => {
-      started = true;
-    },
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 200, value: 0, ease: "linear" },
+      { at: 300, value: 100, ease: "linear" },
+    ],
   });
   const p = tween.play();
 
-  // WHEN — advance 100ms (before delay ends)
+  // WHEN — advance 100ms (during hold)
   ticker.update(100);
 
-  // THEN — not yet started
-  expect(started).toBe(false);
+  // THEN — still at start
   expect(tween.currentValue).toBe(0);
 
-  // WHEN — advance another 100ms (delay expires)
+  // WHEN — advance to hold boundary (200ms)
   ticker.update(100);
 
-  // THEN — started
-  expect(started).toBe(true);
+  // WHEN — one more tick into the animation segment
+  ticker.update(20);
+
+  // THEN — should now be mid-animation (20ms into the 0→100 segment)
+  expect(tween.currentValue).toBeGreaterThan(0);
 
   // WHEN — complete
-  ticker.update(100);
+  ticker.update(80);
   await p;
 
   // THEN — reaches end value

@@ -30,6 +30,7 @@
     "prepublishOnly": "npm run build",
     "bench": "vitest bench src/benchmarks/ --run",
     "bench:baseline": "vitest bench src/benchmarks/ --run --outputJson baselines/benchmark.json",
+    "bench:compare": "vitest bench src/benchmarks/ --run --compare baselines/benchmark.json",
     "format": "oxfmt src/",
     "format:check": "oxfmt --check src/",
     "fmt": "oxfmt src/"

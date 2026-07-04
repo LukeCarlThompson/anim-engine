@@ -12,9 +12,8 @@ type ResolveFunction = (value: Animation) => void;
 export type SingleTweenOptions = {
   from: DynamicValue;
   to: DynamicValue;
-  durationMs: number;
+  durationMs: DynamicValue;
   ease?: EaseName | EaseFunction;
-  delayMs?: number;
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
@@ -50,33 +49,25 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 
 const createSingleTween = (options: SingleTweenOptions): Animation => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
-  const delayMs = options.delayMs ?? 0;
-  const { onStarted, onUpdate, onEnded, durationMs } = options;
+  const { onStarted, onUpdate, onEnded } = options;
 
   let rawFrom: number | (() => number) = options.from;
   let rawTo: number | (() => number) = options.to;
+  const rawDurationMs: DynamicValue = options.durationMs;
+  let cachedDurationMs: number = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
 
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
-  let delayRemainingMs = 0;
-  let pendingStart = false;
 
   const ticker = getTicker();
 
   const update = (deltaMs: number) => {
     if (stopped) return;
-    if (pendingStart) {
-      delayRemainingMs -= deltaMs;
-      if (delayRemainingMs > 0) return;
-      pendingStart = false;
-      onStarted?.();
-      deltaMs = -delayRemainingMs;
-    }
     const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
     const to = typeof rawTo === "function" ? rawTo() : rawTo;
-    const completed = updateTween(state, deltaMs, durationMs, currentEase, from, to);
+    const completed = updateTween(state, deltaMs, cachedDurationMs, currentEase, from, to);
     onUpdate?.(state.currentValue, state.velocity);
     if (completed) handleCompletion();
   };
@@ -91,20 +82,14 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     state.currentValue = initFrom;
     state.velocity = 0;
 
-    if (delayMs > 0) {
-      delayRemainingMs = delayMs;
-      pendingStart = true;
-    } else {
-      pendingStart = false;
-      delayRemainingMs = 0;
-    }
+    cachedDurationMs = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
 
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
     ticker.add(update);
-    if (delayRemainingMs <= 0) onStarted?.();
+    onStarted?.();
     return promise;
   };
 
@@ -192,7 +177,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       return status;
     },
     get durationMs() {
-      return durationMs;
+      return cachedDurationMs;
     },
   };
 
