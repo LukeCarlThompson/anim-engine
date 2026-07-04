@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/tween-machine/**/*.ts"],
-  "exclude": ["**/*.tweakpane.**", "**/*.test.**", "**/*.stories.**"]
+  "include": ["src"],
+  "exclude": ["**/*.test.**", "**/*.stories.**"]
 }

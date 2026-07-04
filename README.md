@@ -1,169 +1,639 @@
-<a id="readme-top"></a>
+# anim-engine
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <a href="https://github.com/LukeCarlThompson/anim-engine">
-    <img src="public/logo.png" alt="Logo" width="80" height="80">
-  </a>
+**Renderer-agnostic animation for JavaScript runtimes.** A fast, lightweight, pure-numeric animation engine.
 
-<h3 align="center">Anim Engine</h3>
+- [Getting started](#getting-started)
+- [Design](#design)
+- [Key advantages](#key-advantages)
+- [Primitives](#primitives)
+- [Usage](#usage)
+  - [createAnimation (tween)](#createanimation)
+  - [createAnimation (keyframes)](#keyframes)
+  - [Re-playing and sequencing](#re-playing-and-sequencing)
+  - [createTimeline](#createtimeline)
+  - [Continuous primitives](#continuous-primitives)
+  - [createSmoothClamp](#createsmoothclamp)
+  - [Color](#color)
+- [Ticker](#ticker)
+- [Easing](#easing)
+- [Dynamic values](#dynamic-values)
+- [Benchmarks](#benchmarks)
+- [Game engine integration](#game-engine-integration)
+- [API Reference](#api-reference)
+- [License](#license)
 
-  <p align="center">
-    A renderer agnostic animation toolkit for making awesome animations and smooth interactions.
-    <br />
-    <a href="https://github.com/LukeCarlThompson/anim-engine"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/LukeCarlThompson/anim-engine">View Demo</a>
-    ·
-    <a href="https://github.com/LukeCarlThompson/anim-engine/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/LukeCarlThompson/anim-engine/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-  </p>
-</div>
+## Getting started
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+```sh
+npm install anim-engine
+```
 
-<!-- ABOUT THE PROJECT -->
+ESM only. Tree-shakeable — import only what you use.
 
-## About The Project
+```ts
+import { createAnimation, getTicker } from "anim-engine";
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+// The ticker drives all animations. Start it once.
+getTicker().start();
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+const anim = createAnimation({
+  from: 0,
+  to: 100,
+  durationMs: 1000,
+  ease: "outCubic",
+  onUpdate: (value) => (sprite.x = value),
+});
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+await anim.play();
+```
 
-<!-- GETTING STARTED -->
+## Design
 
-## Getting Started
+Anim Engine is built around three simple mental models that compose naturally:
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+- **Animation** — a timed tween from value A to value B with easing and delay. The atomic unit of motion.
+- **Keyframes** — multi-segment interpolation that describes what a single value does over time, with per-segment easing and millisecond timing.
+- **Timeline** — orchestration of multiple animations running in parallel, sequence, or staggered offset. Composes tweens and keyframes.
 
-### Prerequisites
+Beyond timed animation, the engine provides **continuous primitives** — spring physics, smooth damp, and exponential lerp — for natural, target-chasing motion without a fixed duration.
 
-This is an example of how to list things you need to use the software and how to install them.
+### Why numbers only?
 
-- npm
-  ```sh
-  npm install npm@latest -g
-  ```
+By restricting itself to numeric values, the engine eliminates string parsing, color-space branching, and transform-matrix overhead. You get a minimal surface area that is easy to optimise, tree-shake, reason about and fit into any renderer. Color interpolation (Oklab) is provided as a pure function — you compose it yourself into an `onUpdate` callback.
 
-### Installation
+## Key advantages
 
-1. Get a free API Key at [https://example.com](https://example.com)
-1. Clone the repo
-   ```sh
-   git clone https://github.com/github_username/repo_name.git
-   ```
-1. Install NPM packages
-   ```sh
-   npm install
-   ```
-1. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
-   ```
+|                              |                                                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ⚡ **Fast**                  | 1.7–9.9× faster than GSAP across tweens, keyframes, and concurrent animations (see [benchmarks](#benchmarks)). |
+| 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                             |
+| 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.         |
+| 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                  |
+| 🧩 **Composable models**     | Animations, keyframes, and timelines compose cleanly — put tweens inside timelines, nest keyframes anywhere.   |
+| 🔄 **Continuous primitives** | Spring, smooth damp, and lerp chase live targets with zero setup — pass `() => value` for dynamic targets.     |
+| 🚫 **No GC pressure**        | Zero object allocations in hot update paths. State is mutated in place.                                        |
+| 🎨 **Perceptual color**      | Oklab interpolation via `lerpOklab` — no muddy browns. Compose it into any `onUpdate`.                         |
+| 📐 **TypeScript-first**      | Full type exports, exhaustive discriminated unions, no `any`.                                                  |
+| 🔧 **Ticker control**        | Bring your own game loop or use the built-in rAF ticker. Explicit — never auto-starts.                         |
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Primitives
 
-<!-- USAGE EXAMPLES -->
+### Timed (return `Animation`)
+
+| Primitive                                   | Returns      | Description                                              |
+| ------------------------------------------- | ------------ | -------------------------------------------------------- |
+| [`createAnimation`](#createanimation)       | `Animation`  | Timed tween from A to B with easing and delay |
+| [`createAnimation` (keyframes)](#keyframes) | `Animation`  | Multi-segment interpolation with per-segment easing      |
+| [`createTimeline`](#createtimeline)         | `Timeline`   | Orchestrate multiple animations on a shared timeline     |
+
+Animations have `play()`/`pause()`/`resume()`/`stop()`/`skipToEnd()`/`kill()` controls, return a `Promise` from `play()`, and emit `onUpdate`/`onEnded`/`onProgress` callbacks.
+
+### Continuous (return `Interpolation`)
+
+| Primitive                               | Returns         | Description                                          |
+| --------------------------------------- | --------------- | ---------------------------------------------------- |
+| [`createSpring`](#createspring)         | `Interpolation` | Physics-based spring (Verlet integration)            |
+| [`createSmoothDamp`](#createsmoothdamp) | `Interpolation` | Unity-style smooth damp, parameter-free chase        |
+| [`createLerp`](#createlerp)             | `Interpolation` | First-order exponential chase, single rate parameter |
+
+Interpolations have `start()`/`stop()`/`kill()` controls, auto-start on creation, and chase a target without a fixed duration. No promise — they run until stopped.
+
+### Utility
+
+| Primitive                                 | Returns              | Description                                   |
+| ----------------------------------------- | -------------------- | --------------------------------------------- |
+| [`createSmoothClamp`](#createsmoothclamp) | `(n: number) => n`   | Asymptotic clamp — saturates toward threshold |
+| [`lerpOklab` / `hexToRgba`](#color)       | `RgbaTuple` / parser | Perceptually uniform color interpolation      |
 
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+### createAnimation
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+Animate a single value from `from` to `to` over `durationMs`.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+```ts
+import { createAnimation } from "anim-engine";
 
-<!-- ROADMAP -->
+const anim = createAnimation({
+  from: 0,
+  to: 100,
+  durationMs: 2000,
+  ease: "outElastic",
+  onUpdate: (value, velocity) => {
+    sprite.x = value;
+  },
+  onEnded: () => console.log("done"),
+});
 
-## Roadmap
+// Promise-based control
+await anim.play(); // plays, resolves when done
+anim.pause();
+anim.resume();
+anim.stop(); // resets to start
+anim.skipToEnd(); // jumps to end, resolves promise
+```
 
-- [ ] Set the current progress on a sequence
-- [ ] Animate an array of values
-- [ ] Ability to repeat an animation a set number of times
-- [ ] Ability to repeat an animation forwards and backwards a set number of times
-- [ ] Sequence steps to be able to overlap
-- [ ] Sequence steps to be able to automatically pause with a provided option
-- [ ] Include a variety of interpolation functions
-- [ ] Include a cubic bezier ease function
-- [ ] Finish the readme
-- [ ] Documentation
-- [ ] Available on NPM
-- [ ] Demo page
-- [ ] Demos with DOM elements
-- [ ] Demos with Pixi objects
-- [ ] Demos with ThreeJs objects
+**Single-tween options:**
 
-See the [open issues](https://github.com/LukeCarlThompson/anim-engine/issues) for a full list of proposed features (and known issues).
+| Option       | Type                                         | Default     | Description                                                  |
+| ------------ | -------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `from`       | `number \| () => number`                     | —           | Start value (static or dynamic)                              |
+| `to`         | `number \| () => number`                     | —           | End value (static or dynamic)                                |
+| `durationMs` | `number`                                     | —           | Duration in milliseconds                                     |
+| `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"` | Easing function or name                                    |
+| `delayMs`    | `number`                                     | `0`         | Delay before starting                                        |
+| `onStarted`  | `() => void`                                | —           | Called when animation begins (after delay)                   |
+| `onUpdate`   | `(value: number, velocity: number) => void`  | —           | Called every frame with current value and velocity (units/s) |
+| `onEnded`    | `() => void`                                | —           | Called when animation completes                              |
+**Returns:** `Animation`
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Keyframes
 
-<!-- CONTRIBUTING -->
+Multi-segment animation with per-keyframe easing. The last keyframe's `at` value determines total duration. Mutually exclusive with `from`/`to`/`durationMs`.
 
-## Contributing
+```ts
+import { createAnimation } from "anim-engine";
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+const anim = createAnimation({
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: 300, value: 50, ease: "outCubic" },
+    { at: 700, value: 80, ease: "inOutQuad" },
+    { at: 1000, value: 100 },
+  ],
+  onUpdate: (value) => (sprite.x = value),
+  onProgress: (progress) => console.log(`${Math.round(progress * 100)}%`),
+});
+```
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the total duration (1000ms in this example). If no `ease` is specified, the previous segment's ease carries forward.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/my-new-feature`)
-3. Commit your Changes (`git commit -m 'Add my awesome feature'`)
-4. Push to the Branch (`git push origin feature/my-new-feature`)
-5. Open a Pull Request
+**Keyframe options:**
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+| Option       | Type                                        | Description                                               |
+| ------------ | ------------------------------------------- | --------------------------------------------------------- |
+| `keyframes`  | `Keyframe[]`                                | Array of `{ at, value, ease? }` keyframes                 |
+| `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity        |
+| `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress               |
+| `onEnded`    | `() => void`                               | Called when the keyframe animation completes              |
 
-<!-- LICENSE -->
+**Returns:** `Animation`
+
+### Re-playing and sequencing
+
+Since `play()` can be called again after a tween completes, repeat and yoyo patterns are built from the public API rather than baked into the engine:
+
+```ts
+import { createAnimation } from "anim-engine";
+
+const anim = createAnimation({
+  from: 1,
+  to: 1.3,
+  durationMs: 600,
+  ease: "inOutSine",
+  onUpdate: (scale) => sprite.scale.set(scale),
+});
+
+// Repeat — just call play() again
+for (let i = 0; i < 3; i++) {
+  await anim.play();
+}
+
+// Yoyo — swap from/to via dynamic accessors and re-play
+let forward = true;
+const bounce = createAnimation({
+  from: () => (forward ? 1 : 1.3),
+  to: () => (forward ? 1.3 : 1),
+  durationMs: 600,
+  ease: "inOutSine",
+  onUpdate: (v) => sprite.scale.set(v),
+});
+
+for (let i = 0; i < 6; i++) {
+  forward = !forward;
+  await bounce.play();
+}
+```
+
+For more complex sequences, use `createTimeline`:
+
+```ts
+import { createAnimation, createTimeline } from "anim-engine";
+
+const fadeIn = createAnimation({ from: 0, to: 1, durationMs: 300 });
+const fadeOut = createAnimation({ from: 1, to: 0, durationMs: 300 });
+
+const flash = createTimeline([
+  { at: 0, animation: fadeIn },
+  { gap: 0, animation: fadeOut },
+]);
+await flash.play();
+```
+
+
+### createTimeline
+
+Compose multiple animations on a shared timeline with `at` or `gap` positions.
+
+```ts
+import { createAnimation, createTimeline } from "anim-engine";
+
+const fadeIn = createAnimation({
+  from: 0,
+  to: 1,
+  durationMs: 500,
+  onUpdate: (v) => (sprite.alpha = v),
+});
+
+const slideIn = createAnimation({
+  from: -100,
+  to: 0,
+  durationMs: 800,
+  ease: "outBack",
+  onUpdate: (v) => (sprite.x = v),
+});
+
+const timeline = createTimeline(
+  [
+    { at: 0, animation: [fadeIn, slideIn] },
+    { gap: 200, animation: slideIn },
+  ],
+  {
+    onProgress: (progress) => console.log(`overall: ${progress}`),
+  },
+);
+
+timeline.play();
+```
+
+**Parameters:**
+
+```ts
+type TimelineLayer =
+  | { at: number; animation: Animation | Animation[] }
+  | { gap: number; animation: Animation | Animation[] };
+```
+
+| Parameter            | Type                 | Description                                                    |
+| -------------------- | -------------------- | -------------------------------------------------------------- |
+| `layers`             | `TimelineLayer[]`    | Array of layers with `at` (absolute) or `gap` (relative) start |
+| `options.onStarted`  | `() => void`         | Called when timeline begins                                    |
+| `options.onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                   |
+| `options.onEnded`    | `() => void`         | Called when timeline finishes                                  |
+
+`gap` is relative to the end of all animations in the previous layer. Pass a single `Animation` or an array for parallel animations within the layer.
+
+### Continuous primitives
+
+Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a target. They return `Interpolation` (no `play`/`pause`/`promise`).
+
+#### createSpring
+
+```ts
+import { createSpring } from "anim-engine";
+
+const spring = createSpring({
+  to: () => 100,
+  stiffness: 180,
+  damping: 12,
+  mass: 1,
+  precision: 0.01,
+  onUpdate: (value, velocity) => {
+    sprite.x = value;
+  },
+});
+
+spring.setCurrentValue(0); // jump to start — spring chases back to 100
+
+// Dynamic target — mouse chase
+const targetX = { value: 0 };
+document.addEventListener("mousemove", (e) => {
+  targetX.value = e.clientX;
+});
+
+const follower = createSpring({
+  to: () => targetX.value, // re-read every frame
+  stiffness: 200,
+  damping: 15,
+  onUpdate: (v) => (sprite.x = v),
+});
+```
+
+All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => number)` — resolved every frame.
+
+**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrentValue(value)`, `currentValue`, `velocity`, `status`. Starts at the `to()` value. Use `setCurrentValue(value)` to jump elsewhere.
+
+#### createSmoothDamp
+
+```ts
+import { createSmoothDamp } from "anim-engine";
+
+const damp = createSmoothDamp({
+  to: () => 100,
+  smoothTimeMs: 300,
+  maxSpeed: Infinity,
+  onUpdate: (value, velocity) => (sprite.x = value),
+});
+
+damp.setCurrentValue(0); // jump to start — damp chases back to 100
+```
+
+Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTimeMs` (milliseconds to reach target).
+
+**Returns:** `Interpolation`
+
+#### createLerp
+
+```ts
+import { createLerp } from "anim-engine";
+
+const lerp = createLerp({
+  to: () => 100,
+  smoothTimeMs: 300, // ms to reach target
+  onUpdate: (value, velocity) => (sprite.x = value),
+});
+
+lerp.setCurrentValue(0); // jump to start — lerp chases back to 100
+```
+
+First-order exponential approach: `value += (target - value) * rate * deltaTime`. `smoothTimeMs` is the approximate time in milliseconds to reach the target. Frame-rate independent.
+
+**Returns:** `Interpolation`
+
+### createSmoothClamp
+
+```ts
+import { createSmoothClamp } from "anim-engine";
+
+const clamp = createSmoothClamp(45); // threshold = 45 units/s
+
+const result = clamp(1000); // → ~44.96 (approaches 45 asymptotically)
+const result2 = clamp(-500); // → ~-44.96 (symmetric)
+```
+
+Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns a function `(value: number) => number` with a `setCurrentValue(0)` method to reset position.
+
+### Color
+
+Perceptually uniform Oklab interpolation. Straight RGB lerp produces muddy transitions — red→green goes through brown, blue→yellow goes through grey. Oklab matches human perception: equal steps look like equal changes.
+
+```ts
+import { lerpOklab, hexToRgba } from "anim-engine";
+
+hexToRgba("#ff6b6b");  // → [1, 0.42, 0.42, 1]
+hexToRgba("#f80");      // → [1, 0.533, 0, 1] (shorthand)
+hexToRgba("#ff804080"); // → [1, 0.502, 0.251, 0.502] (with alpha)
+
+const fromColor = hexToRgba("#ff6b6b");
+const toColor = hexToRgba("#4ecdc4");
+
+createAnimation({
+  from: 0,
+  to: 1,
+  durationMs: 2000,
+  ease: "outCubic",
+  onUpdate: (t) => {
+    const [r, g, b, a] = lerpOklab(fromColor, toColor, t);
+    sprite.setColor(r, g, b, a);
+  },
+});
+```
+
+**With continuous primitives** — drive the blend factor via spring, damp, or lerp:
+
+```ts
+import { createSpring, lerpOklab, hexToRgba } from "anim-engine";
+
+const fromColor = hexToRgba("#ff6b6b");
+const toColor = hexToRgba("#4ecdc4");
+
+const spring = createSpring({
+  from: 0,
+  to: () => (isHovered ? 1 : 0),
+  stiffness: 180,
+  damping: 12,
+  onUpdate: (t) => {
+    const [r, g, b] = lerpOklab(fromColor, toColor, t);
+    sprite.setColor(r, g, b, 1);
+  },
+});
+```
+
+See [`src/color/README.md`](src/color/README.md) for the full Oklab reference including color-space internals.
+
+## Ticker
+
+The ticker does **not** auto-start. You must explicitly call `start()` (for rAF) or `update(deltaMs)` (for custom game loops) to drive animations.
+
+Primitives register themselves with the ticker on creation — no manual registration needed.
+
+**Standalone (rAF):** `getTicker().start()` uses its own `requestAnimationFrame` loop. Best for DOM-based demos or when you don't have a game loop.
+
+```ts
+import { getTicker, createAnimation } from "anim-engine";
+
+getTicker().start(); // starts the rAF loop — call once
+
+createAnimation({
+  from: 0,
+  to: 100,
+  durationMs: 2000,
+  ease: "outElastic",
+  onUpdate: (v) => (sprite.x = v),
+}).play();
+```
+
+**Custom game loop:** Call `getTicker().update(deltaMs)` from your own loop. Syncs to PixiJS ticker, ThreeJS `requestAnimationFrame`, or a fixed-step physics loop.
+
+```ts
+import { getTicker } from "anim-engine";
+
+const animEngineTicker = getTicker();
+
+// Call once per frame from your game loop
+function gameLoop(deltaMs: number) {
+  animEngineTicker.update(deltaMs);
+  // ... physics, rendering
+}
+```
+
+**Stop:** Call `getTicker().stop()` or `animEngineTicker.stop()` to clean up the rAF loop.
+
+## Easing
+
+31 Penner easing functions plus custom cubic bezier:
+
+```ts
+import { cubicBezier, EASE_NAMES } from "anim-engine";
+
+const customEase = cubicBezier(0.25, 0.1, 0.25, 1); // custom easing function
+
+// Use it anywhere you'd use an ease name
+const anim = createAnimation({
+  from: 0,
+  to: 100,
+  durationMs: 1000,
+  ease: customEase,
+  onUpdate: (v) => (sprite.x = v),
+});
+```
+
+You can pass the result directly to any `ease` option — it's an `EaseFunction`, just like the named presets.
+
+**Supported ease names:** `linear`, `inQuad`, `outQuad`, `inOutQuad`, `inCubic`, `outCubic`, `inOutCubic`, `inQuart`, `outQuart`, `inOutQuart`, `inQuint`, `outQuint`, `inOutQuint`, `inSine`, `outSine`, `inOutSine`, `inExpo`, `outExpo`, `inOutExpo`, `inCirc`, `outCirc`, `inOutCirc`, `inBack`, `outBack`, `inOutBack`, `inElastic`, `outElastic`, `inOutElastic`, `inBounce`, `outBounce`, `inOutBounce`.
+
+## Dynamic values
+
+All primitives accept `number | (() => number)` for value parameters. Use a function to update the target every frame without recreating the animation:
+
+```ts
+const spring = createSpring({
+  to: () => getMousePosition(), // starts at current mouse position // re-read every frame
+  stiffness: () => sliderValue, // dynamic stiffness
+  damping: () => dampingValue,
+});
+```
+
+The function is called every frame inside the ticker update — no getter/setter objects, no mutation of the returned controls.
+
+## Benchmarks
+
+Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
+
+| Benchmark                                    | anim-engine  | GSAP         | Ratio        |
+| -------------------------------------------- | ------------ | ------------ | ------------ |
+| **Single tween** (cubic, 1000 frames)        | 43,265 ops/s | 9,542 ops/s  | 4.53× faster |
+| **Single tween** (linear, 1000 frames)       | 30,461 ops/s | 16,195 ops/s | 1.88× faster |
+| **Single tween** (cubic bezier, 1000 frames) | 21,439 ops/s | 12,869 ops/s | 1.67× faster |
+| **Keyframe** (3 segments, 1000 frames)       | 35,307 ops/s | 3,560 ops/s  | 9.92× faster |
+| **50 concurrent tweens** (500 frames)        | 942 ops/s    | 473 ops/s    | 1.99× faster |
+| **50 concurrent keyframes** (500 frames)     | 918 ops/s    | 171 ops/s    | 5.38× faster |
+
+Easing functions are matched between libraries (cubic = GSAP `power2.out`, cubic bezier = identical control points via GSAP `CustomEase`). Linear strips out easing to show pure framework overhead.
+
+Run locally: `npm run bench`
+
+## Game engine integration
+
+### PixiJS
+
+```ts
+import { Application, Sprite } from "pixi.js";
+import { createAnimation, getTicker } from "anim-engine";
+
+const app = new Application();
+await app.init({ width: 800, height: 600 });
+
+const sprite = Sprite.from("texture.png");
+app.stage.addChild(sprite);
+
+// Sync anim-engine ticker to PixiJS ticker
+const animEngineTicker = getTicker();
+app.ticker.add((delta) => {
+  animEngineTicker.update(delta.deltaMS);
+});
+
+createAnimation({
+  from: 0,
+  to: 300,
+  durationMs: 2000,
+  ease: "outElastic",
+  onUpdate: (x) => (sprite.x = x),
+}).play();
+```
+
+### ThreeJS
+
+```ts
+import * as THREE from "three";
+import { createAnimation, getTicker, createSmoothDamp } from "anim-engine";
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+
+const mesh = new THREE.Mesh(
+  new THREE.BoxGeometry(),
+  new THREE.MeshStandardMaterial({ color: "#667eea" }),
+);
+scene.add(mesh);
+
+const animEngineTicker = getTicker();
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  animEngineTicker.update(clock.getDelta() * 1000);
+  renderer.render(scene, camera);
+}
+animate();
+
+createAnimation({
+  from: 0,
+  to: Math.PI * 2,
+  durationMs: 3000,
+  ease: "inOutCubic",
+  onUpdate: (angle) => (mesh.rotation.y = angle),
+}).play();
+```
+
+### Custom game loop
+
+```ts
+import { getTicker, createSpring } from "anim-engine";
+
+const animEngineTicker = getTicker();
+
+function gameLoop(timestamp: number) {
+  const deltaMs = timestamp - lastTimestamp;
+  lastTimestamp = timestamp;
+
+  animEngineTicker.update(deltaMs);
+  // ... physics, rendering, etc.
+
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+```
+
+## API Reference
+
+### Functions
+
+| Export                             | Description                         |
+| ---------------------------------- | ----------------------------------- |
+| `createAnimation(options)`         | Timed or keyframe animation         |
+| `createTimeline(layers, options?)` | Composited timeline of animations   |
+| `createSpring(options)`            | Physics spring (Verlet integration) |
+| `createSmoothDamp(options)`        | Unity-style smooth damp             |
+| `createLerp(options)`              | Exponential lerp chase              |
+| `createSmoothClamp(threshold)`     | Asymptotic clamp factory            |
+| `getTicker()`                      | Singleton ticker                    |
+| `cubicBezier(p1x, p1y, p2x, p2y)`  | Custom cubic bezier easing          |
+| `lerpOklab(from, to, t)`           | Oklab color interpolation           |
+| `hexToRgba(hex)`                   | Parse hex color to normalized RGBA  |
+
+### Type exports
+
+| Type                 | Description                                                                                                             |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrentValue`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
+| `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
+| `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                                            |
+| `EaseName`           | Union of 31 ease name strings                                                                                           |
+| `EaseFunction`       | `(t: number) => number`                                                                                                 |
+| `DynamicValue`       | `number \| (() => number)`                                                                                             |
+| `AnimationStatus`    | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
+| `InterpolationStatus` | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                           |
+| `AnimationOptions`   | Single tween or keyframe animation options (discriminated union)                                                         |
+| `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
+| `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
+| `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
+| `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                                     |
+| `LerpOptions`        | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                                                        |
+| `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
+| `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTACT -->
-
-## Contact
-
-Luke Thompson - hello@lukethompson.com
-
-Project Link: [https://github.com/LukeCarlThompson/anim-engine](https://github.com/LukeCarlThompson/anim-engine)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ACKNOWLEDGMENTS -->
-
-## Acknowledgments
-
-- [https://easings.net/](https://easings.net/)
-- [https://animejs.com/](https://animejs.com/)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+MIT

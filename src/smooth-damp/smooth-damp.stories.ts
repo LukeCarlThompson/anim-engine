@@ -1,0 +1,185 @@
+import type { Meta, StoryObj } from "@storybook/html-vite";
+
+import { getTicker } from "../ticker/get-ticker";
+import { createSmoothDamp } from "./create-smooth-damp";
+
+getTicker().start();
+
+const meta = {
+  title: "Smooth Damp",
+  argTypes: {
+    smoothTimeMs: { control: { type: "range", min: 100, max: 2000, step: 100 } },
+    maxSpeed: { control: { type: "range", min: 10, max: 500, step: 10 } },
+  },
+  args: { smoothTimeMs: 400, maxSpeed: 200 },
+  render: ({ smoothTimeMs, maxSpeed }) => {
+    const container = document.createElement("div");
+    container.style.cssText = `
+      display: flex; flex-direction: column; align-items: center;
+      gap: 24px; padding: 40px; font-family: sans-serif;
+    `;
+
+    const title = document.createElement("h2");
+    title.textContent = "Smooth Damp — Mouse Follow";
+    title.style.cssText = "margin:0;color:#ccc;font-weight:400;font-size:18px;";
+    container.appendChild(title);
+
+    const description = document.createElement("p");
+    description.textContent = "Move your mouse over the track — the block smoothly chases it";
+    description.style.cssText = "margin:0;color:#666;font-size:13px;";
+    container.appendChild(description);
+
+    const track = document.createElement("div");
+    track.style.cssText = `
+      position: relative; width: 700px; height: 150px;
+      background: #2a2a3d; border-radius: 8px; cursor: pointer;
+      overflow: hidden; user-select: none;
+    `;
+
+    const mouseLine = document.createElement("div");
+    mouseLine.style.cssText = `
+      position: absolute; top: 0; bottom: 0; width: 2px;
+      background: rgba(255,255,255,0.1); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(mouseLine);
+
+    const targetDot = document.createElement("div");
+    targetDot.style.cssText = `
+      position: absolute; top: 50%; width: 10px; height: 10px;
+      border-radius: 50%; background: rgba(255,255,255,0.2);
+      transform: translate(-50%, -50%); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(targetDot);
+
+    const block = document.createElement("div");
+    block.style.cssText = `
+      position: absolute; top: 50%;
+      width: 50px; height: 50px; border-radius: 8px;
+      background: linear-gradient(135deg, #61afef, #528bff);
+      pointer-events: none;
+    `;
+    track.appendChild(block);
+    container.appendChild(track);
+
+    const velocityRow = document.createElement("div");
+    velocityRow.style.cssText =
+      "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
+
+    const velocityLabel = document.createElement("span");
+    velocityLabel.textContent = "velocity";
+    velocityLabel.style.cssText = "min-width:60px;color:#666;";
+
+    const velocityBar = document.createElement("div");
+    velocityBar.style.cssText =
+      "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
+    const velocityFill = document.createElement("div");
+    velocityFill.style.cssText =
+      "position:absolute;top:0;left:50%;height:100%;width:0%;background:#61afef;border-radius:3px;";
+    velocityBar.appendChild(velocityFill);
+
+    const velocityValue = document.createElement("span");
+    velocityValue.textContent = "0.00";
+    velocityValue.style.cssText = "min-width:60px;text-align:right;color:#61afef;";
+
+    velocityRow.appendChild(velocityLabel);
+    velocityRow.appendChild(velocityBar);
+    velocityRow.appendChild(velocityValue);
+    container.appendChild(velocityRow);
+
+    const controls = document.createElement("div");
+    controls.style.cssText = "display:flex;gap:16px;align-items:center;flex-wrap:wrap;";
+
+    const makeSlider = (
+      label: string,
+      min: number,
+      max: number,
+      step: number,
+      value: number,
+      color: string,
+    ) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText =
+        "display:flex;align-items:center;gap:8px;font-size:12px;color:#888;font-family:monospace;";
+      const lbl = document.createElement("span");
+      lbl.textContent = label;
+      lbl.style.cssText = "min-width:60px;";
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = String(step);
+      slider.value = String(value);
+      slider.style.cssText = "accent-color:" + color + ";width:100px;";
+      const val = document.createElement("span");
+      val.textContent = String(value);
+      val.style.cssText = "min-width:30px;color:" + color + ";";
+      slider.addEventListener("input", () => {
+        val.textContent = slider.value;
+      });
+      wrapper.appendChild(lbl);
+      wrapper.appendChild(slider);
+      wrapper.appendChild(val);
+      return { wrapper, slider, val };
+    };
+
+    const smoothTimeMsCtrl = makeSlider("smoothTimeMs", 100, 2000, 100, smoothTimeMs, "#61afef");
+    const maxSpeedCtrl = makeSlider("maxSpeed", 10, 500, 10, maxSpeed, "#e5c07b");
+
+    controls.appendChild(smoothTimeMsCtrl.wrapper);
+    controls.appendChild(maxSpeedCtrl.wrapper);
+    container.appendChild(controls);
+
+    let targetX = 30;
+    let currentSmoothTimeMs = smoothTimeMs;
+    let currentMaxSpeed = maxSpeed;
+
+    const damp = createSmoothDamp({
+      to: () => targetX,
+      smoothTimeMs: () => currentSmoothTimeMs,
+      maxSpeed: () => currentMaxSpeed,
+      onUpdate: (value, velocity) => {
+        block.style.transform = `translateY(-50%) translateX(${value}px)`;
+
+        const absVel = Math.abs(velocity);
+        const barPercent = Math.min(absVel * 0.01, 100);
+        velocityFill.style.width = `${barPercent}%`;
+        velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
+        velocityFill.style.background = velocity >= 0 ? "#61afef" : "#e06c75";
+        velocityValue.textContent = velocity.toFixed(2);
+      },
+    });
+
+    damp.setCurrentValue(30);
+
+    track.addEventListener("mousemove", (e) => {
+      const rect = track.getBoundingClientRect();
+      targetX = e.clientX - rect.left - 25;
+      targetX = Math.max(0, Math.min(650, targetX));
+      mouseLine.style.display = "block";
+      targetDot.style.display = "block";
+      mouseLine.style.left = `${targetX + 25}px`;
+      targetDot.style.left = `${targetX + 25}px`;
+    });
+
+    track.addEventListener("mouseleave", () => {
+      mouseLine.style.display = "none";
+      targetDot.style.display = "none";
+    });
+
+    smoothTimeMsCtrl.slider.addEventListener("input", () => {
+      currentSmoothTimeMs = Number(smoothTimeMsCtrl.slider.value);
+    });
+    maxSpeedCtrl.slider.addEventListener("input", () => {
+      currentMaxSpeed = Number(maxSpeedCtrl.slider.value);
+    });
+
+    return container;
+  },
+} satisfies Meta;
+
+export default meta;
+type Story = StoryObj;
+
+export const Default: Story = {};

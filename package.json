@@ -1,52 +1,45 @@
 {
   "name": "anim-engine",
-  "private": true,
-  "version": "0.0.5",
-  "type": "module",
+  "version": "0.1.0",
+  "private": false,
   "description": "JavaScript library for animating numbers",
-  "repository": "https://github.com/LukeCarlThompson/anim-engine",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "repository": "https://github.com/LukeCarlThompson/anim-engine",
   "files": [
     "dist"
   ],
+  "type": "module",
   "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "npm run lint && npm run test:watch && vite",
     "build": "npm run lint && npm run test && tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint --config ./eslint.config.mjs",
+    "check:types": "tsc --noEmit",
+    "lint": "oxlint -c .oxlintrc.json src/",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "npm run lint && npm run test && storybook build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "bench": "vitest bench src/benchmarks/ --run",
+    "bench:baseline": "vitest bench src/benchmarks/ --run --outputJson baselines/benchmark.json",
+    "format": "oxfmt src/",
+    "format:check": "oxfmt --check src/",
+    "fmt": "oxfmt src/"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.2",
-    "@eslint/js": "^9.15.0",
-    "@storybook/addon-essentials": "^8.4.5",
-    "@storybook/addon-interactions": "^8.4.5",
-    "@storybook/blocks": "^8.4.5",
-    "@storybook/html": "^8.4.5",
-    "@storybook/html-vite": "^8.4.5",
-    "@storybook/test": "^8.4.5",
-    "@tweakpane/core": "^2.0.5",
-    "eslint": "^9.15.0",
-    "eslint-plugin-storybook": "^0.11.1",
-    "sass-embedded": "^1.81.0",
-    "storybook": "^8.4.5",
-    "tweakpane": "^4.0.5",
-    "typescript": "~5.6.2",
-    "typescript-eslint": "^8.15.0",
-    "vite": "^5.4.10",
-    "vite-plugin-dts": "4.3.0",
-    "vitest": "^2.1.5"
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
+    "@storybook/addon-docs": "10.4.6",
+    "@storybook/html": "10.4.6",
+    "@storybook/html-vite": "10.4.6",
+    "gsap": "3.15.0",
+    "oxfmt": "0.57.0",
+    "oxlint": "1.72.0",
+    "storybook": "10.4.6",
+    "typescript": "6.0.3",
+    "vite": "8.1.3",
+    "vite-plugin-dts": "5.0.3",
+    "vitest": "4.1.9"
   }
 }
