@@ -135,16 +135,15 @@ anim.skipToEnd(); // jumps to end, resolves promise
 
 **Single-tween options:**
 
-| Option       | Type                                         | Default     | Description                                                  |
-| ------------ | -------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `from`       | `number \| () => number`                     | —           | Start value (static or dynamic)                              |
-| `to`         | `number \| () => number`                     | —           | End value (static or dynamic)                                |
-| `durationMs` | `number`                                     | —           | Duration in milliseconds                                     |
-| `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"` | Easing function or name                                    |
-| `delayMs`    | `number`                                     | `0`         | Delay before starting                                        |
-| `onStarted`  | `() => void`                                | —           | Called when animation begins (after delay)                   |
-| `onUpdate`   | `(value: number, velocity: number) => void`  | —           | Called every frame with current value and velocity (units/s) |
-| `onEnded`    | `() => void`                                | —           | Called when animation completes                              |
+| Option       | Type                                         | Default       | Description                                                  |
+| ------------ | -------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `from`       | `number \| () => number`                     | —             | Start value (static or dynamic)                              |
+| `to`         | `number \| () => number`                     | —             | End value (static or dynamic)                                |
+| `durationMs` | `number \| () => number`                     | —             | Duration in milliseconds (static or dynamic)                 |
+| `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"`   | Easing function or name                                      |
+| `onStarted`  | `() => void`                                 | —             | Called when animation begins                                 |
+| `onUpdate`   | `(value: number, velocity: number) => void`  | —             | Called every frame with current value and velocity (units/s) |
+| `onEnded`    | `() => void`                                 | —             | Called when animation completes                              |
 **Returns:** `Animation`
 
 ### Keyframes
@@ -166,7 +165,7 @@ const anim = createAnimation({
 });
 ```
 
-Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the total duration (1000ms in this example). If no `ease` is specified, the previous segment's ease carries forward.
+Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the total duration (1000ms in this example). Both `at` and `value` accept `DynamicValue` for per-play resolution. If no `ease` is specified, the previous segment's ease carries forward.
 
 **Keyframe options:**
 
@@ -484,17 +483,46 @@ You can pass the result directly to any `ease` option — it's an `EaseFunction`
 
 ## Dynamic values
 
-All primitives accept `number | (() => number)` for value parameters. Use a function to update the target every frame without recreating the animation:
+The `DynamicValue` type (`number | (() => number)`) lets you provide values that are resolved at runtime. How often they're resolved depends on the primitive:
+
+### Timed animations (per-play)
+
+In `createAnimation` — tweens and keyframes — all dynamic values are resolved **once when `play()` is called** and cached for the duration of that run. The frame-hot update path reads from the cache with zero overhead:
+
+```ts
+const anim = createAnimation({
+  from: () => getLayoutStart(),
+  to: () => getLayoutEnd(),
+  durationMs: () => 500 / speedMultiplier,
+  keyframes: [
+    { at: 0, value: 0 },
+    { at: () => scrollHeight * 0.3, value: 50 },
+    { at: () => scrollHeight, value: 100 },
+  ],
+});
+
+// Values resolved here, cached for duration
+await anim.play();
+
+// On re-play, values are re-resolved
+await anim.play();
+```
+
+This means `from`, `to`, `durationMs`, `keyframe.at`, and `keyframe.value` are all evaluated at play time and remain stable throughout the animation. If you need truly per-frame dynamic values, that's the domain of continuous primitives.
+
+### Continuous primitives (per-frame)
+
+In `createSpring`, `createSmoothDamp`, and `createLerp`, dynamic values are resolved **every frame** — these primitives are designed to chase live targets:
 
 ```ts
 const spring = createSpring({
-  to: () => getMousePosition(), // starts at current mouse position // re-read every frame
-  stiffness: () => sliderValue, // dynamic stiffness
+  to: () => getMousePosition(), // re-read every frame
+  stiffness: () => sliderValue,  // dynamic stiffness
   damping: () => dampingValue,
 });
 ```
 
-The function is called every frame inside the ticker update — no getter/setter objects, no mutation of the returned controls.
+This distinction reflects the two use-cases: timed animations describe a fixed motion path evaluated at start, while continuous primitives describe ongoing behaviour that adapts to changing input.
 
 ## Benchmarks
 
@@ -626,7 +654,7 @@ requestAnimationFrame(gameLoop);
 | `AnimationStatus`    | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
 | `InterpolationStatus` | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                           |
 | `AnimationOptions`   | Single tween or keyframe animation options (discriminated union)                                                         |
-| `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
+| `Keyframe`           | `{ at: DynamicValue, value: DynamicValue, ease?: EaseName \| EaseFunction }`                                            |
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
 | `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
 | `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                                     |
