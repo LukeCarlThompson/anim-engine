@@ -1,7 +1,7 @@
 {
   "name": "anim-engine",
-  "version": "0.0.5",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "description": "JavaScript library for animating numbers",
   "license": "MIT",
   "repository": "https://github.com/LukeCarlThompson/anim-engine",
