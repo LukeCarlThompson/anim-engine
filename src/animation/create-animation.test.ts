@@ -7,75 +7,111 @@ beforeEach(() => {
   getTicker().stop();
 });
 
-test("tween from 0 to 100 over 1000ms finishes at 100", async () => {
+test("GIVEN a linear tween from 0 to 100 over 1000ms WHEN updated by 1000ms THEN it finishes at 100", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
+
+  // WHEN
   const p = tween.play();
   ticker.update(1000);
   await p;
+
+  // THEN
   expect(tween.currentValue).toBe(100);
   expect(tween.status).toBe("stopped");
 });
 
-test("tween resolves to end value with outElastic ease", async () => {
+test("GIVEN an outElastic tween from 0 to 200 over 500ms WHEN it completes THEN it resolves to the end value", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 200, durationMs: 500, ease: "outElastic" });
+
+  // WHEN
   const p = tween.play();
   ticker.update(500);
   await p;
+
+  // THEN
   expect(tween.currentValue).toBe(200);
 });
 
-test("pause at 500ms, resume, completes correctly", async () => {
+test("GIVEN a running linear tween WHEN paused at midpoint and later resumed THEN it completes correctly", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
 
+  // WHEN — advance to 500ms
   ticker.update(500);
+
+  // THEN — midway
   expect(Math.trunc(tween.currentValue)).toBe(50);
 
+  // WHEN — pause
   tween.pause();
   ticker.update(500);
+
+  // THEN — frozen at 50
   expect(Math.trunc(tween.currentValue)).toBe(50);
 
+  // WHEN — resume and complete
   tween.resume();
   ticker.update(500);
   await p;
+
+  // THEN — reaches end
   expect(tween.currentValue).toBe(100);
 });
 
-test("stop mid-tween resolves promise at current value", async () => {
+test("GIVEN a running linear tween WHEN stopped mid-way THEN the promise resolves at the current value", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
+
+  // WHEN
   ticker.update(400);
   tween.stop();
   await p;
+
+  // THEN
   expect(Math.trunc(tween.currentValue)).toBe(40);
 });
 
-test("skipToEnd resolves at end value", async () => {
+test("GIVEN a running linear tween WHEN skipToEnd is called THEN the promise resolves at the end value", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   const p = tween.play();
+
+  // WHEN
   ticker.update(300);
   tween.skipToEnd();
   await p;
+
+  // THEN
   expect(tween.currentValue).toBe(100);
 });
 
-test("kill leaves promise unresolved and prevents replay", async () => {
+test("GIVEN a running tween WHEN killed THEN the promise stays unresolved and replay throws", async () => {
+  // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
   tween.play();
+
+  // WHEN
   ticker.update(300);
   tween.kill();
   await Promise.resolve();
+
+  // THEN
   expect(tween.status).toBe("dead");
   expect(() => tween.play()).toThrow();
 });
 
-test("dynamic from/to functions are evaluated at play time", async () => {
+test("GIVEN a tween with dynamic from/to functions WHEN played THEN the values are evaluated at play time", async () => {
+  // GIVEN
   const ticker = getTicker();
   let from = 20;
   let to = 80;
@@ -85,19 +121,27 @@ test("dynamic from/to functions are evaluated at play time", async () => {
     durationMs: 100,
     ease: "linear",
   });
+
+  // WHEN
   const p = tween.play();
   ticker.update(100);
   await p;
+
+  // THEN
   expect(tween.currentValue).toBe(80);
 });
 
-test("dead status throws on play()", () => {
+test("GIVEN a tween that has been killed WHEN play() is called THEN it throws", () => {
+  // GIVEN
   const tween = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
   tween.kill();
+
+  // WHEN / THEN
   expect(() => tween.play()).toThrow();
 });
 
-test("onStarted fires when playback begins", async () => {
+test("GIVEN a tween with onStarted callback WHEN playback begins THEN the callback fires", async () => {
+  // GIVEN
   const ticker = getTicker();
   let started = false;
   const tween = createAnimation({
@@ -109,13 +153,18 @@ test("onStarted fires when playback begins", async () => {
       started = true;
     },
   });
+
+  // WHEN
   const p = tween.play();
+
+  // THEN
   expect(started).toBe(true);
   ticker.update(100);
   await p;
 });
 
-test("onEnded fires on completion", async () => {
+test("GIVEN a tween with onEnded callback WHEN it completes THEN the callback fires", async () => {
+  // GIVEN
   const ticker = getTicker();
   let ended = false;
   const tween = createAnimation({
@@ -127,13 +176,18 @@ test("onEnded fires on completion", async () => {
       ended = true;
     },
   });
+
+  // WHEN
   const p = tween.play();
   ticker.update(100);
   await p;
+
+  // THEN
   expect(ended).toBe(true);
 });
 
-test("onUpdate receives correct intermediate values", async () => {
+test("GIVEN a linear tween with onUpdate callback WHEN it progresses through frames THEN it receives the correct intermediate values", async () => {
+  // GIVEN
   const ticker = getTicker();
   const updates: number[] = [];
   const tween = createAnimation({
@@ -145,19 +199,24 @@ test("onUpdate receives correct intermediate values", async () => {
       updates.push(Math.round(v));
     },
   });
+
+  // WHEN
   const p = tween.play();
   ticker.update(250);
   ticker.update(250);
   ticker.update(250);
   ticker.update(250);
   await p;
+
+  // THEN
   expect(updates[0]).toBe(25);
   expect(updates[1]).toBe(50);
   expect(updates[2]).toBe(75);
   expect(updates[3]).toBe(100);
 });
 
-test("setProgress computes currentValue immediately", () => {
+test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue is computed immediately", () => {
+  // GIVEN
   const tween = createAnimation({
     from: 0,
     to: 100,
@@ -165,13 +224,17 @@ test("setProgress computes currentValue immediately", () => {
     ease: "outCubic",
   });
 
+  // WHEN
   tween.setProgress(0.5);
+
+  // THEN
   expect(tween.progress).toBe(0.5);
-  expect(tween.currentValue).toBeGreaterThan(80); // outCubic at 0.5 should be near end
+  expect(tween.currentValue).toBeGreaterThan(80);
   expect(tween.currentValue).toBeLessThan(90);
 });
 
-test("repeats specified number of times", async () => {
+test("GIVEN a tween with repeat: 2 WHEN it plays through THEN it repeats the specified number of times", async () => {
+  // GIVEN
   const ticker = getTicker();
   let count = 0;
   const tween = createAnimation({
@@ -184,16 +247,21 @@ test("repeats specified number of times", async () => {
       count++;
     },
   });
+
+  // WHEN
   const p = tween.play();
   ticker.update(100);
   ticker.update(100);
   ticker.update(100);
   await p;
+
+  // THEN
   expect(tween.currentValue).toBe(100);
   expect(count).toBeGreaterThanOrEqual(3);
 });
 
-test("delayMs delays the start", async () => {
+test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and playback starts after the delay", async () => {
+  // GIVEN
   const ticker = getTicker();
   let started = false;
   const tween = createAnimation({
@@ -208,21 +276,31 @@ test("delayMs delays the start", async () => {
   });
   const p = tween.play();
 
+  // WHEN — advance 100ms (before delay ends)
   ticker.update(100);
+
+  // THEN — not yet started
   expect(started).toBe(false);
   expect(tween.currentValue).toBe(0);
 
+  // WHEN — advance another 100ms (delay expires)
   ticker.update(100);
+
+  // THEN — started
   expect(started).toBe(true);
 
+  // WHEN — complete
   ticker.update(100);
   await p;
+
+  // THEN — reaches end value
   expect(tween.currentValue).toBe(100);
 });
 
 // ─── Keyframe mode ───
 
-test("keyframes with 2 points equals single tween", async () => {
+test("GIVEN keyframes with 2 points WHEN played THEN it behaves the same as a single tween", async () => {
+  // GIVEN
   const ticker = getTicker();
   const a = createAnimation({
     keyframes: [
@@ -231,13 +309,18 @@ test("keyframes with 2 points equals single tween", async () => {
     ],
     onUpdate: () => {},
   });
+
+  // WHEN
   const p = a.play();
   ticker.update(100);
   await p;
+
+  // THEN
   expect(a.currentValue).toBe(100);
 });
 
-test("keyframes with 3 points interpolates correctly", async () => {
+test("GIVEN keyframes with 3 points WHEN played through THEN it interpolates between them correctly", async () => {
+  // GIVEN
   const ticker = getTicker();
   const values: number[] = [];
   const a = createAnimation({
@@ -250,14 +333,19 @@ test("keyframes with 3 points interpolates correctly", async () => {
       values.push(Math.round(v));
     },
   });
+
+  // WHEN
   const p = a.play();
   ticker.update(100);
   ticker.update(100);
   await p;
+
+  // THEN
   expect(values[values.length - 1]).toBe(50);
 });
 
-test("keyframe velocity is non-zero during movement", async () => {
+test("GIVEN a keyframe animation with velocity tracking WHEN it moves THEN velocity is non-zero and returns to zero at rest", async () => {
+  // GIVEN
   const ticker = getTicker();
   const velocities: number[] = [];
   const a = createAnimation({
@@ -269,19 +357,21 @@ test("keyframe velocity is non-zero during movement", async () => {
       velocities.push(vel);
     },
   });
+
+  // WHEN — advance by 2 frames (66ms total)
   const p = a.play();
-  // Advance by 2 frames (33ms each) — not enough to complete
   ticker.update(33);
   ticker.update(33);
-  // Check we got velocity during movement
+
+  // THEN — velocity is non-zero during movement
   expect(velocities.length).toBeGreaterThan(0);
-  // First velocity should be 100 units/s (linear, 100 units over 1000ms)
   expect(velocities[0]).toBeCloseTo(100, 5);
-  // Complete the animation to the end
+
+  // WHEN — complete the animation
   ticker.update(1000);
   await p;
-  // Last velocity should be 0 (at rest)
+
+  // THEN — velocity returns to zero at rest
   expect(velocities[velocities.length - 1]).toBe(0);
-  // Velocity getter matches last value
   expect(a.velocity).toBe(velocities[velocities.length - 1]);
 });

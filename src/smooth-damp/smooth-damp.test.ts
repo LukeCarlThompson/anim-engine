@@ -4,7 +4,8 @@ import { getTicker } from "../ticker/get-ticker";
 import { createSmoothDamp } from "./create-smooth-damp";
 
 describe("createSmoothDamp", () => {
-  it("approaches a static target over time", () => {
+  it("GIVEN a smooth damp with a static target WHEN updated over time THEN it approaches the target value", () => {
+    // GIVEN
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -15,18 +16,20 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN
     target = 100;
-
     for (let i = 0; i < 120; i++) {
       getTicker().update(16);
     }
 
+    // THEN
     expect(values.length).toBeGreaterThan(10);
     expect(values[values.length - 1]).toBeGreaterThan(97);
     sd.kill();
   });
 
-  it("chases a moving target", () => {
+  it("GIVEN a smooth damp chasing a dynamic target WHEN the target changes mid-way THEN it follows the new target", () => {
+    // GIVEN
     let target = 100;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -37,37 +40,44 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN
     for (let t = 0; t < 120; t++) {
       if (t === 30) target = 200;
       getTicker().update(16);
     }
 
+    // THEN
     expect(values[values.length - 1]).toBeGreaterThan(150);
     sd.kill();
   });
 
-  it("default start position is at target", () => {
+  it("GIVEN a smooth damp without explicit starting value WHEN created THEN currentValue defaults to the target", () => {
+    // GIVEN / WHEN
     const sd = createSmoothDamp({
       to: () => 100,
       smoothTimeMs: 300,
     });
 
+    // THEN
     expect(sd.currentValue).toBe(100);
     sd.kill();
   });
 
-  it("setCurrentValue before first tick sets initial position", () => {
+  it("GIVEN a smooth damp WHEN setCurrentValue is called before the first tick THEN it sets the initial position", () => {
+    // GIVEN / WHEN
     const sd = createSmoothDamp({
       to: () => 100,
       smoothTimeMs: 300,
     });
     sd.setCurrentValue(50);
 
+    // THEN
     expect(sd.currentValue).toBe(50);
     sd.kill();
   });
 
-  it("setCurrentValue teleports the value", () => {
+  it("GIVEN a running smooth damp WHEN setCurrentValue is called THEN it teleports the value instantly", () => {
+    // GIVEN
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -78,15 +88,18 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN
     target = 100;
     getTicker().update(16);
     sd.setCurrentValue(500);
 
+    // THEN
     expect(sd.currentValue).toBe(500);
     sd.kill();
   });
 
-  it("stop pauses progress and start resumes it", () => {
+  it("GIVEN a running smooth damp WHEN stopped THEN it pauses and WHEN started THEN it resumes", () => {
+    // GIVEN
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -101,19 +114,24 @@ describe("createSmoothDamp", () => {
     for (let i = 0; i < 10; i++) getTicker().update(16);
     const before = sd.currentValue;
 
+    // WHEN — stop
     sd.stop();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
+    // THEN — paused
     expect(sd.currentValue).toBe(before);
 
+    // WHEN — resume
     sd.start();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
+    // THEN — progressing again
     expect(sd.currentValue).toBeGreaterThan(before);
     sd.kill();
   });
 
-  it("kill stops the damp and removes from ticker", () => {
+  it("GIVEN a running smooth damp WHEN killed THEN it stops updating and becomes inactive", () => {
+    // GIVEN
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -126,16 +144,19 @@ describe("createSmoothDamp", () => {
 
     target = 100;
     getTicker().update(16);
-    sd.kill();
 
+    // WHEN
+    sd.kill();
     const killedValue = sd.currentValue;
     getTicker().update(16);
 
+    // THEN
     expect(sd.currentValue).toBe(killedValue);
     expect(sd.status).toBe("inactive");
   });
 
-  it("onUpdate receives velocity", () => {
+  it("GIVEN a smooth damp with onUpdate velocity callback WHEN it moves THEN velocity is reported correctly", () => {
+    // GIVEN
     let target = 0;
     const velocities: number[] = [];
     const sd = createSmoothDamp({
@@ -146,16 +167,19 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN
     target = 100;
     getTicker().update(16);
 
+    // THEN
     expect(velocities.length).toBeGreaterThan(0);
     expect(velocities[0]).toBeCloseTo(63.93, 1);
     expect(sd.velocity).toBe(velocities[velocities.length - 1]);
     sd.kill();
   });
 
-  it("fires onEnded when settled", () => {
+  it("GIVEN a smooth damp with onEnded callback WHEN it settles on the target THEN onEnded fires", () => {
+    // GIVEN
     let target = 0;
     let ended = false;
     const sd = createSmoothDamp({
@@ -167,18 +191,20 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN
     target = 100;
-
     for (let i = 0; i < 300; i++) {
       getTicker().update(16);
     }
 
+    // THEN
     expect(ended).toBe(true);
     expect(sd.currentValue).toBeCloseTo(100, 0);
     sd.kill();
   });
 
-  it("uses maxSpeed to cap velocity", () => {
+  it("GIVEN a smooth damp with maxSpeed WHEN a large frame update occurs THEN velocity is capped", () => {
+    // GIVEN
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -190,11 +216,11 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    // WHEN — single large step toward a far target
     target = 1000;
-    // Single large frame
     getTicker().update(16);
 
-    // Should have moved at most maxSpeed * deltaTime ~ 10 * 0.016 = 0.16
+    // THEN — should have moved at most maxSpeed * deltaTime ~ 10 * 0.016 = 0.16
     expect(sd.currentValue).toBeLessThan(1);
     sd.kill();
   });

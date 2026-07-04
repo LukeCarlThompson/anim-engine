@@ -2,9 +2,11 @@ import { expect, test } from "vitest";
 
 import { cubicBezier } from "./easing";
 
-test("cubicBezier(0, 0, 1, 1) is linear", () => {
+test("GIVEN control points (0, 0, 1, 1) WHEN evaluating the cubic bezier THEN it behaves linearly", () => {
+  // GIVEN
   const ease = cubicBezier(0, 0, 1, 1);
 
+  // WHEN / THEN
   expect(ease(0)).toBeCloseTo(0, 5);
   expect(ease(0.25)).toBeCloseTo(0.25, 2);
   expect(ease(0.5)).toBeCloseTo(0.5, 2);
@@ -12,44 +14,49 @@ test("cubicBezier(0, 0, 1, 1) is linear", () => {
   expect(ease(1)).toBeCloseTo(1, 5);
 });
 
-test("cubicBezier(0.42, 0, 0.58, 1) is ease-in-out", () => {
+test("GIVEN control points (0.42, 0, 0.58, 1) WHEN evaluating THEN it produces ease-in-out behavior", () => {
+  // GIVEN
   const ease = cubicBezier(0.42, 0, 0.58, 1);
 
+  // THEN — slow at edges, fast in the middle
   expect(ease(0)).toBeCloseTo(0, 5);
   expect(ease(1)).toBeCloseTo(1, 5);
-  // Ease-in-out: slow at edges, fast in the middle
   expect(ease(0.25)).toBeLessThan(0.25);
   expect(ease(0.75)).toBeGreaterThan(0.75);
 });
 
-test("clamps to 0 and 1 at edges", () => {
+test("GIVEN an input outside [0, 1] WHEN evaluating THEN it clamps to 0 or 1", () => {
+  // GIVEN
   const ease = cubicBezier(0.25, 0.1, 0.25, 1);
 
+  // WHEN / THEN
   expect(ease(-0.1)).toBe(0);
   expect(ease(1.5)).toBe(1);
 });
 
-test("ease-in: cubicBezier(0.42, 0, 1, 1) starts slow", () => {
+test("GIVEN ease-in control points (0.42, 0, 1, 1) WHEN evaluating THEN the curve starts slow", () => {
+  // GIVEN
   const easeIn = cubicBezier(0.42, 0, 1, 1);
 
-  // At x=0.5, y hasn't caught up yet — starts slow
+  // THEN — at x=0.5, y hasn't caught up yet
   expect(easeIn(0.5)).toBeLessThan(0.5);
   expect(easeIn(0.5)).toBeCloseTo(0.315, 1);
   expect(easeIn(1)).toBeCloseTo(1, 5);
 });
 
-test("ease-out: cubicBezier(0, 0, 0.58, 1) starts fast", () => {
+test("GIVEN ease-out control points (0, 0, 0.58, 1) WHEN evaluating THEN the curve starts fast", () => {
+  // GIVEN
   const easeOut = cubicBezier(0, 0, 0.58, 1);
 
-  // At x=0.5, y is already ahead — starts fast
+  // THEN — at x=0.5, y is already ahead
   expect(easeOut(0.5)).toBeGreaterThan(0.5);
   expect(easeOut(1)).toBeCloseTo(1, 5);
 });
 
-test("64 samples gives good enough accuracy", () => {
-  // CSS ease-in-out — should be close to a known value at midpoint
+test("GIVEN a cubic bezier sampled at 64 steps WHEN evaluating at midpoint THEN it is within 0.005 of the true value", () => {
+  // GIVEN
   const ease = cubicBezier(0.42, 0, 0.58, 1);
 
-  // At 64 samples, error should be under 0.002
+  // WHEN / THEN — error should be under 0.005
   expect(Math.abs(ease(0.5) - 0.5)).toBeLessThan(0.005);
 });
