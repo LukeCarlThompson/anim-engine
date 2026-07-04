@@ -1,7 +1,6 @@
 import type { Interpolation, DynamicValue } from "../shared/types";
 export type SpringOptions = {
-  from?: DynamicValue<number>;
-  to: DynamicValue<number>;
+  to: () => number;
   stiffness?: DynamicValue<number>;
   damping?: DynamicValue<number>;
   mass?: DynamicValue<number>;
@@ -15,28 +14,22 @@ import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
 export const createSpring = (options: SpringOptions): Interpolation => {
-  const precision = options.precision ?? 0.01;
   const onUpdate = options.onUpdate;
 
-  const rawFrom: number | (() => number) = options.from ?? 0;
-  const rawTo: number | (() => number) = options.to;
+  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
+
+  const rawTo = options.to;
   const rawStiffness: number | (() => number) = options.stiffness ?? 180;
   const rawDamping: number | (() => number) = options.damping ?? 12;
   const rawMass: number | (() => number) = options.mass ?? 1;
 
-  const state: SpringState = { current: 0, velocity: 0 };
+  const state: SpringState = { current: rawTo(), velocity: 0 };
   let active = true;
 
   const ticker = getTicker();
 
-  // Initialize
-  const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-  state.current = initFrom;
-
   // Register immediately (auto-start)
   ticker.add(update);
-
-  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   const start = () => {
     if (active) return;
@@ -57,25 +50,13 @@ export const createSpring = (options: SpringOptions): Interpolation => {
   function update(deltaMs: number) {
     if (!active) return;
 
-    const target = resolveValue(rawTo);
+    const target = rawTo();
     const stiffness = resolveValue(rawStiffness);
     const damping = resolveValue(rawDamping);
     const mass = resolveValue(rawMass);
     verletStep(state, target, stiffness, damping, mass, deltaMs);
 
     onUpdate?.(state.current, state.velocity);
-
-    // Auto-stop when near rest (only for static targets)
-    const isStatic = typeof rawTo !== "function";
-    if (
-      isStatic &&
-      Math.abs(state.current - target) < precision &&
-      Math.abs(state.velocity) < precision
-    ) {
-      state.current = target;
-      state.velocity = 0;
-      stop();
-    }
   }
 
   const controls: Interpolation = {

@@ -12,11 +12,7 @@ const meta = {
     damping: { control: { type: "range", min: 1, max: 50, step: 1 } },
     mass: { control: { type: "range", min: 0.1, max: 10, step: 0.1 } },
   },
-  args: {
-    stiffness: 180,
-    damping: 12,
-    mass: 1,
-  },
+  args: { stiffness: 180, damping: 12, mass: 1 },
   render: ({ stiffness, damping, mass }) => {
     const container = document.createElement("div");
     container.style.cssText = `
@@ -25,34 +21,51 @@ const meta = {
     `;
 
     const title = document.createElement("h2");
-    title.textContent = "Spring Physics";
+    title.textContent = "Spring — Mouse Follow";
     title.style.cssText = "margin:0;color:#ccc;font-weight:400;font-size:18px;";
     container.appendChild(title);
 
-    // Params display
-    const params = document.createElement("div");
-    params.style.cssText = "color:#666;font-size:13px;font-family:monospace;";
-    params.textContent = `stiffness: ${stiffness}  damping: ${damping}  mass: ${mass}`;
-    container.appendChild(params);
+    const description = document.createElement("p");
+    description.textContent =
+      "Move your mouse over the track — the block chases it with spring physics";
+    description.style.cssText = "margin:0;color:#666;font-size:13px;";
+    container.appendChild(description);
 
-    // Track
     const track = document.createElement("div");
     track.style.cssText = `
-      display: flex; align-items: center; padding-left: 30px;
-      width: 700px; height: 100px;
-      background: #2a2a3d; border-radius: 8px;
+      position: relative; width: 700px; height: 150px;
+      background: #2a2a3d; border-radius: 8px; cursor: pointer;
+      overflow: hidden; user-select: none;
     `;
+
+    const mouseLine = document.createElement("div");
+    mouseLine.style.cssText = `
+      position: absolute; top: 0; bottom: 0; width: 2px;
+      background: rgba(255,255,255,0.1); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(mouseLine);
+
+    const targetDot = document.createElement("div");
+    targetDot.style.cssText = `
+      position: absolute; top: 50%; width: 10px; height: 10px;
+      border-radius: 50%; background: rgba(255,255,255,0.2);
+      transform: translate(-50%, -50%); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(targetDot);
 
     const block = document.createElement("div");
     block.style.cssText = `
+      position: absolute; top: 50%;
       width: 50px; height: 50px; border-radius: 8px;
       background: linear-gradient(135deg, #98c379, #56ab2f);
-      transform: translateX(0px);
+      pointer-events: none;
     `;
     track.appendChild(block);
     container.appendChild(track);
 
-    // Velocity indicator
+    // Velocity
     const velocityRow = document.createElement("div");
     velocityRow.style.cssText =
       "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
@@ -80,86 +93,98 @@ const meta = {
 
     // Controls
     const controls = document.createElement("div");
-    controls.style.cssText = "display:flex;gap:12px;";
+    controls.style.cssText = "display:flex;gap:16px;align-items:center;flex-wrap:wrap;";
 
-    const playBtn = document.createElement("button");
-    playBtn.textContent = "▶ Play";
-    playBtn.style.cssText = `
-      padding:8px 24px;border:1px solid #98c379;border-radius:6px;
-      background:transparent;color:#98c379;cursor:pointer;font-size:14px;min-width:100px;
-    `;
+    const makeSlider = (
+      label: string,
+      min: number,
+      max: number,
+      step: number,
+      value: number,
+      color: string,
+    ) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText =
+        "display:flex;align-items:center;gap:8px;font-size:12px;color:#888;font-family:monospace;";
+      const lbl = document.createElement("span");
+      lbl.textContent = label;
+      lbl.style.cssText = "min-width:60px;";
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = String(step);
+      slider.value = String(value);
+      slider.style.cssText = "accent-color:" + color + ";width:100px;";
+      const val = document.createElement("span");
+      val.textContent = String(value);
+      val.style.cssText = "min-width:30px;color:" + color + ";";
+      slider.addEventListener("input", () => {
+        val.textContent = slider.value;
+      });
+      wrapper.appendChild(lbl);
+      wrapper.appendChild(slider);
+      wrapper.appendChild(val);
+      return { wrapper, slider, val };
+    };
 
-    const resetBtn = document.createElement("button");
-    resetBtn.textContent = "↺ Reset";
-    resetBtn.style.cssText =
-      "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
+    const stiffnessCtrl = makeSlider("stiffness", 10, 500, 10, stiffness, "#98c379");
+    const dampingCtrl = makeSlider("damping", 1, 50, 1, damping, "#e06c75");
+    const massCtrl = makeSlider("mass", 0.1, 10, 0.1, mass, "#61afef");
 
-    controls.appendChild(playBtn);
-    controls.appendChild(resetBtn);
+    controls.appendChild(stiffnessCtrl.wrapper);
+    controls.appendChild(dampingCtrl.wrapper);
+    controls.appendChild(massCtrl.wrapper);
     container.appendChild(controls);
 
-    let spring: ReturnType<typeof createSpring> | null = null;
+    let targetX = 30;
+    let currentStiffness = stiffness;
+    let currentDamping = damping;
+    let currentMass = mass;
 
-    const reset = () => {
-      block.style.transform = "translateX(0px)";
-      velocityFill.style.width = "0%";
-      velocityValue.textContent = "0.00";
-    };
+    const spring = createSpring({
+      to: () => targetX,
+      stiffness: () => currentStiffness,
+      damping: () => currentDamping,
+      mass: () => currentMass,
+      precision: 0.01,
+      onUpdate: (value, velocity) => {
+        block.style.transform = `translateY(-50%) translateX(${value}px)`;
 
-    const play = () => {
-      if (spring) {
-        spring.kill();
-      }
-      reset();
+        const absVel = Math.abs(velocity);
+        const barPercent = Math.min(absVel * 0.01, 100);
+        velocityFill.style.width = `${barPercent}%`;
+        velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
+        velocityFill.style.background = velocity >= 0 ? "#98c379" : "#e06c75";
+        velocityValue.textContent = velocity.toFixed(2);
+      },
+    });
 
-      spring = createSpring({
-        from: 0,
-        to: 620,
-        stiffness,
-        damping,
-        mass,
-        onUpdate: (value, velocity) => {
-          block.style.transform = `translateX(${value}px)`;
+    spring.setCurrent(30);
 
-          const absVel = Math.abs(velocity);
-          const barPercent = Math.min(absVel * 0.4, 100);
-          velocityFill.style.width = `${barPercent}%`;
-          velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
-          velocityFill.style.background = velocity >= 0 ? "#98c379" : "#e06c75";
-          velocityValue.textContent = velocity.toFixed(2);
-        },
-        onEnded: () => {
-          spring = null;
-          playBtn.textContent = "▶ Play";
-        },
-      });
+    track.addEventListener("mousemove", (e) => {
+      const rect = track.getBoundingClientRect();
+      targetX = e.clientX - rect.left - 25;
+      targetX = Math.max(0, Math.min(650, targetX));
+      mouseLine.style.display = "block";
+      targetDot.style.display = "block";
+      mouseLine.style.left = `${targetX + 25}px`;
+      targetDot.style.left = `${targetX + 25}px`;
+    });
 
-      // Spring auto-starts on creation — no play() needed
-      playBtn.textContent = "⏸ Pause";
-    };
+    track.addEventListener("mouseleave", () => {
+      mouseLine.style.display = "none";
+      targetDot.style.display = "none";
+    });
 
-    const togglePlay = () => {
-      if (!spring) {
-        play();
-        return;
-      }
-      if (spring.status === "active") {
-        spring.stop();
-        playBtn.textContent = "▶ Resume";
-      } else {
-        spring.start();
-        playBtn.textContent = "⏸ Pause";
-      }
-    };
-
-    playBtn.addEventListener("click", togglePlay);
-    resetBtn.addEventListener("click", () => {
-      if (spring) {
-        spring.kill();
-        spring = null;
-      }
-      reset();
-      playBtn.textContent = "▶ Play";
+    stiffnessCtrl.slider.addEventListener("input", () => {
+      currentStiffness = Number(stiffnessCtrl.slider.value);
+    });
+    dampingCtrl.slider.addEventListener("input", () => {
+      currentDamping = Number(dampingCtrl.slider.value);
+    });
+    massCtrl.slider.addEventListener("input", () => {
+      currentMass = Number(massCtrl.slider.value);
     });
 
     return container;

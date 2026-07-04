@@ -14,89 +14,166 @@ const meta = {
   args: { smoothTime: 0.4, maxSpeed: 200 },
   render: ({ smoothTime, maxSpeed }) => {
     const container = document.createElement("div");
-    container.style.cssText =
-      "display:flex;flex-direction:column;align-items:center;gap:24px;padding:40px;font-family:sans-serif;";
+    container.style.cssText = `
+      display: flex; flex-direction: column; align-items: center;
+      gap: 24px; padding: 40px; font-family: sans-serif;
+    `;
 
     const title = document.createElement("h2");
-    title.textContent = "Smooth Damp";
+    title.textContent = "Smooth Damp — Mouse Follow";
     title.style.cssText = "margin:0;color:#ccc;font-weight:400;font-size:18px;";
     container.appendChild(title);
 
-    const params = document.createElement("div");
-    params.style.cssText = "color:#666;font-size:13px;font-family:monospace;";
-    params.textContent = `smoothTime: ${smoothTime}s  maxSpeed: ${maxSpeed}`;
-    container.appendChild(params);
+    const description = document.createElement("p");
+    description.textContent =
+      "Move your mouse over the track — the block smoothly chases it";
+    description.style.cssText = "margin:0;color:#666;font-size:13px;";
+    container.appendChild(description);
 
     const track = document.createElement("div");
-    track.style.cssText =
-      "display:flex;align-items:center;padding-left:30px;width:700px;height:100px;background:#2a2a3d;border-radius:8px;";
+    track.style.cssText = `
+      position: relative; width: 700px; height: 150px;
+      background: #2a2a3d; border-radius: 8px; cursor: pointer;
+      overflow: hidden; user-select: none;
+    `;
+
+    const mouseLine = document.createElement("div");
+    mouseLine.style.cssText = `
+      position: absolute; top: 0; bottom: 0; width: 2px;
+      background: rgba(255,255,255,0.1); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(mouseLine);
+
+    const targetDot = document.createElement("div");
+    targetDot.style.cssText = `
+      position: absolute; top: 50%; width: 10px; height: 10px;
+      border-radius: 50%; background: rgba(255,255,255,0.2);
+      transform: translate(-50%, -50%); pointer-events: none;
+      display: none;
+    `;
+    track.appendChild(targetDot);
 
     const block = document.createElement("div");
-    block.style.cssText =
-      "width:50px;height:50px;border-radius:8px;background:linear-gradient(135deg,#61afef,#528bff);transform:translateX(0px);";
+    block.style.cssText = `
+      position: absolute; top: 50%;
+      width: 50px; height: 50px; border-radius: 8px;
+      background: linear-gradient(135deg, #61afef, #528bff);
+      pointer-events: none;
+    `;
     track.appendChild(block);
     container.appendChild(track);
 
-    const velRow = document.createElement("div");
-    velRow.style.cssText =
+    const velocityRow = document.createElement("div");
+    velocityRow.style.cssText =
       "display:flex;align-items:center;gap:12px;width:700px;font-size:13px;color:#888;font-family:monospace;";
-    const velLabel = document.createElement("span");
-    velLabel.textContent = "velocity";
-    velLabel.style.cssText = "min-width:60px;color:#666;";
-    const velTrack = document.createElement("div");
-    velTrack.style.cssText =
+
+    const velocityLabel = document.createElement("span");
+    velocityLabel.textContent = "velocity";
+    velocityLabel.style.cssText = "min-width:60px;color:#666;";
+
+    const velocityBar = document.createElement("div");
+    velocityBar.style.cssText =
       "flex:1;height:6px;background:#2a2a3d;border-radius:3px;overflow:hidden;position:relative;";
-    const velFill = document.createElement("div");
-    velFill.style.cssText =
-      "position:absolute;top:0;left:50%;height:100%;width:0%;border-radius:3px;";
-    velTrack.appendChild(velFill);
-    const velValue = document.createElement("span");
-    velValue.textContent = "0.00";
-    velValue.style.cssText = "min-width:60px;text-align:right;color:#61afef;";
-    velRow.appendChild(velLabel);
-    velRow.appendChild(velTrack);
-    velRow.appendChild(velValue);
-    container.appendChild(velRow);
+    const velocityFill = document.createElement("div");
+    velocityFill.style.cssText =
+      "position:absolute;top:0;left:50%;height:100%;width:0%;background:#61afef;border-radius:3px;";
+    velocityBar.appendChild(velocityFill);
+
+    const velocityValue = document.createElement("span");
+    velocityValue.textContent = "0.00";
+    velocityValue.style.cssText = "min-width:60px;text-align:right;color:#61afef;";
+
+    velocityRow.appendChild(velocityLabel);
+    velocityRow.appendChild(velocityBar);
+    velocityRow.appendChild(velocityValue);
+    container.appendChild(velocityRow);
 
     const controls = document.createElement("div");
-    controls.style.cssText = "display:flex;gap:12px;";
-    const playBtn = document.createElement("button");
-    playBtn.textContent = "⏸ Pause";
-    playBtn.style.cssText =
-      "padding:8px 24px;border:1px solid #61afef;border-radius:6px;background:transparent;color:#61afef;cursor:pointer;font-size:14px;min-width:100px;";
-    const resetBtn = document.createElement("button");
-    resetBtn.textContent = "↺ Reset";
-    resetBtn.style.cssText =
-      "padding:8px 16px;border:1px solid #555;border-radius:6px;background:transparent;color:#888;cursor:pointer;font-size:14px;";
-    controls.appendChild(playBtn);
-    controls.appendChild(resetBtn);
+    controls.style.cssText = "display:flex;gap:16px;align-items:center;flex-wrap:wrap;";
+
+    const makeSlider = (
+      label: string,
+      min: number,
+      max: number,
+      step: number,
+      value: number,
+      color: string,
+    ) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText =
+        "display:flex;align-items:center;gap:8px;font-size:12px;color:#888;font-family:monospace;";
+      const lbl = document.createElement("span");
+      lbl.textContent = label;
+      lbl.style.cssText = "min-width:60px;";
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = String(step);
+      slider.value = String(value);
+      slider.style.cssText = "accent-color:" + color + ";width:100px;";
+      const val = document.createElement("span");
+      val.textContent = String(value);
+      val.style.cssText = "min-width:30px;color:" + color + ";";
+      slider.addEventListener("input", () => {
+        val.textContent = slider.value;
+      });
+      wrapper.appendChild(lbl);
+      wrapper.appendChild(slider);
+      wrapper.appendChild(val);
+      return { wrapper, slider, val };
+    };
+
+    const smoothTimeCtrl = makeSlider("smoothTime", 0.1, 2, 0.1, smoothTime, "#61afef");
+    const maxSpeedCtrl = makeSlider("maxSpeed", 10, 500, 10, maxSpeed, "#e5c07b");
+
+    controls.appendChild(smoothTimeCtrl.wrapper);
+    controls.appendChild(maxSpeedCtrl.wrapper);
     container.appendChild(controls);
 
-    let targetValue = 620;
-    createSmoothDamp({
-      from: () => 0,
-      to: () => targetValue,
-      smoothTime,
-      maxSpeed,
+    let targetX = 30;
+    let currentSmoothTime = smoothTime;
+    let currentMaxSpeed = maxSpeed;
+
+    const damp = createSmoothDamp({
+      to: () => targetX,
+      smoothTime: () => currentSmoothTime,
+      maxSpeed: () => currentMaxSpeed,
       onUpdate: (value, velocity) => {
-        block.style.transform = `translateX(${value}px)`;
-        const absoluteVelocity = Math.abs(velocity);
-        const barPercent = Math.min(absoluteVelocity * 2, 100);
-        velFill.style.width = `${barPercent}%`;
-        velFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
-        velFill.style.background = velocity >= 0 ? "#61afef" : "#e06c75";
-        velValue.textContent = velocity.toFixed(2);
+        block.style.transform = `translateY(-50%) translateX(${value}px)`;
+
+        const absVel = Math.abs(velocity);
+        const barPercent = Math.min(absVel * 0.01, 100);
+        velocityFill.style.width = `${barPercent}%`;
+        velocityFill.style.left = velocity >= 0 ? "50%" : `${50 - barPercent}%`;
+        velocityFill.style.background = velocity >= 0 ? "#61afef" : "#e06c75";
+        velocityValue.textContent = velocity.toFixed(2);
       },
     });
 
-    let paused = false;
-    playBtn.addEventListener("click", () => {
-      paused = !paused;
-      playBtn.textContent = paused ? "▶ Play" : "⏸ Pause";
+    damp.setCurrent(30);
+
+    track.addEventListener("mousemove", (e) => {
+      const rect = track.getBoundingClientRect();
+      targetX = e.clientX - rect.left - 25;
+      targetX = Math.max(0, Math.min(650, targetX));
+      mouseLine.style.display = "block";
+      targetDot.style.display = "block";
+      mouseLine.style.left = `${targetX + 25}px`;
+      targetDot.style.left = `${targetX + 25}px`;
     });
 
-    resetBtn.addEventListener("click", () => {
-      targetValue = targetValue === 620 ? 100 : 620;
+    track.addEventListener("mouseleave", () => {
+      mouseLine.style.display = "none";
+      targetDot.style.display = "none";
+    });
+
+    smoothTimeCtrl.slider.addEventListener("input", () => {
+      currentSmoothTime = Number(smoothTimeCtrl.slider.value);
+    });
+    maxSpeedCtrl.slider.addEventListener("input", () => {
+      currentMaxSpeed = Number(maxSpeedCtrl.slider.value);
     });
 
     return container;

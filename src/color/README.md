@@ -132,7 +132,6 @@ const fromColor = hexToRgba("#ff6b6b");
 const toColor = hexToRgba("#4ecdc4");
 
 const spring = createSpring({
-  from: 0,
   to: () => (isHovered ? 1 : 0),
   stiffness: 180,
   damping: 12,

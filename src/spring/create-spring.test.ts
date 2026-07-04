@@ -7,35 +7,43 @@ beforeEach(() => {
   getTicker().stop();
 });
 
-test("spring settles at target", async () => {
+test("spring settles at target", () => {
   const ticker = getTicker();
+  let target = 0;
+
   const spring = createSpring({
-    from: 0,
-    to: 100,
+    to: () => target,
     stiffness: 100,
     damping: 10,
     mass: 1,
     precision: 0.01,
   });
 
+  // Change target — spring chases
+  target = 100;
+
   for (let i = 0; i < 200; i++) {
     ticker.update(16);
   }
 
   expect(spring.currentValue).toBeCloseTo(100, 0);
-  expect(spring.status).toBe("inactive");
+  // Dynamic targets stay active (target function may return a new value)
+  expect(spring.status).toBe("active");
 });
 
-test("spring with high stiffness settles faster", async () => {
+test("spring with high stiffness settles faster", () => {
   const ticker = getTicker();
+  let target = 0;
+
   const spring = createSpring({
-    from: 0,
-    to: 100,
+    to: () => target,
     stiffness: 400,
     damping: 20,
     mass: 1,
     precision: 0.01,
   });
+
+  target = 100;
 
   for (let i = 0; i < 100; i++) {
     ticker.update(16);
@@ -44,22 +52,45 @@ test("spring with high stiffness settles faster", async () => {
   expect(spring.currentValue).toBeCloseTo(100, 0);
 });
 
-test("setCurrent teleports mid-animation", async () => {
+test("setCurrent teleports mid-animation", () => {
   const ticker = getTicker();
-  const spring = createSpring({ from: 0, to: 100, stiffness: 100, damping: 10 });
+  let target = 0;
 
+  const spring = createSpring({
+    to: () => target,
+    stiffness: 100,
+    damping: 10,
+  });
+
+  target = 100;
   ticker.update(16);
   spring.setCurrent(50);
   expect(spring.currentValue).toBe(50);
   expect(spring.velocity).toBe(0);
 });
 
+test("default start position is at target", () => {
+  const spring = createSpring({ to: () => 100, stiffness: 200, damping: 15 });
+
+  expect(spring.currentValue).toBe(100);
+  spring.kill();
+});
+
+test("setCurrent before first tick sets initial position", () => {
+  const spring = createSpring({ to: () => 100, stiffness: 200, damping: 15 });
+  spring.setCurrent(50);
+
+  expect(spring.currentValue).toBe(50);
+  spring.kill();
+});
+
 test("onUpdate receives velocity", () => {
   const ticker = getTicker();
   const velocities: number[] = [];
+  let target = 0;
+
   const spring = createSpring({
-    from: 0,
-    to: 100,
+    to: () => target,
     stiffness: 200,
     damping: 15,
     mass: 1,
@@ -68,31 +99,39 @@ test("onUpdate receives velocity", () => {
     },
   });
 
+  target = 100;
   ticker.update(16);
 
   expect(velocities.length).toBeGreaterThan(0);
   expect(velocities[0]).toBeCloseTo(320, 5);
-  // velocity getter matches
   expect(spring.velocity).toBe(velocities[velocities.length - 1]);
   spring.kill();
 });
 
-test("kill removes from ticker", async () => {
+test("kill removes from ticker", () => {
   const ticker = getTicker();
-  const spring = createSpring({ from: 0, to: 100, stiffness: 100, damping: 10 });
+  let target = 0;
 
+  const spring = createSpring({
+    to: () => target,
+    stiffness: 100,
+    damping: 10,
+  });
+
+  target = 100;
   ticker.update(16);
   spring.kill();
 
   expect(spring.status).toBe("inactive");
 });
 
-test("start and stop control the spring", async () => {
+test("start and stop control the spring", () => {
   const ticker = getTicker();
   const values: number[] = [];
+  let target = 0;
+
   const spring = createSpring({
-    from: 0,
-    to: 100,
+    to: () => target,
     stiffness: 200,
     damping: 15,
     onUpdate: (v) => {
@@ -100,6 +139,7 @@ test("start and stop control the spring", async () => {
     },
   });
 
+  target = 100;
   ticker.update(16);
   ticker.update(16);
 
@@ -116,11 +156,11 @@ test("start and stop control the spring", async () => {
   expect(spring.currentValue).toBeCloseTo(100, 0);
 });
 
-test("chases dynamic target function", async () => {
+test("chases dynamic target function", () => {
   const ticker = getTicker();
   let target = 50;
 
-  const spring = createSpring({ from: 0, to: () => target, stiffness: 200, damping: 15 });
+  const spring = createSpring({ to: () => target, stiffness: 200, damping: 15 });
 
   for (let i = 0; i < 50; i++) ticker.update(16);
 

@@ -5,17 +5,18 @@ import { createSmoothDamp } from "./create-smooth-damp";
 
 describe("createSmoothDamp", () => {
   it("approaches a static target over time", () => {
+    let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       smoothTime: 0.3,
       onUpdate: (v) => {
         values.push(v);
       },
     });
 
-    // Simulate frames
+    target = 100;
+
     for (let i = 0; i < 120; i++) {
       getTicker().update(16);
     }
@@ -29,7 +30,6 @@ describe("createSmoothDamp", () => {
     let target = 100;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
       to: () => target,
       smoothTime: 0.5,
       onUpdate: (v) => {
@@ -37,97 +37,116 @@ describe("createSmoothDamp", () => {
       },
     });
 
-    // Simulate frames with target moving
     for (let t = 0; t < 120; t++) {
       if (t === 30) target = 200;
       getTicker().update(16);
     }
 
-    // Should have moved past initial target and be approaching new target
     expect(values[values.length - 1]).toBeGreaterThan(150);
     sd.kill();
   });
 
+  it("default start position is at target", () => {
+    const sd = createSmoothDamp({
+      to: () => 100,
+      smoothTime: 0.3,
+    });
+
+    expect(sd.currentValue).toBe(100);
+    sd.kill();
+  });
+
+  it("setCurrent before first tick sets initial position", () => {
+    const sd = createSmoothDamp({
+      to: () => 100,
+      smoothTime: 0.3,
+    });
+    sd.setCurrent(50);
+
+    expect(sd.currentValue).toBe(50);
+    sd.kill();
+  });
+
   it("setCurrent teleports the value", () => {
+    let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       smoothTime: 1,
       onUpdate: (v) => {
         values.push(v);
       },
     });
 
+    target = 100;
     getTicker().update(16);
     sd.setCurrent(500);
 
-    // Check immediately after setCurrent, before next tick
     expect(sd.currentValue).toBe(500);
     sd.kill();
   });
 
   it("stop pauses progress and start resumes it", () => {
+    let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       smoothTime: 0.2,
       onUpdate: (v) => {
         values.push(v);
       },
     });
 
-    // Let it move for 10 frames
+    target = 100;
     for (let i = 0; i < 10; i++) getTicker().update(16);
     const before = sd.currentValue;
 
     sd.stop();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
-    // Should be frozen
     expect(sd.currentValue).toBe(before);
 
     sd.start();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
-    // Should resume moving
     expect(sd.currentValue).toBeGreaterThan(before);
     sd.kill();
   });
 
   it("kill stops the damp and removes from ticker", () => {
+    let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       smoothTime: 0.3,
       onUpdate: (v) => {
         values.push(v);
       },
     });
 
+    target = 100;
     getTicker().update(16);
     sd.kill();
 
     const killedValue = sd.currentValue;
-    getTicker().update(16); // This should do nothing
+    getTicker().update(16);
 
     expect(sd.currentValue).toBe(killedValue);
     expect(sd.status).toBe("inactive");
   });
 
   it("onUpdate receives velocity", () => {
+    let target = 0;
     const velocities: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       smoothTime: 0.3,
       onUpdate: (_v, vel) => {
         velocities.push(vel);
       },
     });
 
+    target = 100;
     getTicker().update(16);
 
     expect(velocities.length).toBeGreaterThan(0);
@@ -137,10 +156,10 @@ describe("createSmoothDamp", () => {
   });
 
   it("uses maxSpeed to cap velocity", () => {
+    let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
-      from: () => 0,
-      to: () => 1000,
+      to: () => target,
       smoothTime: 0.1,
       maxSpeed: 10,
       onUpdate: (v) => {
@@ -148,6 +167,7 @@ describe("createSmoothDamp", () => {
       },
     });
 
+    target = 1000;
     // Single large frame
     getTicker().update(16);
 

@@ -5,15 +5,17 @@ import { createLerp } from "./create-lerp";
 
 describe("createLerp", () => {
   it("approaches a static target over time", () => {
+    let target = 0;
     const values: number[] = [];
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: 2,
       onUpdate: (v) => {
         values.push(v);
       },
     });
+
+    target = 100;
 
     for (let i = 0; i < 120; i++) {
       getTicker().update(16);
@@ -28,7 +30,6 @@ describe("createLerp", () => {
     let target = 50;
     const values: number[] = [];
     const lerp = createLerp({
-      from: () => 0,
       to: () => target,
       rate: 3,
       onUpdate: (v) => {
@@ -46,30 +47,50 @@ describe("createLerp", () => {
   });
 
   it("rate of 0 does nothing", () => {
-    const values: number[] = [];
+    let target = 0;
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: 0,
-      onUpdate: (v) => {
-        values.push(v);
-      },
+      onUpdate: () => {},
     });
 
+    target = 100;
     for (let i = 0; i < 30; i++) getTicker().update(16);
 
     expect(lerp.currentValue).toBe(0);
     lerp.kill();
   });
 
-  it("setCurrent teleports the value", () => {
+  it("default start position is at target", () => {
     const lerp = createLerp({
-      from: () => 0,
       to: () => 100,
+      rate: 2,
+    });
+
+    expect(lerp.currentValue).toBe(100);
+    lerp.kill();
+  });
+
+  it("setCurrent before first tick sets initial position", () => {
+    const lerp = createLerp({
+      to: () => 100,
+      rate: 2,
+    });
+    lerp.setCurrent(50);
+
+    expect(lerp.currentValue).toBe(50);
+    lerp.kill();
+  });
+
+  it("setCurrent teleports the value", () => {
+    let target = 0;
+    const lerp = createLerp({
+      to: () => target,
       rate: 2,
       onUpdate: () => {},
     });
 
+    target = 100;
     getTicker().update(16);
     lerp.setCurrent(500);
 
@@ -78,13 +99,14 @@ describe("createLerp", () => {
   });
 
   it("stop pauses and start resumes", () => {
+    let target = 0;
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: 5,
       onUpdate: () => {},
     });
 
+    target = 100;
     for (let i = 0; i < 10; i++) getTicker().update(16);
     const before = lerp.currentValue;
 
@@ -101,13 +123,14 @@ describe("createLerp", () => {
   });
 
   it("kill stops the lerp and removes from ticker", () => {
+    let target = 0;
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: 2,
       onUpdate: () => {},
     });
 
+    target = 100;
     getTicker().update(16);
     lerp.kill();
 
@@ -119,16 +142,17 @@ describe("createLerp", () => {
   });
 
   it("onUpdate receives velocity that decreases as it approaches target", () => {
+    let target = 0;
     const velocities: number[] = [];
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: 3,
       onUpdate: (_v, vel) => {
         velocities.push(vel);
       },
     });
 
+    target = 100;
     for (let i = 0; i < 30; i++) getTicker().update(16);
 
     // First velocity should be positive (moving toward target)
@@ -142,17 +166,18 @@ describe("createLerp", () => {
   });
 
   it("rate can be a dynamic accessor function", () => {
+    let target = 0;
     let currentRate = 0.5;
     const values: number[] = [];
     const lerp = createLerp({
-      from: () => 0,
-      to: () => 100,
+      to: () => target,
       rate: () => currentRate,
       onUpdate: (v) => {
         values.push(v);
       },
     });
 
+    target = 100;
     for (let i = 0; i < 60; i++) getTicker().update(16);
     const afterSlow = lerp.currentValue;
 

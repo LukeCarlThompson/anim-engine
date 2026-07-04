@@ -274,8 +274,7 @@ Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a
 import { createSpring } from "anim-engine";
 
 const spring = createSpring({
-  from: 0,
-  to: 100,
+  to: () => 100,
   stiffness: 180,
   damping: 12,
   mass: 1,
@@ -285,6 +284,8 @@ const spring = createSpring({
   },
 });
 
+spring.setCurrent(0); // jump to start — spring chases back to 100
+
 // Dynamic target — mouse chase
 const targetX = { value: 0 };
 document.addEventListener("mousemove", (e) => {
@@ -292,7 +293,6 @@ document.addEventListener("mousemove", (e) => {
 });
 
 const follower = createSpring({
-  from: 0,
   to: () => targetX.value, // re-read every frame
   stiffness: 200,
   damping: 15,
@@ -302,7 +302,7 @@ const follower = createSpring({
 
 All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => number)` — resolved every frame.
 
-**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrent(value)`, `currentValue`, `velocity`, `status`.
+**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrent(value)`, `currentValue`, `velocity`, `status`. Starts at the `to()` value. Use `setCurrent(value)` to jump elsewhere.
 
 #### createSmoothDamp
 
@@ -310,12 +310,13 @@ All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => nu
 import { createSmoothDamp } from "anim-engine";
 
 const damp = createSmoothDamp({
-  from: 0,
-  to: 100,
+  to: () => 100,
   smoothTime: 0.3,
   maxSpeed: Infinity,
   onUpdate: (value, velocity) => (sprite.x = value),
 });
+
+damp.setCurrent(0); // jump to start — damp chases back to 100
 ```
 
 Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTime` (seconds to reach target).
@@ -328,11 +329,12 @@ Unity-style smooth damp with Taylor-series exponential approximation. No stiffne
 import { createLerp } from "anim-engine";
 
 const lerp = createLerp({
-  from: 0,
-  to: 100,
+  to: () => 100,
   rate: 3, // convergence rate (higher = faster)
   onUpdate: (value, velocity) => (sprite.x = value),
 });
+
+lerp.setCurrent(0); // jump to start — lerp chases back to 100
 ```
 
 First-order exponential approach: `value += (target - value) * rate * deltaTime`. Frame-rate independent.
@@ -467,8 +469,7 @@ All primitives accept `number | (() => number)` for value parameters. Use a func
 
 ```ts
 const spring = createSpring({
-  from: 0,
-  to: () => getMousePosition(), // re-read every frame
+  to: () => getMousePosition(), // starts at current mouse position // re-read every frame
   stiffness: () => sliderValue, // dynamic stiffness
   damping: () => dampingValue,
 });
@@ -609,9 +610,9 @@ requestAnimationFrame(gameLoop);
 | `KeyframeOptions`    | `keyframes: Keyframe[]`, `onUpdate`, `onProgress`, `onEnded`                                                             |
 | `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
-| `SpringOptions`      | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                  |
-| `SmoothDampOptions`  | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                     |
-| `LerpOptions`        | `from`, `to`, `rate`, `onUpdate`                                                                                        |
+| `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                  |
+| `SmoothDampOptions`  | `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                     |
+| `LerpOptions`        | `to`, `rate`, `onUpdate`                                                                                        |
 | `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
 | `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
