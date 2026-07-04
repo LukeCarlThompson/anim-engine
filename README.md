@@ -9,7 +9,7 @@
 - [Usage](#usage)
   - [createAnimation (tween)](#createanimation)
   - [createAnimation (keyframes)](#keyframes)
-  - [Repeat & yoyo](#repeat--yoyo)
+  - [Re-playing and sequencing](#re-playing-and-sequencing)
   - [createTimeline](#createtimeline)
   - [Continuous primitives](#continuous-primitives)
   - [createSmoothClamp](#createsmoothclamp)
@@ -51,7 +51,7 @@ await anim.play();
 
 Anim Engine is built around three simple mental models that compose naturally:
 
-- **Animation** — a timed tween from value A to value B with easing, repeat, yoyo, and delay. The atomic unit of motion.
+- **Animation** — a timed tween from value A to value B with easing and delay. The atomic unit of motion.
 - **Keyframes** — multi-segment interpolation that describes what a single value does over time, with per-segment easing and millisecond timing.
 - **Timeline** — orchestration of multiple animations running in parallel, sequence, or staggered offset. Composes tweens and keyframes.
 
@@ -82,7 +82,7 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 
 | Primitive                                   | Returns      | Description                                              |
 | ------------------------------------------- | ------------ | -------------------------------------------------------- |
-| [`createAnimation`](#createanimation)       | `Animation`  | Timed tween from A to B with easing, repeat, yoyo, delay |
+| [`createAnimation`](#createanimation)       | `Animation`  | Timed tween from A to B with easing and delay |
 | [`createAnimation` (keyframes)](#keyframes) | `Animation`  | Multi-segment interpolation with per-segment easing      |
 | [`createTimeline`](#createtimeline)         | `Timeline`   | Orchestrate multiple animations on a shared timeline     |
 
@@ -142,13 +142,9 @@ anim.skipToEnd(); // jumps to end, resolves promise
 | `durationMs` | `number`                                     | —           | Duration in milliseconds                                     |
 | `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"` | Easing function or name                                    |
 | `delayMs`    | `number`                                     | `0`         | Delay before starting                                        |
-| `repeat`     | `number`                                     | `0`         | Times to repeat (set to `Infinity` for infinite)             |
-| `yoyo`       | `boolean`                                    | `false`     | Alternate direction on repeat                                |
 | `onStarted`  | `() => void`                                | —           | Called when animation begins (after delay)                   |
 | `onUpdate`   | `(value: number, velocity: number) => void`  | —           | Called every frame with current value and velocity (units/s) |
 | `onEnded`    | `() => void`                                | —           | Called when animation completes                              |
-| `onRepeat`   | `() => void`                                | —           | Called at the start of each repeat cycle                     |
-
 **Returns:** `Animation`
 
 ### Keyframes
@@ -183,34 +179,57 @@ Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the to
 
 **Returns:** `Animation`
 
-### Repeat & yoyo
+### Re-playing and sequencing
+
+Since `play()` can be called again after a tween completes, repeat and yoyo patterns are built from the public API rather than baked into the engine:
 
 ```ts
 import { createAnimation } from "anim-engine";
 
-// Pulse — scale bounces between 1 and 1.3 forever
-const pulse = createAnimation({
+const anim = createAnimation({
   from: 1,
   to: 1.3,
   durationMs: 600,
   ease: "inOutSine",
-  repeat: Infinity,
-  yoyo: true,
   onUpdate: (scale) => sprite.scale.set(scale),
 });
 
-// Flash — blink three times with a callback on each repeat
-const flash = createAnimation({
-  from: 1,
-  to: 0,
-  durationMs: 200,
+// Repeat — just call play() again
+for (let i = 0; i < 3; i++) {
+  await anim.play();
+}
+
+// Yoyo — swap from/to via dynamic accessors and re-play
+let forward = true;
+const bounce = createAnimation({
+  from: () => (forward ? 1 : 1.3),
+  to: () => (forward ? 1.3 : 1),
+  durationMs: 600,
   ease: "inOutSine",
-  repeat: 3,
-  yoyo: true,
-  onRepeat: () => console.log("blink"),
-  onUpdate: (alpha) => (sprite.alpha = alpha),
+  onUpdate: (v) => sprite.scale.set(v),
 });
+
+for (let i = 0; i < 6; i++) {
+  forward = !forward;
+  await bounce.play();
+}
 ```
+
+For more complex sequences, use `createTimeline`:
+
+```ts
+import { createAnimation, createTimeline } from "anim-engine";
+
+const fadeIn = createAnimation({ from: 0, to: 1, durationMs: 300 });
+const fadeOut = createAnimation({ from: 1, to: 0, durationMs: 300 });
+
+const flash = createTimeline([
+  { at: 0, animation: fadeIn },
+  { gap: 0, animation: fadeOut },
+]);
+await flash.play();
+```
+
 
 ### createTimeline
 

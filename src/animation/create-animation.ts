@@ -15,12 +15,9 @@ export type SingleTweenOptions = {
   durationMs: number;
   ease?: EaseName | EaseFunction;
   delayMs?: number;
-  repeat?: number;
-  yoyo?: boolean;
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
-  onRepeat?: () => void;
 };
 
 export type Keyframe = {
@@ -53,10 +50,8 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 
 const createSingleTween = (options: SingleTweenOptions): Animation => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
-  const repeatCount = options.repeat ?? 0;
-  const yoyoEnabled = options.yoyo ?? false;
   const delayMs = options.delayMs ?? 0;
-  const { onStarted, onUpdate, onEnded, onRepeat, durationMs } = options;
+  const { onStarted, onUpdate, onEnded, durationMs } = options;
 
   let rawFrom: number | (() => number) = options.from;
   let rawTo: number | (() => number) = options.to;
@@ -65,8 +60,6 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
-  let repeatCounter = 0;
-  let isReversed = false;
   let delayRemainingMs = 0;
   let pendingStart = false;
 
@@ -93,8 +86,6 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
-    repeatCounter = 0;
-    isReversed = false;
     state.progress = 0;
     const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
     state.currentValue = initFrom;
@@ -161,17 +152,6 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 
   function handleCompletion() {
     onEnded?.();
-    if (repeatCounter < repeatCount) {
-      repeatCounter++;
-      if (yoyoEnabled) isReversed = !isReversed;
-      state.progress = 0;
-      const revFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-      const revTo = typeof rawTo === "function" ? rawTo() : rawTo;
-      state.currentValue = isReversed ? revTo : revFrom;
-      state.velocity = 0;
-      onRepeat?.();
-      return;
-    }
     status = "stopped";
     ticker.remove(update);
     resolvePromise?.(controls);

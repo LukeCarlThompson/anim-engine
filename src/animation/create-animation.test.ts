@@ -22,6 +22,42 @@ test("GIVEN a linear tween from 0 to 100 over 1000ms WHEN updated by 1000ms THEN
   expect(tween.status).toBe("stopped");
 });
 
+test("GIVEN a tween WHEN played to completion and played again THEN it animates again", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let value = 0;
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 50,
+    ease: "linear",
+    onUpdate: (v) => {
+      value = v;
+    },
+  });
+
+  // WHEN — play once to completion
+  const p1 = tween.play();
+  ticker.update(50);
+  await p1;
+
+  // THEN — first play completes
+  expect(value).toBe(100);
+
+  // WHEN — reset and play again
+  value = 0;
+  tween.setProgress(0);
+  const p2 = tween.play();
+  ticker.update(25);
+
+  // THEN — animating again from 0 toward 100
+  expect(value).toBe(50);
+
+  ticker.update(25);
+  await p2;
+  expect(value).toBe(100);
+});
+
 test("GIVEN an outElastic tween from 0 to 200 over 500ms WHEN it completes THEN it resolves to the end value", async () => {
   // GIVEN
   const ticker = getTicker();
@@ -233,32 +269,7 @@ test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue 
   expect(tween.currentValue).toBeLessThan(90);
 });
 
-test("GIVEN a tween with repeat: 2 WHEN it plays through THEN it repeats the specified number of times", async () => {
-  // GIVEN
-  const ticker = getTicker();
-  let count = 0;
-  const tween = createAnimation({
-    from: 0,
-    to: 100,
-    durationMs: 100,
-    ease: "linear",
-    repeat: 2,
-    onUpdate: () => {
-      count++;
-    },
-  });
 
-  // WHEN
-  const p = tween.play();
-  ticker.update(100);
-  ticker.update(100);
-  ticker.update(100);
-  await p;
-
-  // THEN
-  expect(tween.currentValue).toBe(100);
-  expect(count).toBeGreaterThanOrEqual(3);
-});
 
 test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and playback starts after the delay", async () => {
   // GIVEN
@@ -295,6 +306,82 @@ test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and 
 
   // THEN — reaches end value
   expect(tween.currentValue).toBe(100);
+});
+
+
+
+// ─── setCurrentValue ───
+
+test("GIVEN a running linear tween WHEN setCurrentValue is called THEN it teleports the value and resets velocity", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 1000,
+    ease: "linear",
+  });
+  const p = tween.play();
+
+  // WHEN
+  ticker.update(300);
+  tween.setCurrentValue(500);
+
+  // THEN
+  expect(tween.currentValue).toBe(500);
+  expect(tween.velocity).toBe(0);
+
+  tween.stop();
+  await p;
+});
+
+test("GIVEN a running tween WHEN setCurrentValue is called mid-way THEN it teleports and subsequent updates animate from the new position", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 1000,
+    ease: "linear",
+  });
+  const p = tween.play();
+
+  // WHEN — advance 300ms (at 30), then teleport to 500
+  ticker.update(300);
+  tween.setCurrentValue(500);
+
+  // THEN — immediate teleport
+  expect(tween.currentValue).toBe(500);
+  expect(tween.velocity).toBe(0);
+
+  // WHEN — advance another 700ms (the remaining progress from the original duration perspective)
+  ticker.update(700);
+  await p;
+
+  // THEN — completes at the to value
+  expect(tween.currentValue).toBe(100);
+});
+
+// ─── Very short durationMs edge case ───
+
+test("GIVEN a tween with a very short durationMs of 1 WHEN played with a large delta THEN it snaps to the end value", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 1,
+    ease: "linear",
+  });
+
+  // WHEN
+  const p = tween.play();
+  ticker.update(16);
+  await p;
+
+  // THEN
+  expect(tween.currentValue).toBe(100);
+  expect(tween.status).toBe("stopped");
 });
 
 // ─── Keyframe mode ───

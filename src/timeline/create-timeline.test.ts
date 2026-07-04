@@ -310,6 +310,75 @@ test("GIVEN a timeline that has been killed WHEN play() is called THEN it throws
   expect(() => tl.play()).toThrow();
 });
 
+test("GIVEN a timeline with onStarted callback WHEN played THEN the callback fires", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let started = false;
+
+  const a = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
+  const tl = createTimeline([{ at: 0, animation: [a] }], {
+    onStarted: () => {
+      started = true;
+    },
+  });
+
+  // WHEN
+  const p = tl.play();
+
+  // THEN
+  expect(started).toBe(true);
+  ticker.update(100);
+  await p;
+});
+
+test("GIVEN a timeline with onProgress callback WHEN it advances through frames THEN the callback receives progress values", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const progressValues: number[] = [];
+
+  const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
+  const tl = createTimeline([{ at: 0, animation: [a] }], {
+    onProgress: (p) => {
+      progressValues.push(Math.round(p * 100));
+    },
+  });
+
+  // WHEN
+  const p = tl.play();
+  ticker.update(100);
+  ticker.update(100);
+  await p;
+
+  // THEN — progress should go from ~0.5 to ~1.0
+  expect(progressValues.length).toBeGreaterThanOrEqual(2);
+  expect(progressValues[0]).toBeGreaterThanOrEqual(48);
+  expect(progressValues[0]).toBeLessThanOrEqual(52);
+  expect(progressValues[progressValues.length - 1]).toBeGreaterThanOrEqual(98);
+});
+
+test("GIVEN a running timeline WHEN stopped from paused state THEN the stop is handled cleanly", async () => {
+  // GIVEN
+  const ticker = getTicker();
+
+  const a = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 200,
+    ease: "linear",
+  });
+  const tl = createTimeline([{ at: 0, animation: [a] }]);
+  tl.play();
+
+  // WHEN — advance then pause then stop
+  ticker.update(100);
+  tl.pause();
+  tl.stop();
+  await Promise.resolve();
+
+  // THEN — status is stopped
+  expect(tl.status).toBe("stopped");
+});
+
 test("GIVEN a timeline with two keyframes WHEN setProgress is called THEN all animations scrub to the correct positions", () => {
   // GIVEN
   let aValue = 0;
