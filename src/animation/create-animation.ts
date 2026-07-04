@@ -10,8 +10,8 @@ const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
 type ResolveFunction = (value: Animation) => void;
 
 export type SingleTweenOptions = {
-  from: DynamicValue<number>;
-  to: DynamicValue<number>;
+  from: DynamicValue;
+  to: DynamicValue;
   durationMs: number;
   ease?: EaseName | EaseFunction;
   delayMs?: number;
@@ -25,20 +25,20 @@ export type SingleTweenOptions = {
 
 export type Keyframe = {
   at: number;
-  value: DynamicValue<number>;
+  value: DynamicValue;
   ease?: EaseName | EaseFunction;
 };
 
-export type KeyframeOptions = {
+export type KeyframedAnimationOptions = {
   keyframes: Keyframe[];
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
 };
 
-export type AnimationOptions = SingleTweenOptions | KeyframeOptions;
+export type AnimationOptions = SingleTweenOptions | KeyframedAnimationOptions;
 
-const isKeyframeMode = (options: AnimationOptions): options is KeyframeOptions => {
+const isKeyframeMode = (options: AnimationOptions): options is KeyframedAnimationOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
@@ -204,7 +204,9 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     get status() {
       return status;
     },
-    getDurationMs: () => durationMs,
+    get durationMs() {
+      return durationMs;
+    },
   };
 
   return controls;
@@ -212,7 +214,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
+const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation => {
   const keyframes = options.keyframes;
   const onUpdate = options.onUpdate;
   const onProgress = options.onProgress;
@@ -418,7 +420,9 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
     get status() {
       return status;
     },
-    getDurationMs: () => totalDurationMs,
+    get durationMs() {
+      return totalDurationMs;
+    },
   };
 
   return controls;

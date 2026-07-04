@@ -5,7 +5,7 @@ import type { LerpState } from "./step";
 
 export type LerpOptions = {
   to: () => number;
-  smoothTimeMs: DynamicValue<number>;
+  smoothTimeMs: DynamicValue;
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;

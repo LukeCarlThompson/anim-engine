@@ -2,8 +2,8 @@ import type { Interpolation, DynamicValue } from "../shared/types";
 
 export type SmoothDampOptions = {
   to: () => number;
-  smoothTimeMs: DynamicValue<number>;
-  maxSpeed?: DynamicValue<number>;
+  smoothTimeMs: DynamicValue;
+  maxSpeed?: DynamicValue;
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;

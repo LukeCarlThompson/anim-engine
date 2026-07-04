@@ -39,7 +39,7 @@ export type AnimationStatus = "playing" | "paused" | "stopped" | "dead";
 
 export type InterpolationStatus = "active" | "inactive" | "dead";
 
-export type DynamicValue<T> = T | (() => T);
+export type DynamicValue = number | (() => number);
 
 // === Animation ===
 
@@ -58,7 +58,7 @@ export type Animation = {
   progress: number;
   setProgress: (value: number) => void;
   status: AnimationStatus;
-  getDurationMs: () => number;
+  durationMs: number;
 };
 
 // === Interpolation ===

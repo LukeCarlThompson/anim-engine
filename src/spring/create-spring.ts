@@ -1,9 +1,9 @@
 import type { Interpolation, DynamicValue } from "../shared/types";
 export type SpringOptions = {
   to: () => number;
-  stiffness?: DynamicValue<number>;
-  damping?: DynamicValue<number>;
-  mass?: DynamicValue<number>;
+  stiffness?: DynamicValue;
+  damping?: DynamicValue;
+  mass?: DynamicValue;
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;

@@ -275,7 +275,7 @@ test("kill prevents replay", async () => {
   expect(() => tl.play()).toThrow();
 });
 
-test("getDurationMs returns total timeline length", () => {
+test("durationMs returns total timeline length", () => {
   const a = createAnimation({ from: 0, to: 100, durationMs: 200, ease: "linear" });
   const b = createAnimation({ from: 0, to: 100, durationMs: 300, ease: "linear" });
 
@@ -284,5 +284,5 @@ test("getDurationMs returns total timeline length", () => {
     { gap: 100, animation: [b] },
   ]);
 
-  expect(tl.getDurationMs()).toBe(200 + 100 + 300);
+  expect(tl.durationMs).toBe(200 + 100 + 300);
 });

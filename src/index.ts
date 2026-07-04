@@ -13,13 +13,11 @@ export { lerpOklab, hexToRgba } from "./color/lerp-oklab";
 export { getTicker } from "./ticker/get-ticker";
 
 // Easing
-export { easingFunctions, EASE_NAMES, cubicBezier } from "./easing/easing";
+export { EASE_NAMES, cubicBezier } from "./easing/easing";
 
 // Types
 export type {
-  SingleTweenOptions,
   Keyframe,
-  KeyframeOptions,
   AnimationOptions,
 } from "./animation/create-animation";
 export type { Animation, Interpolation, EaseName, AnimationStatus, InterpolationStatus, DynamicValue } from "./shared/types";

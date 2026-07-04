@@ -19,7 +19,7 @@ export type Timeline = {
   kill: () => void;
   progress: number;
   status: AnimationStatus;
-  getDurationMs: () => number;
+  durationMs: number;
 };
 import { getTicker } from "../ticker/get-ticker";
 
@@ -49,7 +49,7 @@ export const createTimeline = (
   for (const layer of layers) {
     const anims = Array.isArray(layer.animation) ? layer.animation : [layer.animation];
     const startAt = "at" in layer ? layer.at : lastBatchEnd + layer.gap;
-    const maxDuration = Math.max(...anims.map((a) => a.getDurationMs()));
+    const maxDuration = Math.max(...anims.map((a) => a.durationMs));
     const endAt = startAt + maxDuration;
     batches.push({ animations: anims, startAt, endAt, started: false });
     lastBatchEnd = endAt;
@@ -189,8 +189,6 @@ export const createTimeline = (
     resolvePromise = undefined;
   };
 
-  const getDurationMs = () => totalDurationMs;
-
   const timeline: Timeline = {
     play,
     pause,
@@ -204,7 +202,9 @@ export const createTimeline = (
     get status() {
       return status;
     },
-    getDurationMs,
+    get durationMs() {
+      return totalDurationMs;
+    },
   };
 
   return timeline;

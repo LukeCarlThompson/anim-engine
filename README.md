@@ -603,12 +603,10 @@ requestAnimationFrame(gameLoop);
 | `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `progress`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                           |
 | `EaseFunction`       | `(t: number) => number`                                                                                                 |
-| `DynamicValue<T>`    | `T \| (() => T)`                                                                                                        |
+| `DynamicValue`       | `number \| (() => number)`                                                                                             |
 | `AnimationStatus`    | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
 | `InterpolationStatus` | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                           |
-| `AnimationOptions`   | Single tween or keyframe animation options                                                                              |
-| `SingleTweenOptions` | `from`, `to`, `durationMs`, `ease`, `delayMs`, `repeat`, `yoyo`, `onStarted`, `onUpdate`, `onEnded`, `onRepeat`          |
-| `KeyframeOptions`    | `keyframes: Keyframe[]`, `onUpdate`, `onProgress`, `onEnded`                                                             |
+| `AnimationOptions`   | Single tween or keyframe animation options (discriminated union)                                                         |
 | `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
 | `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
