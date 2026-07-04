@@ -119,15 +119,6 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
 };
 
 /**
- * Normalise a named or custom easing into a callable function.
- * If `ease` is already a function, returns it as-is.
- */
-export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction => {
-  if (typeof ease === "function") return ease;
-  return easingFunctions[ease];
-};
-
-/**
  * Cubic bezier easing. Builds a pre-computed lookup table at construction time
  * for O(log n) binary search at runtime — no Newton iteration, no allocation
  * per frame.

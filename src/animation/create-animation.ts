@@ -1,8 +1,11 @@
 import type { AnimControls, DynamicValue, EaseFunction, EaseName } from "../shared/types";
+import { easingFunctions } from "../easing/easing";
 import { getTicker } from "../ticker/get-ticker";
-import { resolveEasing } from "../easing/easing";
 import { updateTween } from "./update";
 import type { TweenState } from "./update";
+
+const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
+  typeof ease === "function" ? ease : easingFunctions[ease];
 
 type ResolveFunction = (value: AnimControls<number>) => void;
 

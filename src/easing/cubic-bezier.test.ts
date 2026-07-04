@@ -45,15 +45,6 @@ test("ease-out: cubicBezier(0, 0, 0.58, 1) starts fast", () => {
   expect(easeOut(1)).toBeCloseTo(1, 5);
 });
 
-test("works with resolveEasing when passed as function", async () => {
-  const { resolveEasing } = await import("./easing");
-  const ease = resolveEasing(cubicBezier(0.25, 0.1, 0.25, 1));
-
-  expect(ease(0)).toBeCloseTo(0, 5);
-  expect(ease(0.5)).toBeGreaterThan(0.3);
-  expect(ease(1)).toBeCloseTo(1, 5);
-});
-
 test("64 samples gives good enough accuracy", () => {
   // CSS ease-in-out — should be close to a known value at midpoint
   const ease = cubicBezier(0.42, 0, 0.58, 1);

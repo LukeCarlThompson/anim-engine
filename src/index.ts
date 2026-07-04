@@ -12,7 +12,7 @@ export { createLerp } from "./lerp/create-lerp";
 export { getTicker, createTicker } from "./ticker/get-ticker";
 
 // Easing
-export { easingFunctions, EASE_NAMES, resolveEasing, cubicBezier } from "./easing/easing";
+export { easingFunctions, EASE_NAMES, cubicBezier } from "./easing/easing";
 
 // Types
 export type {

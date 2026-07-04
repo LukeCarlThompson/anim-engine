@@ -124,13 +124,15 @@ const slideIn = createAnimation({
   onUpdate: (v) => (sprite.x = v),
 });
 
-createTimeline({
+const timeline = createTimeline({
   keyframes: [
     { at: 0, animations: [fadeIn, slideIn] }, // both start together
     { gap: 0.2, animations: [slideIn] }, // relative gap
   ],
   onProgress: (progress) => console.log(`overall: ${progress}`),
-}).play();
+});
+
+timeline.play();
 ```
 
 **Timeline options:**
@@ -268,6 +270,8 @@ Run locally: `npm run bench`
 
 ### Ticker
 
+The ticker does **not** auto-start. You must explicitly call `start()` (for rAF) or `update(deltaMs)` (for custom game loops) to drive animations.
+
 Primitives register themselves with the ticker on creation — no manual registration needed.
 
 **Standalone (rAF):** `getTicker().start()` uses its own `requestAnimationFrame` loop. Best for DOM-based demos or when you don't have a game loop.
@@ -307,13 +311,21 @@ function gameLoop(deltaMs: number) {
 31 Penner easing functions plus custom cubic bezier:
 
 ```ts
-import { evaluateEasing, cubicBezier, EASE_NAMES } from "anim-engine";
+import { cubicBezier, EASE_NAMES, createAnimation } from "anim-engine";
 
-resolveEasing("outElastic"); // named ease → function
-resolveEasing(cubicBezier(0.25, 0.1, 0.25, 1)); // custom → function
+const customEase = cubicBezier(0.25, 0.1, 0.25, 1); // custom easing function
+
+// Use it anywhere you'd use an ease name
+const anim = createAnimation({
+  from: 0,
+  to: 100,
+  durationMs: 1000,
+  ease: customEase,
+  onUpdate: (v) => (sprite.x = v),
+});
 ```
 
-`cubicBezier(p1x, p1y, p2x, p2y)` builds a 64-sample lookup table for O(log n) runtime — no iteration per frame.
+You can pass the result directly to any `ease` option — it's an `EaseFunction`, just like the named presets.
 
 **Supported ease names:** `linear`, `inQuad`, `outQuad`, `inOutQuad`, `inCubic`, `outCubic`, `inOutCubic`, `inQuart`, `outQuart`, `inOutQuart`, `inQuint`, `outQuint`, `inOutQuint`, `inSine`, `outSine`, `inOutSine`, `inExpo`, `outExpo`, `inOutExpo`, `inCirc`, `outCirc`, `inOutCirc`, `inBack`, `outBack`, `inOutBack`, `inElastic`, `outElastic`, `inOutElastic`, `inBounce`, `outBounce`, `inOutBounce`.
 
@@ -336,20 +348,20 @@ The function is called every frame inside the ticker update — no getter/setter
 
 ### Functions
 
-| Export                            | Description                          |
-| --------------------------------- | ------------------------------------ |
-| `createAnimation(options)`        | Timed or keyframe animation          |
-| `createTimeline(options)`         | Composited timeline of animations    |
-| `createSpring(options)`           | Physics spring (Verlet integration)  |
-| `createSmoothDamp(options)`       | Unity-style smooth damp              |
-| `createLerp(options)`             | Exponential lerp chase               |
-| `createSmoothClamp(threshold)`    | Asymptotic clamp factory             |
-| `createTicker()`                  | Ticker factory for custom game loops |
-| `getTicker()`                     | Singleton ticker                     |
-| `resolveEasing(ease)`             | Resolve ease name or function        |
-| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing           |
-| `lerpOklab(from, to, t)`          | Oklab color interpolation            |
-| `hexToRgba(hex)`                  | Parse hex color to normalized RGBA   |
+| Export                         | Description                          |
+| ------------------------------ | ------------------------------------ |
+| `createAnimation(options)`     | Timed or keyframe animation          |
+| `createTimeline(options)`      | Composited timeline of animations    |
+| `createSpring(options)`        | Physics spring (Verlet integration)  |
+| `createSmoothDamp(options)`    | Unity-style smooth damp              |
+| `createLerp(options)`          | Exponential lerp chase               |
+| `createSmoothClamp(threshold)` | Asymptotic clamp factory             |
+| `createTicker()`               | Ticker factory for custom game loops |
+| `getTicker()`                  | Singleton ticker                     |
+
+| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing |
+| `lerpOklab(from, to, t)` | Oklab color interpolation |
+| `hexToRgba(hex)` | Parse hex color to normalized RGBA |
 
 ### Type exports
 
