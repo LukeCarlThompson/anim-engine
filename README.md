@@ -354,11 +354,17 @@ Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. 
 
 ### Color
 
+Perceptually uniform Oklab interpolation. Straight RGB lerp produces muddy transitions — red→green goes through brown, blue→yellow goes through grey. Oklab matches human perception: equal steps look like equal changes.
+
 ```ts
 import { lerpOklab, hexToRgba } from "anim-engine";
 
-const fromColor = hexToRgba("#ff6b6b"); // → [1, 0.42, 0.42, 1]
-const toColor = hexToRgba("#4ecdc4"); // → [0.31, 0.80, 0.77, 1]
+hexToRgba("#ff6b6b");  // → [1, 0.42, 0.42, 1]
+hexToRgba("#f80");      // → [1, 0.533, 0, 1] (shorthand)
+hexToRgba("#ff804080"); // → [1, 0.502, 0.251, 0.502] (with alpha)
+
+const fromColor = hexToRgba("#ff6b6b");
+const toColor = hexToRgba("#4ecdc4");
 
 createAnimation({
   from: 0,
@@ -372,7 +378,27 @@ createAnimation({
 });
 ```
 
-Perceptually uniform Oklab interpolation — avoids muddy brown midpoints that RGB lerp produces. Alpha lerps linearly.
+**With continuous primitives** — drive the blend factor via spring, damp, or lerp:
+
+```ts
+import { createSpring, lerpOklab, hexToRgba } from "anim-engine";
+
+const fromColor = hexToRgba("#ff6b6b");
+const toColor = hexToRgba("#4ecdc4");
+
+const spring = createSpring({
+  from: 0,
+  to: () => (isHovered ? 1 : 0),
+  stiffness: 180,
+  damping: 12,
+  onUpdate: (t) => {
+    const [r, g, b] = lerpOklab(fromColor, toColor, t);
+    sprite.setColor(r, g, b, 1);
+  },
+});
+```
+
+See [`src/color/README.md`](src/color/README.md) for the full Oklab reference including color-space internals.
 
 ## Ticker
 

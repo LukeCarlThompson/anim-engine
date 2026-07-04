@@ -1,5 +1,7 @@
 # Color Interpolation (Oklab)
 
+> The main [README](../../README.md#color) covers basic usage, multi-stop sequences, and continuous primitive integration. This document is the expanded reference with full API details and color-space internals.
+
 Utilities for perceptually uniform color blending via [Oklab](https://bottosson.github.io/posts/oklab/).
 
 ## Why Oklab
