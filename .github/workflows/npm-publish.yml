@@ -1,0 +1,59 @@
+# Publish anim-engine to npm. Skips publish if the package version is already
+# published on the registry.
+# Triggers:
+#  - push to main (real publish)
+#  - manual run (workflow_dispatch) — does a dry-run by default
+name: Publish anim-engine to NPM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check types
+        run: npm run check:types
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Check if version is already published
+        id: check_published
+        run: node .github/scripts/check-published-version.mjs
+
+      - name: Verify npm auth (safe)
+        if: steps.check_published.outputs.published == 'false'
+        run: npm whoami || true
+
+      - name: Publish (dry-run for manual runs)
+        if: github.event_name == 'workflow_dispatch' && steps.check_published.outputs.published == 'false'
+        run: npm publish --access public --dry-run
+
+      - name: Publish
+        if: github.event_name == 'push' && steps.check_published.outputs.published == 'false'
+        run: npm publish --access public
