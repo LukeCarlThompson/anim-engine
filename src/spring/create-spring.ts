@@ -28,7 +28,7 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   let active = true;
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+  const animationHandle = { update: update };
 
   // Initialize
   const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
@@ -55,7 +55,7 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
     ticker.remove(animationHandle);
   };
 
-  function onTickerUpdate(deltaMs: number) {
+  function update(deltaMs: number) {
     if (!active) return;
 
     const target = resolveValue(rawTo);

@@ -49,7 +49,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   let lastBatchEnd = 0;
 
   for (const keyframe of options.keyframes) {
-    const startAt = 'at' in keyframe ? keyframe.at : lastBatchEnd + keyframe.gap;
+    const startAt = "at" in keyframe ? keyframe.at : lastBatchEnd + keyframe.gap;
     const maxDuration = Math.max(...keyframe.animations.map((a) => a.getDurationMs()));
     const endAt = startAt + maxDuration;
     batches.push({ anims: keyframe.animations, startAt, endAt, started: false });
@@ -66,7 +66,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   let pendingAnimations = 0;
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+  const animationHandle = { update: update };
 
   // ─── Lifecycle ───
 
@@ -153,7 +153,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   // ─── Ticker callback ───
 
-  function onTickerUpdate(deltaMs: number) {
+  function update(deltaMs: number) {
     if (status !== "playing") return;
     elapsedMs += deltaMs;
 

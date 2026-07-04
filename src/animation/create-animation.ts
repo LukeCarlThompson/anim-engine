@@ -75,7 +75,23 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
   let pendingStart = false;
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+
+  const update = (deltaMs: number) => {
+    if (stopped) return;
+    if (pendingStart) {
+      delayRemainingMs -= deltaMs;
+      if (delayRemainingMs > 0) return;
+      pendingStart = false;
+      onStarted?.(state.currentValue);
+      deltaMs = -delayRemainingMs;
+    }
+    const { from, to } = resolveValues();
+    const completed = updateTween(state, deltaMs, durationMs, currentEase, from, to);
+    onUpdate?.(state.currentValue, state.velocity);
+    if (completed) handleCompletion();
+  };
+
+  const animationHandle = { update: update };
 
   const resolveValues = () => {
     const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
@@ -153,21 +169,6 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     stopped = true;
     resolvePromise = undefined;
   };
-
-  function onTickerUpdate(deltaMs: number) {
-    if (stopped) return;
-    if (pendingStart) {
-      delayRemainingMs -= deltaMs;
-      if (delayRemainingMs > 0) return;
-      pendingStart = false;
-      onStarted?.(state.currentValue);
-      deltaMs = -delayRemainingMs;
-    }
-    const { from, to } = resolveValues();
-    const completed = updateTween(state, deltaMs, durationMs, currentEase, from, to);
-    onUpdate?.(state.currentValue, state.velocity);
-    if (completed) handleCompletion();
-  }
 
   function handleCompletion() {
     onEnded?.(state.currentValue);
@@ -298,7 +299,61 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
   let previousValue = resolveKeyframeValue(sorted[0]);
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+
+  const update = (deltaMs: number) => {
+    if (stopped) return;
+
+    const segment = segments[currentSegmentIndex];
+    segmentElapsed += deltaMs;
+
+    // Advance segment progress
+    segmentProgress += deltaMs / segment.durationMs;
+    if (segmentProgress >= 1) {
+      segmentProgress = 1;
+    }
+
+    // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
+    const eased = segment.easeFn(segmentProgress);
+    previousValue = state.currentValue;
+    state.currentValue = segment.from + (segment.to - segment.from) * eased;
+
+    if (segmentProgress >= 1) {
+      state.currentValue = segment.to;
+      state.velocity = 0;
+    } else {
+      state.velocity = (state.currentValue - previousValue) / (deltaMs / 1000);
+    }
+
+    // Compute global progress (O(1) via prefix sum)
+    const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
+    state.progress = Math.min(elapsedTotal / totalDurationMs, 1);
+    onProgress?.(state.progress);
+
+    onUpdate?.(state.currentValue, state.velocity);
+
+    // Check if segment completed
+    if (segmentProgress >= 1) {
+      if (currentSegmentIndex < segments.length - 1) {
+        currentSegmentIndex++;
+        segmentElapsed = 0;
+        segmentProgress = 0;
+        state.currentValue = segments[currentSegmentIndex].from;
+        previousValue = state.currentValue;
+        state.velocity = 0;
+        // Update global progress to end of previous segment (O(1) via prefix sum)
+        state.progress = Math.min(prefixSum[currentSegmentIndex] / totalDurationMs, 1);
+        onProgress?.(state.progress);
+      } else {
+        status = "stopped";
+        ticker.remove(animationHandle);
+        onEnded?.(state.currentValue);
+        resolvePromise?.(controls);
+        resolvePromise = undefined;
+      }
+    }
+  };
+
+  const animationHandle = { update: update };
 
   // Separate segment progress tracker (state.progress is overridden with global progress)
   let segmentProgress = 0;
@@ -364,59 +419,6 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     stopped = true;
     resolvePromise = undefined;
   };
-
-  function onTickerUpdate(deltaMs: number) {
-    if (stopped) return;
-
-    const segment = segments[currentSegmentIndex];
-    segmentElapsed += deltaMs;
-
-    // Advance segment progress
-    segmentProgress += deltaMs / segment.durationMs;
-    if (segmentProgress >= 1) {
-      segmentProgress = 1;
-    }
-
-    // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
-    const eased = segment.easeFn(segmentProgress);
-    previousValue = state.currentValue;
-    state.currentValue = segment.from + (segment.to - segment.from) * eased;
-
-    if (segmentProgress >= 1) {
-      state.currentValue = segment.to;
-      state.velocity = 0;
-    } else {
-      state.velocity = (state.currentValue - previousValue) / (deltaMs / 1000);
-    }
-
-    // Compute global progress (O(1) via prefix sum)
-    const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
-    state.progress = Math.min(elapsedTotal / totalDurationMs, 1);
-    onProgress?.(state.progress);
-
-    onUpdate?.(state.currentValue, state.velocity);
-
-    // Check if segment completed
-    if (segmentProgress >= 1) {
-      if (currentSegmentIndex < segments.length - 1) {
-        currentSegmentIndex++;
-        segmentElapsed = 0;
-        segmentProgress = 0;
-        state.currentValue = segments[currentSegmentIndex].from;
-        previousValue = state.currentValue;
-        state.velocity = 0;
-        // Update global progress to end of previous segment (O(1) via prefix sum)
-        state.progress = Math.min(prefixSum[currentSegmentIndex] / totalDurationMs, 1);
-        onProgress?.(state.progress);
-      } else {
-        status = "stopped";
-        ticker.remove(animationHandle);
-        onEnded?.(state.currentValue);
-        resolvePromise?.(controls);
-        resolvePromise = undefined;
-      }
-    }
-  }
 
   const controls: AnimControls<number> = {
     play,

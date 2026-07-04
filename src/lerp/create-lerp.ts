@@ -19,7 +19,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
   let active = true;
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+  const animationHandle = { update: update };
 
   const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
@@ -46,7 +46,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
     ticker.remove(animationHandle);
   };
 
-  function onTickerUpdate(deltaMs: number) {
+  function update(deltaMs: number) {
     if (!active) return;
 
     const target = options.to();

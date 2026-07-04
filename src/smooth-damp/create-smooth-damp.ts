@@ -18,7 +18,7 @@ export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls
   let active = true;
 
   const ticker = getTicker();
-  const animationHandle = { update: onTickerUpdate };
+  const animationHandle = { update: update };
 
   const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
@@ -44,7 +44,7 @@ export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls
     ticker.remove(animationHandle);
   };
 
-  function onTickerUpdate(deltaMs: number) {
+  function update(deltaMs: number) {
     if (!active) return;
 
     const target = options.to();
