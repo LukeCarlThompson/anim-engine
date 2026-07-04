@@ -66,7 +66,6 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
   let pendingAnimations = 0;
 
   const ticker = getTicker();
-  const animationHandle = { update: update };
 
   // ─── Lifecycle ───
 
@@ -82,14 +81,14 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     });
     status = "playing";
     onStarted?.();
-    ticker.add(animationHandle);
+    ticker.add(update);
     return promise;
   };
 
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     for (const batch of batches) {
       if (batch.started) {
         for (const anim of batch.anims) {
@@ -109,13 +108,13 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
         }
       }
     }
-    ticker.add(animationHandle);
+    ticker.add(update);
   };
 
   const stop = () => {
     if (status !== "playing" && status !== "paused") return;
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     for (const batch of batches) {
       if (batch.started) {
         for (const anim of batch.anims) {
@@ -129,7 +128,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   const skipToEnd = () => {
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     for (const batch of batches) {
       for (const anim of batch.anims) {
         anim.skipToEnd();
@@ -142,7 +141,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   const kill = () => {
     status = "dead";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     for (const batch of batches) {
       for (const anim of batch.anims) {
         anim.kill();
@@ -185,7 +184,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   function finish() {
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     onEnded?.();
     resolvePromise?.(handle);
     resolvePromise = undefined;

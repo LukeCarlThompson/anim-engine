@@ -28,31 +28,30 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
   let active = true;
 
   const ticker = getTicker();
-  const animationHandle = { update: update };
 
   // Initialize
   const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
   state.current = initFrom;
 
   // Register immediately (auto-start)
-  ticker.add(animationHandle);
+  ticker.add(update);
 
   const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   const start = () => {
     if (active) return;
     active = true;
-    ticker.add(animationHandle);
+    ticker.add(update);
   };
 
   const stop = () => {
     active = false;
-    ticker.remove(animationHandle);
+    ticker.remove(update);
   };
 
   const kill = () => {
     active = false;
-    ticker.remove(animationHandle);
+    ticker.remove(update);
   };
 
   function update(deltaMs: number) {

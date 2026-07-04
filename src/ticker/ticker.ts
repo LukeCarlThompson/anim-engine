@@ -1,9 +1,11 @@
+export type TickHandler = (deltaMs: number) => void;
+
 export type TickerControls = {
   start: () => void;
   stop: () => void;
   update: (deltaMs: number) => void;
-  add: (anim: { update: (deltaMs: number) => void }) => void;
-  remove: (anim: { update: (deltaMs: number) => void }) => void;
+  add: (handler: TickHandler) => void;
+  remove: (handler: TickHandler) => void;
 };
 
 /**
@@ -20,7 +22,7 @@ export type TickerControls = {
  * modification during iteration. Compacted after each frame.
  */
 export const createTicker = (): TickerControls => {
-  const activeAnimations: ({ update: (deltaMs: number) => void } | undefined)[] = [];
+  const activeAnimations: (TickHandler | undefined)[] = [];
   let animationFrameRequestId: number | undefined = undefined;
   let previousFrameTime: number | undefined = undefined;
 
@@ -49,7 +51,7 @@ export const createTicker = (): TickerControls => {
   const update = (deltaMs: number) => {
     for (let i = 0; i < activeAnimations.length; i++) {
       const anim = activeAnimations[i];
-      if (anim) anim.update(deltaMs);
+      if (anim) anim(deltaMs);
     }
     // Compact undefined tombstones
     let writeIndex = 0;
@@ -62,12 +64,12 @@ export const createTicker = (): TickerControls => {
     activeAnimations.length = writeIndex;
   };
 
-  const add = (anim: { update: (deltaMs: number) => void }) => {
-    activeAnimations.push(anim);
+  const add = (handler: TickHandler) => {
+    activeAnimations.push(handler);
   };
 
-  const remove = (anim: { update: (deltaMs: number) => void }) => {
-    const index = activeAnimations.indexOf(anim);
+  const remove = (handler: TickHandler) => {
+    const index = activeAnimations.indexOf(handler);
     if (index >= 0) activeAnimations[index] = undefined;
   };
 

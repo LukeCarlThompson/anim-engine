@@ -91,8 +91,6 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     if (completed) handleCompletion();
   };
 
-  const animationHandle = { update: update };
-
   const resolveValues = () => {
     const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
     const to = typeof rawTo === "function" ? rawTo() : rawTo;
@@ -123,7 +121,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(animationHandle);
+    ticker.add(update);
     if (delayRemainingMs <= 0) onStarted?.(state.currentValue);
     return promise;
   };
@@ -131,19 +129,19 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(animationHandle);
+    ticker.add(update);
   };
 
   const stop = () => {
     stopped = true;
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -158,14 +156,14 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
       onEnded?.(state.currentValue);
     }
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     stopped = true;
     resolvePromise = undefined;
   };
@@ -183,7 +181,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
       return;
     }
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   }
@@ -345,15 +343,13 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
         onProgress?.(state.progress);
       } else {
         status = "stopped";
-        ticker.remove(animationHandle);
+        ticker.remove(update);
         onEnded?.(state.currentValue);
         resolvePromise?.(controls);
         resolvePromise = undefined;
       }
     }
   };
-
-  const animationHandle = { update: update };
 
   // Separate segment progress tracker (state.progress is overridden with global progress)
   let segmentProgress = 0;
@@ -374,26 +370,26 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(animationHandle);
+    ticker.add(update);
     return promise;
   };
 
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(animationHandle);
+    ticker.add(update);
   };
 
   const stop = () => {
     stopped = true;
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -408,14 +404,14 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
       onEnded?.(state.currentValue);
     }
     status = "stopped";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(animationHandle);
+    ticker.remove(update);
     stopped = true;
     resolvePromise = undefined;
   };
