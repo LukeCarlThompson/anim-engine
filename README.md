@@ -236,8 +236,8 @@ const slideIn = createAnimation({
 
 const timeline = createTimeline(
   [
-    { at: 0, animation: [fadeIn, slideIn] }, // both start together
-    { gap: 200, animation: slideIn }, // single animation — no array needed
+    { at: 0, animation: [fadeIn, slideIn] },
+    { gap: 200, animation: slideIn },
   ],
   {
     onProgress: (progress) => console.log(`overall: ${progress}`),
@@ -600,7 +600,7 @@ requestAnimationFrame(gameLoop);
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrentValue`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
 | `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
-| `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `progress`, `status`                                            |
+| `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                           |
 | `EaseFunction`       | `(t: number) => number`                                                                                                 |
 | `DynamicValue`       | `number \| (() => number)`                                                                                             |

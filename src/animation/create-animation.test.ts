@@ -157,6 +157,20 @@ test("onUpdate receives correct intermediate values", async () => {
   expect(updates[3]).toBe(100);
 });
 
+test("setProgress computes currentValue immediately", () => {
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 1000,
+    ease: "outCubic",
+  });
+
+  tween.setProgress(0.5);
+  expect(tween.progress).toBe(0.5);
+  expect(tween.currentValue).toBeGreaterThan(80); // outCubic at 0.5 should be near end
+  expect(tween.currentValue).toBeLessThan(90);
+});
+
 test("repeats specified number of times", async () => {
   const ticker = getTicker();
   let count = 0;

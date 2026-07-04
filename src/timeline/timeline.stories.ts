@@ -21,7 +21,7 @@ const meta = {
     container.appendChild(title);
 
     const info = document.createElement("p");
-    info.textContent = "Multiple tweens, timed with at and gap";
+    info.textContent = "Multiple tweens, timed with at and gap — drag the progress bar to scrub";
     info.style.cssText = "margin:0;color:#666;font-size:13px;";
     container.appendChild(info);
 
@@ -64,7 +64,7 @@ const meta = {
       "A: at 0, outQuart",
       "B: at 0, outBounce",
       "C: gap 200ms, outElastic",
-      "D: gap -300ms, inOutBack",
+      "D: gap 200ms, inOutBack",
     ];
     colors.forEach((c, i) => {
       const item = document.createElement("div");
@@ -77,13 +77,25 @@ const meta = {
     });
     container.appendChild(legend);
 
-    // Timeline bar
+    // Timeline bar (scrubbable)
     const timeBar = document.createElement("div");
     timeBar.style.cssText =
-      "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+      "width:700px;height:8px;background:#2a2a3d;border-radius:4px;cursor:pointer;position:relative;";
+
     const timeFill = document.createElement("div");
-    timeFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
+    timeFill.style.cssText =
+      "position:absolute;top:0;left:0;height:100%;background:#667eea;border-radius:4px;pointer-events:none;";
+    timeFill.style.width = "0%";
     timeBar.appendChild(timeFill);
+
+    const scrubHandle = document.createElement("div");
+    scrubHandle.style.cssText = `
+      position: absolute; top: 50%; width: 16px; height: 16px;
+      border-radius: 50%; background: #fff; border: 2px solid #667eea;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 1;
+    `;
+    scrubHandle.style.left = "0%";
+    timeBar.appendChild(scrubHandle);
     container.appendChild(timeBar);
 
     // Controls
@@ -106,42 +118,22 @@ const meta = {
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
-    // Build tweens
+    // Build animations
     const moveA = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 800,
-      ease: "outQuart",
-      onUpdate: (v) => {
-        els[0].style.transform = `translateX(${v}px)`;
-      },
+      from: 0, to: 640, durationMs: 800, ease: "outQuart",
+      onUpdate: (v) => { els[0].style.transform = `translateX(${v}px)`; },
     });
     const moveB = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 700,
-      ease: "outBounce",
-      onUpdate: (v) => {
-        els[1].style.transform = `translateX(${v}px)`;
-      },
+      from: 0, to: 640, durationMs: 700, ease: "outBounce",
+      onUpdate: (v) => { els[1].style.transform = `translateX(${v}px)`; },
     });
     const moveC = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 1000,
-      ease: "outElastic",
-      onUpdate: (v) => {
-        els[2].style.transform = `translateX(${v}px)`;
-      },
+      from: 0, to: 640, durationMs: 1000, ease: "outElastic",
+      onUpdate: (v) => { els[2].style.transform = `translateX(${v}px)`; },
     });
     const moveD = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 600,
-      ease: "inOutBack",
-      onUpdate: (v) => {
-        els[3].style.transform = `translateX(${v}px)`;
-      },
+      from: 0, to: 640, durationMs: 600, ease: "inOutBack",
+      onUpdate: (v) => { els[3].style.transform = `translateX(${v}px)`; },
     });
 
     const resetAll = () =>
@@ -157,19 +149,67 @@ const meta = {
       ],
       {
         onProgress: (progress) => {
-          timeFill.style.width = `${Math.round(progress * 100)}%`;
+          const pct = `${Math.round(progress * 100)}%`;
+          timeFill.style.width = pct;
+          scrubHandle.style.left = pct;
+        },
+        onEnded: () => {
+          playBtn.textContent = "▶ Play";
         },
       },
     );
 
-    const play = () => {
-      timeline.play();
-      resetAll();
+    let scrubbing = false;
+    let playing = false;
+
+    const scrubTo = (e: MouseEvent) => {
+      const rect = timeBar.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const pct = `${Math.round(ratio * 100)}%`;
+      timeFill.style.width = pct;
+      scrubHandle.style.left = pct;
+      timeline.setProgress(ratio);
+      if (playing) {
+        playing = false;
+        playBtn.textContent = "▶ Play";
+      }
     };
 
-    playBtn.addEventListener("click", play);
+    timeBar.addEventListener("mousedown", (e) => {
+      scrubbing = true;
+      scrubTo(e);
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (scrubbing) scrubTo(e);
+    });
+    window.addEventListener("mouseup", () => {
+      scrubbing = false;
+    });
+
+    const togglePlay = () => {
+      if (playing) {
+        timeline.pause();
+        playBtn.textContent = "▶ Play";
+      } else {
+        if (timeline.status === "stopped") {
+          resetAll();
+          timeline.play();
+        } else {
+          timeline.resume();
+        }
+        playBtn.textContent = "⏸ Pause";
+      }
+      playing = !playing;
+    };
+
+    playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
+      playing = false;
       resetAll();
+      timeline.stop();
+      timeline.setProgress(0);
+      timeFill.style.width = "0%";
+      scrubHandle.style.left = "0%";
       playBtn.textContent = "▶ Play";
     });
 

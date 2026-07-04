@@ -50,13 +50,25 @@ const meta = {
     track.appendChild(block);
     container.appendChild(track);
 
-    // Progress bar
+    // Progress bar (scrubbable)
     const progressBar = document.createElement("div");
     progressBar.style.cssText =
-      "width:700px;height:4px;background:#2a2a3d;border-radius:2px;overflow:hidden;";
+      "width:700px;height:8px;background:#2a2a3d;border-radius:4px;cursor:pointer;position:relative;";
+
     const progressFill = document.createElement("div");
-    progressFill.style.cssText = "width:0%;height:100%;background:#667eea;border-radius:2px;";
+    progressFill.style.cssText =
+      "position:absolute;top:0;left:0;height:100%;background:#667eea;border-radius:4px;pointer-events:none;";
+    progressFill.style.width = "0%";
     progressBar.appendChild(progressFill);
+
+    const scrubHandle = document.createElement("div");
+    scrubHandle.style.cssText = `
+      position: absolute; top: 50%; width: 16px; height: 16px;
+      border-radius: 50%; background: #fff; border: 2px solid #667eea;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 1;
+    `;
+    scrubHandle.style.left = "0%";
+    progressBar.appendChild(scrubHandle);
     container.appendChild(progressBar);
 
     // Controls
@@ -83,6 +95,8 @@ const meta = {
 
     const smoothClamp = createSmoothClamp(45);
 
+    let playing = false;
+
     const anim = createAnimation({
       keyframes: [
         { at: 0, value: 0 },
@@ -96,26 +110,52 @@ const meta = {
         block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
       },
       onProgress: (p) => {
-        progressFill.style.width = `${Math.round(p * 100)}%`;
+        const pct = `${Math.round(p * 100)}%`;
+        progressFill.style.width = pct;
+        scrubHandle.style.left = pct;
       },
       onEnded: () => {
+        playing = false;
         playBtn.textContent = "▶ Play";
-        progressFill.style.width = "100%";
       },
     });
 
     const reset = () => {
       block.style.transform = "translateX(0px) rotate(0deg)";
       progressFill.style.width = "0%";
+      scrubHandle.style.left = "0%";
     };
+
+    let scrubbing = false;
+
+    const scrubTo = (e: MouseEvent) => {
+      const rect = progressBar.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const pct = `${Math.round(ratio * 100)}%`;
+      progressFill.style.width = pct;
+      scrubHandle.style.left = pct;
+      anim.setProgress(ratio);
+      if (playing) {
+        playing = false;
+        playBtn.textContent = "▶ Play";
+      }
+    };
+
+    progressBar.addEventListener("mousedown", (e) => {
+      scrubbing = true;
+      scrubTo(e);
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (scrubbing) scrubTo(e);
+    });
+    window.addEventListener("mouseup", () => {
+      scrubbing = false;
+    });
 
     const play = () => {
       reset();
-      anim.setCurrentValue(0);
-      const p = anim.play();
-      void p.then(() => {
-        playBtn.textContent = "▶ Play";
-      });
+      anim.play();
+      playing = true;
       playBtn.textContent = "⏸ Pause";
     };
 
@@ -126,15 +166,18 @@ const meta = {
       }
       if (anim.status === "playing") {
         anim.pause();
+        playing = false;
         playBtn.textContent = "▶ Resume";
       } else {
         anim.resume();
+        playing = true;
         playBtn.textContent = "⏸ Pause";
       }
     };
 
     playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
+      playing = false;
       anim.stop();
       reset();
       playBtn.textContent = "▶ Play";

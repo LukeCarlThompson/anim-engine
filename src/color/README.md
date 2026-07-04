@@ -75,41 +75,21 @@ const green = hexToRgba("#4ecdc4");
 const blue = hexToRgba("#6c5ce7");
 const yellow = hexToRgba("#ffd93d");
 
-const segment1 = createAnimation({
+const colorSegment = (from: number[], to: number[]) => createAnimation({
   from: 0,
   to: 1,
   durationMs: 1000,
-  ease: "outCubic",
-  onUpdate: (blend) => {
-    sprite.setColor(...lerpOklab(red, green, blend), 1);
-  },
-});
-
-const segment2 = createAnimation({
-  from: 0,
-  to: 1,
-  durationMs: 1000,
-  ease: "outCubic",
-  onUpdate: (blend) => {
-    sprite.setColor(...lerpOklab(green, blue, blend), 1);
-  },
-});
-
-const segment3 = createAnimation({
-  from: 0,
-  to: 1,
-  durationMs: 1000,
-  ease: "outCubic",
-  onUpdate: (blend) => {
-    sprite.setColor(...lerpOklab(blue, yellow, blend), 1);
+  ease: "outCubic" as const,
+  onUpdate: (blend: number) => {
+    sprite.setColor(...lerpOklab(from, to, blend), 1);
   },
 });
 
 const timeline = createTimeline(
   [
-    { at: 0, animation: segment1 },
-    { at: 1000, animation: segment2 },
-    { at: 2000, animation: segment3 },
+    { at: 0, animation: colorSegment(red, green) },
+    { at: 1000, animation: colorSegment(green, blue) },
+    { at: 2000, animation: colorSegment(blue, yellow) },
   ],
   {
     onEnded: () => console.log("color cycle complete"),

@@ -17,6 +17,7 @@ export type Timeline = {
   stop: () => void;
   skipToEnd: () => void;
   kill: () => void;
+  setProgress: (value: number) => void;
   progress: number;
   status: AnimationStatus;
   durationMs: number;
@@ -189,6 +190,29 @@ export const createTimeline = (
     resolvePromise = undefined;
   };
 
+  const setProgress = (value: number) => {
+    if (status === "playing") pause();
+
+    const clamped = Math.max(0, Math.min(1, value));
+    elapsedMs = clamped * totalDurationMs;
+
+    for (const batch of batches) {
+      if (elapsedMs < batch.startAt) {
+        for (const anim of batch.animations) {
+          anim.setProgress(0);
+        }
+        batch.started = false;
+      } else {
+        batch.started = true;
+        const batchElapsed = elapsedMs - batch.startAt;
+        for (const anim of batch.animations) {
+          const localProgress = anim.durationMs > 0 ? Math.min(batchElapsed / anim.durationMs, 1) : 1;
+          anim.setProgress(localProgress);
+        }
+      }
+    }
+  };
+
   const timeline: Timeline = {
     play,
     pause,
@@ -196,6 +220,7 @@ export const createTimeline = (
     stop,
     skipToEnd,
     kill,
+    setProgress,
     get progress() {
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0;
     },

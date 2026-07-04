@@ -142,8 +142,8 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     state.currentValue = skipTo;
     state.velocity = 0;
     state.progress = 1;
+    onUpdate?.(state.currentValue, state.velocity);
     if (status === "playing" || status === "paused") {
-      onUpdate?.(state.currentValue, state.velocity);
       onEnded?.();
     }
     status = "stopped";
@@ -199,7 +199,14 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       return state.progress;
     },
     setProgress(value: number) {
-      state.progress = Math.max(0, Math.min(1, value));
+      if (status === "playing") pause();
+      const clamped = Math.max(0, Math.min(1, value));
+      state.progress = clamped;
+      const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+      const to = typeof rawTo === "function" ? rawTo() : rawTo;
+      state.currentValue = from + (to - from) * currentEase(clamped);
+      state.velocity = 0;
+      onUpdate?.(state.currentValue, state.velocity);
     },
     get status() {
       return status;
@@ -377,8 +384,8 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     state.currentValue = last.to;
     state.velocity = 0;
     state.progress = 1;
+    onUpdate?.(state.currentValue, state.velocity);
     if (status === "playing" || status === "paused") {
-      onUpdate?.(state.currentValue, state.velocity);
       onEnded?.();
     }
     status = "stopped";
@@ -415,7 +422,29 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
       return state.progress;
     },
     setProgress(value: number) {
-      state.progress = Math.max(0, Math.min(1, value));
+      if (status === "playing") pause();
+      const clamped = Math.max(0, Math.min(1, value));
+      state.progress = clamped;
+
+      const elapsed = clamped * totalDurationMs;
+      let segIdx = 0;
+      for (let i = 0; i < segments.length; i++) {
+        if (elapsed <= prefixSum[i + 1]) {
+          segIdx = i;
+          break;
+        }
+        segIdx = i;
+      }
+
+      const segment = segments[segIdx];
+      const segStart = prefixSum[segIdx];
+      const segDuration = segment.durationMs;
+      const segProgress = segDuration > 0 ? (elapsed - segStart) / segDuration : 1;
+      const eased = segment.easeFn(Math.max(0, Math.min(1, segProgress)));
+      state.currentValue = segment.from + segment.range * eased;
+      state.velocity = 0;
+      onUpdate?.(state.currentValue, state.velocity);
+      onProgress?.(clamped);
     },
     get status() {
       return status;

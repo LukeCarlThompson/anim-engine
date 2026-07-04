@@ -182,7 +182,7 @@ test("negative gap for overlap", async () => {
   expect(overlapDetected).toBe(true);
 });
 
-test("mixed at and gap keyframes", async () => {
+test("mixed at and gap", async () => {
   const ticker = getTicker();
   let started = false;
 
@@ -273,6 +273,50 @@ test("kill prevents replay", async () => {
 
   expect(tl.status).toBe("dead");
   expect(() => tl.play()).toThrow();
+});
+
+test("setProgress scrubs all animations to the correct position", () => {
+  let aValue = 0;
+  let bValue = 0;
+
+  const a = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 200,
+    ease: "linear",
+    onUpdate: (v) => {
+      aValue = v;
+    },
+  });
+  const b = createAnimation({
+    from: 0,
+    to: 200,
+    durationMs: 300,
+    ease: "linear",
+    onUpdate: (v) => {
+      bValue = v;
+    },
+  });
+
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 100, animation: [b] },
+  ]);
+
+  // Timeline: 0-200ms (A), 200-300ms gap, 300-600ms (B). Total: 600ms
+  // setProgress(0.5) = 300ms. A is done (progress 1), B just starting (progress 0)
+  tl.setProgress(0.5);
+  expect(tl.progress).toBe(0.5);
+  expect(aValue).toBe(100);
+  expect(bValue).toBe(0);
+
+  // setProgress(0.75) = 450ms. A done, B at 150/300 = progress 0.5
+  tl.setProgress(0.75);
+  expect(tl.progress).toBe(0.75);
+  expect(aValue).toBe(100);
+  expect(bValue).toBe(100);
+
+  tl.kill();
 });
 
 test("durationMs returns total timeline length", () => {
