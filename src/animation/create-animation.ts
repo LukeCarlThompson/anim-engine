@@ -17,10 +17,10 @@ export type SingleTweenOptions = {
   delayMs?: number;
   repeat?: number;
   yoyo?: boolean;
-  onStarted?: (value: number) => void;
+  onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
-  onEnded?: (value: number) => void;
-  onRepeat?: (value: number) => void;
+  onEnded?: () => void;
+  onRepeat?: () => void;
 };
 
 export type Keyframe = {
@@ -33,7 +33,7 @@ export type KeyframeOptions = {
   keyframes: Keyframe[];
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
-  onEnded?: (value: number) => void;
+  onEnded?: () => void;
 };
 
 export type AnimationOptions = SingleTweenOptions | KeyframeOptions;
@@ -78,7 +78,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       delayRemainingMs -= deltaMs;
       if (delayRemainingMs > 0) return;
       pendingStart = false;
-      onStarted?.(state.currentValue);
+      onStarted?.();
       deltaMs = -delayRemainingMs;
     }
     const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
@@ -113,7 +113,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     });
     status = "playing";
     ticker.add(update);
-    if (delayRemainingMs <= 0) onStarted?.(state.currentValue);
+    if (delayRemainingMs <= 0) onStarted?.();
     return promise;
   };
 
@@ -144,7 +144,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     state.progress = 1;
     if (status === "playing" || status === "paused") {
       onUpdate?.(state.currentValue, state.velocity);
-      onEnded?.(state.currentValue);
+      onEnded?.();
     }
     status = "stopped";
     ticker.remove(update);
@@ -160,7 +160,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   };
 
   function handleCompletion() {
-    onEnded?.(state.currentValue);
+    onEnded?.();
     if (repeatCounter < repeatCount) {
       repeatCounter++;
       if (yoyoEnabled) isReversed = !isReversed;
@@ -169,7 +169,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       const revTo = typeof rawTo === "function" ? rawTo() : rawTo;
       state.currentValue = isReversed ? revTo : revFrom;
       state.velocity = 0;
-      onRepeat?.(state.currentValue);
+      onRepeat?.();
       return;
     }
     status = "stopped";
@@ -320,7 +320,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
       } else {
         status = "stopped";
         ticker.remove(update);
-        onEnded?.(state.currentValue);
+        onEnded?.();
         resolvePromise?.(controls);
         resolvePromise = undefined;
       }
@@ -377,7 +377,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
     state.progress = 1;
     if (status === "playing" || status === "paused") {
       onUpdate?.(state.currentValue, state.velocity);
-      onEnded?.(state.currentValue);
+      onEnded?.();
     }
     status = "stopped";
     ticker.remove(update);

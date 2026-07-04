@@ -99,38 +99,38 @@ test("dead status throws on play()", () => {
 
 test("onStarted fires when playback begins", async () => {
   const ticker = getTicker();
-  let startedValue = -1;
+  let started = false;
   const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
     ease: "linear",
-    onStarted: (v) => {
-      startedValue = v;
+    onStarted: () => {
+      started = true;
     },
   });
   const p = tween.play();
-  expect(startedValue).toBe(0);
+  expect(started).toBe(true);
   ticker.update(100);
   await p;
 });
 
 test("onEnded fires on completion", async () => {
   const ticker = getTicker();
-  let endedValue = -1;
+  let ended = false;
   const tween = createAnimation({
     from: 0,
     to: 100,
     durationMs: 100,
     ease: "linear",
-    onEnded: (v) => {
-      endedValue = v;
+    onEnded: () => {
+      ended = true;
     },
   });
   const p = tween.play();
   ticker.update(100);
   await p;
-  expect(endedValue).toBe(100);
+  expect(ended).toBe(true);
 });
 
 test("onUpdate receives correct intermediate values", async () => {

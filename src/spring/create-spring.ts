@@ -5,9 +5,9 @@ export type SpringOptions = {
   damping?: DynamicValue<number>;
   mass?: DynamicValue<number>;
   precision?: number;
-  onStarted?: (value: number) => void;
+  onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
-  onEnded?: (value: number) => void;
+  onEnded?: () => void;
 };
 import { getTicker } from "../ticker/get-ticker";
 import { verletStep } from "./verlet";

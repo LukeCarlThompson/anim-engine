@@ -122,7 +122,7 @@ const anim = createAnimation({
   onUpdate: (value, velocity) => {
     sprite.x = value;
   },
-  onEnded: (value) => console.log("done at", value),
+  onEnded: () => console.log("done"),
 });
 
 // Promise-based control
@@ -144,10 +144,10 @@ anim.skipToEnd(); // jumps to end, resolves promise
 | `delayMs`    | `number`                                     | `0`         | Delay before starting                                        |
 | `repeat`     | `number`                                     | `0`         | Times to repeat (set to `Infinity` for infinite)             |
 | `yoyo`       | `boolean`                                    | `false`     | Alternate direction on repeat                                |
-| `onStarted`  | `(value: number) => void`                    | —           | Called when animation begins (after delay)                   |
+| `onStarted`  | `() => void`                                | —           | Called when animation begins (after delay)                   |
 | `onUpdate`   | `(value: number, velocity: number) => void`  | —           | Called every frame with current value and velocity (units/s) |
-| `onEnded`    | `(value: number) => void`                    | —           | Called when animation completes                              |
-| `onRepeat`   | `(value: number) => void`                    | —           | Called at the start of each repeat cycle                     |
+| `onEnded`    | `() => void`                                | —           | Called when animation completes                              |
+| `onRepeat`   | `() => void`                                | —           | Called at the start of each repeat cycle                     |
 
 **Returns:** `Animation`
 
@@ -179,7 +179,7 @@ Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the to
 | `keyframes`  | `Keyframe[]`                                | Array of `{ at, value, ease? }` keyframes                 |
 | `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity        |
 | `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress               |
-| `onEnded`    | `(value: number) => void`                   | Called when the keyframe animation completes              |
+| `onEnded`    | `() => void`                               | Called when the keyframe animation completes              |
 
 **Returns:** `Animation`
 
@@ -207,7 +207,7 @@ const flash = createAnimation({
   ease: "inOutSine",
   repeat: 3,
   yoyo: true,
-  onRepeat: (value) => console.log("blink", value),
+  onRepeat: () => console.log("blink"),
   onUpdate: (alpha) => (sprite.alpha = alpha),
 });
 ```
