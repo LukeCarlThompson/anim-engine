@@ -1,4 +1,4 @@
-import type { Animation } from "../shared/types";
+import type { Animation, AnimationStatus } from "../shared/types";
 
 export type TimelineLayer =
   | {
@@ -18,7 +18,7 @@ export type Timeline = {
   skipToEnd: () => void;
   kill: () => void;
   progress: number;
-  status: "playing" | "paused" | "stopped" | "dead";
+  status: AnimationStatus;
   getDurationMs: () => number;
 };
 import { getTicker } from "../ticker/get-ticker";

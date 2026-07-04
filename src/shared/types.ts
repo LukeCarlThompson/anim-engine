@@ -35,7 +35,9 @@ export type EaseName =
 
 export type EaseFunction = (t: number) => number;
 
-export type Status = "playing" | "paused" | "stopped" | "dead";
+export type AnimationStatus = "playing" | "paused" | "stopped" | "dead";
+
+export type InterpolationStatus = "active" | "inactive" | "dead";
 
 export type DynamicValue<T> = T | (() => T);
 
@@ -55,7 +57,7 @@ export type Animation = {
   velocity: number;
   progress: number;
   setProgress: (value: number) => void;
-  status: Status;
+  status: AnimationStatus;
   getDurationMs: () => number;
 };
 
@@ -70,5 +72,5 @@ export type Interpolation = {
 
   currentValue: number;
   velocity: number;
-  status: "active" | "inactive" | "dead";
+  status: InterpolationStatus;
 };

@@ -22,7 +22,7 @@ export type {
   KeyframeOptions,
   AnimationOptions,
 } from "./animation/create-animation";
-export type { Animation, Interpolation, EaseName, Status, DynamicValue } from "./shared/types";
+export type { Animation, Interpolation, EaseName, AnimationStatus, InterpolationStatus, DynamicValue } from "./shared/types";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
