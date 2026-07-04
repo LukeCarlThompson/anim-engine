@@ -8,10 +8,10 @@ getTicker().start();
 const meta = {
   title: "Lerp",
   argTypes: {
-    rate: { control: { type: "range", min: 0, max: 10, step: 0.5 } },
+    smoothTimeMs: { control: { type: "range", min: 50, max: 2000, step: 50 } },
   },
-  args: { rate: 2 },
-  render: ({ rate }) => {
+  args: { smoothTimeMs: 500 },
+  render: ({ smoothTimeMs }) => {
     const container = document.createElement("div");
     container.style.cssText = `
       display: flex; flex-direction: column; align-items: center;
@@ -124,17 +124,17 @@ const meta = {
       return { wrapper, slider, val };
     };
 
-    const rateCtrl = makeSlider("rate", 0, 10, 0.5, rate, "#e5c07b");
+    const smoothTimeMsCtrl = makeSlider("smoothTimeMs", 50, 2000, 50, smoothTimeMs, "#e5c07b");
 
-    controls.appendChild(rateCtrl.wrapper);
+    controls.appendChild(smoothTimeMsCtrl.wrapper);
     container.appendChild(controls);
 
     let targetX = 30;
-    let currentRate = rate;
+    let currentSmoothTimeMs = smoothTimeMs;
 
     const lerp = createLerp({
       to: () => targetX,
-      rate: () => currentRate,
+      smoothTimeMs: () => currentSmoothTimeMs,
       onUpdate: (value, velocity) => {
         block.style.transform = `translateY(-50%) translateX(${value}px)`;
 
@@ -164,8 +164,8 @@ const meta = {
       targetDot.style.display = "none";
     });
 
-    rateCtrl.slider.addEventListener("input", () => {
-      currentRate = Number(rateCtrl.slider.value);
+    smoothTimeMsCtrl.slider.addEventListener("input", () => {
+      currentSmoothTimeMs = Number(smoothTimeMsCtrl.slider.value);
     });
 
     return container;

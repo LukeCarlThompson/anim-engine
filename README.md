@@ -330,14 +330,14 @@ import { createLerp } from "anim-engine";
 
 const lerp = createLerp({
   to: () => 100,
-  rate: 3, // convergence rate (higher = faster)
+  smoothTimeMs: 300, // ms to reach target
   onUpdate: (value, velocity) => (sprite.x = value),
 });
 
 lerp.setCurrentValue(0); // jump to start — lerp chases back to 100
 ```
 
-First-order exponential approach: `value += (target - value) * rate * deltaTime`. Frame-rate independent.
+First-order exponential approach: `value += (target - value) * rate * deltaTime`. `smoothTimeMs` is the approximate time in milliseconds to reach the target. Frame-rate independent.
 
 **Returns:** `Interpolation`
 
@@ -613,7 +613,7 @@ requestAnimationFrame(gameLoop);
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
 | `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                  |
 | `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `onUpdate`                                                                     |
-| `LerpOptions`        | `to`, `rate`, `onUpdate`                                                                                        |
+| `LerpOptions`        | `to`, `smoothTimeMs`, `onUpdate`                                                                                        |
 | `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
 | `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 

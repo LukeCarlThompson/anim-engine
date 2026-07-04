@@ -5,7 +5,7 @@ import type { LerpState } from "./step";
 
 export type LerpOptions = {
   to: () => number;
-  rate: DynamicValue<number>;
+  smoothTimeMs: DynamicValue<number>;
   onUpdate?: (value: number, velocity: number) => void;
 };
 
@@ -48,8 +48,8 @@ export const createLerp = (options: LerpOptions): Interpolation => {
     if (!active) return;
 
     const target = options.to();
-    const rate = resolveValue(options.rate);
-    lerpStep(state, target, rate, deltaMs);
+    const smoothTimeMs = resolveValue(options.smoothTimeMs);
+    lerpStep(state, target, smoothTimeMs, deltaMs);
 
     currentVelocity = (state.current - previousValue) / (deltaMs / 1000);
     previousValue = state.current;
