@@ -1,6 +1,35 @@
 # anim-engine
 
-**Renderer-agnostic animation for JavaScript runtimes.** A pure numeric engine — no DOM, no canvas, no coupling to your renderer. Feed it values, bridge the output to PixiJS, ThreeJS, canvas2d, or the DOM.
+**Renderer-agnostic animation for JavaScript runtimes.** A fast, lightweight, pure-numeric animation engine.
+
+## Design
+
+Anim Engine is built around three simple mental models that compose naturally:
+
+- **Animation** — a timed tween from value A to value B with easing, repeat, yoyo, and delay. The atomic unit of motion.
+- **Keyframes** — multi-segment interpolation that describes what a single value does over time, with per-segment easing and millisecond timing.
+- **Timeline** — orchestration of multiple animations running in parallel, sequence, or staggered offset. Composes tweens and keyframes.
+
+Beyond timed animation, the engine provides **continuous primitives** — spring physics, smooth damp, and exponential lerp — for natural, target-chasing motion without a fixed duration.
+
+### Why numbers only?
+
+By restricting itself to numeric values, the engine eliminates string parsing, color-space branching, and transform-matrix overhead. You get a minimal surface area that is easy to optimise, tree-shake, reason about and fit into any renderer. Color interpolation (Oklab) is provided as a pure function — you compose it yourself into an `onUpdate` callback.
+
+## Key advantages
+
+|                              |                                                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ⚡ **Fast**                  | 1.7–9.9× faster than GSAP across tweens, keyframes, and concurrent animations (see [benchmarks](#benchmarks)). |
+| 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                             |
+| 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.         |
+| 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                  |
+| 🧩 **Composable models**     | Animations, keyframes, and timelines compose cleanly — put tweens inside timelines, nest keyframes anywhere.   |
+| 🔄 **Continuous primitives** | Spring, smooth damp, and lerp chase live targets with zero setup — pass `() => value` for dynamic targets.     |
+| 🚫 **No GC pressure**        | Zero object allocations in hot update paths. State is mutated in place.                                        |
+| 🎨 **Perceptual color**      | Oklab interpolation via `lerpOklab` — no muddy browns. Compose it into any `onUpdate`.                         |
+| 📐 **TypeScript-first**      | Full type exports, exhaustive discriminated unions, no `any`.                                                  |
+| 🔧 **Ticker control**        | Bring your own game loop or use the built-in rAF ticker. Explicit — never auto-starts.                         |
 
 ```ts
 import { createAnimation } from "anim-engine";
