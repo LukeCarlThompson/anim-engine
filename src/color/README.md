@@ -103,14 +103,18 @@ const segment3 = createAnimation({
   },
 });
 
-createTimeline({
-  keyframes: [
-    { at: 0, animations: [segment1] },
-    { at: 1, animations: [segment2] },
-    { at: 2, animations: [segment3] },
+const timeline = createTimeline(
+  [
+    { at: 0, animation: segment1 },
+    { at: 1000, animation: segment2 },
+    { at: 2000, animation: segment3 },
   ],
-  onEnded: () => console.log("color cycle complete"),
-});
+  {
+    onEnded: () => console.log("color cycle complete"),
+  },
+);
+
+timeline.play();
 ```
 
 Each segment gets its own easing, duration, and color pair — no manual segment math or `if/then` branching inside the update callback.
