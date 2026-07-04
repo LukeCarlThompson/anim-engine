@@ -120,20 +120,40 @@ const meta = {
 
     // Build animations
     const moveA = createAnimation({
-      from: 0, to: 640, durationMs: 800, ease: "outQuart",
-      onUpdate: (v) => { els[0].style.transform = `translateX(${v}px)`; },
+      from: 0,
+      to: 640,
+      durationMs: 800,
+      ease: "outQuart",
+      onUpdate: (v) => {
+        els[0].style.transform = `translateX(${v}px)`;
+      },
     });
     const moveB = createAnimation({
-      from: 0, to: 640, durationMs: 700, ease: "outBounce",
-      onUpdate: (v) => { els[1].style.transform = `translateX(${v}px)`; },
+      from: 0,
+      to: 640,
+      durationMs: 700,
+      ease: "outBounce",
+      onUpdate: (v) => {
+        els[1].style.transform = `translateX(${v}px)`;
+      },
     });
     const moveC = createAnimation({
-      from: 0, to: 640, durationMs: 1000, ease: "outElastic",
-      onUpdate: (v) => { els[2].style.transform = `translateX(${v}px)`; },
+      from: 0,
+      to: 640,
+      durationMs: 1000,
+      ease: "outElastic",
+      onUpdate: (v) => {
+        els[2].style.transform = `translateX(${v}px)`;
+      },
     });
     const moveD = createAnimation({
-      from: 0, to: 640, durationMs: 600, ease: "inOutBack",
-      onUpdate: (v) => { els[3].style.transform = `translateX(${v}px)`; },
+      from: 0,
+      to: 640,
+      durationMs: 600,
+      ease: "inOutBack",
+      onUpdate: (v) => {
+        els[3].style.transform = `translateX(${v}px)`;
+      },
     });
 
     const resetAll = () =>

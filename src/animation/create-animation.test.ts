@@ -269,8 +269,6 @@ test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue 
   expect(tween.currentValue).toBeLessThan(90);
 });
 
-
-
 test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and playback starts after the delay", async () => {
   // GIVEN
   const ticker = getTicker();
@@ -307,8 +305,6 @@ test("GIVEN a tween with delayMs: 200 WHEN played THEN onStarted is delayed and 
   // THEN — reaches end value
   expect(tween.currentValue).toBe(100);
 });
-
-
 
 // ─── setCurrentValue ───
 

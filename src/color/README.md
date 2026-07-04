@@ -75,15 +75,16 @@ const green = hexToRgba("#4ecdc4");
 const blue = hexToRgba("#6c5ce7");
 const yellow = hexToRgba("#ffd93d");
 
-const colorSegment = (from: number[], to: number[]) => createAnimation({
-  from: 0,
-  to: 1,
-  durationMs: 1000,
-  ease: "outCubic" as const,
-  onUpdate: (blend: number) => {
-    sprite.setColor(...lerpOklab(from, to, blend), 1);
-  },
-});
+const colorSegment = (from: number[], to: number[]) =>
+  createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 1000,
+    ease: "outCubic" as const,
+    onUpdate: (blend: number) => {
+      sprite.setColor(...lerpOklab(from, to, blend), 1);
+    },
+  });
 
 const timeline = createTimeline(
   [

@@ -16,11 +16,15 @@ export { getTicker } from "./ticker/get-ticker";
 export { EASE_NAMES, cubicBezier } from "./easing/easing";
 
 // Types
+export type { Keyframe, AnimationOptions } from "./animation/create-animation";
 export type {
-  Keyframe,
-  AnimationOptions,
-} from "./animation/create-animation";
-export type { Animation, Interpolation, EaseName, AnimationStatus, InterpolationStatus, DynamicValue } from "./shared/types";
+  Animation,
+  Interpolation,
+  EaseName,
+  AnimationStatus,
+  InterpolationStatus,
+  DynamicValue,
+} from "./shared/types";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";

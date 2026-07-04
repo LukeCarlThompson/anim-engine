@@ -218,7 +218,13 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
   };
 
   // Create segment from one keyframe to the next
-  type Segment = { from: number; to: number; range: number; durationMs: number; easeFn: EaseFunction };
+  type Segment = {
+    from: number;
+    to: number;
+    range: number;
+    durationMs: number;
+    easeFn: EaseFunction;
+  };
   const segments: Segment[] = [];
 
   for (let i = 0; i < sorted.length - 1; i++) {

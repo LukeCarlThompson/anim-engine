@@ -70,15 +70,22 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
   inOutQuad: (x) => (x < 0.5 ? 2 * x * x : 1 - pow(-2 * x + 2, 2) / 2),
 
   inCubic: (x) => x * x * x,
-  outCubic: (x) => { const t = 1 - x; return 1 - t * t * t; },
+  outCubic: (x) => {
+    const t = 1 - x;
+    return 1 - t * t * t;
+  },
   inOutCubic: (x) => {
     if (x < 0.5) return 4 * x * x * x;
     const t = -2 * x + 2;
-    return 1 - t * t * t / 2;
+    return 1 - (t * t * t) / 2;
   },
 
   inQuart: (x) => x * x * x * x,
-  outQuart: (x) => { const t = 1 - x; const t2 = t * t; return 1 - t2 * t2; },
+  outQuart: (x) => {
+    const t = 1 - x;
+    const t2 = t * t;
+    return 1 - t2 * t2;
+  },
   inOutQuart: (x) => {
     if (x < 0.5) return 8 * x * x * x * x;
     const t = -2 * x + 2;
@@ -86,7 +93,11 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
   },
 
   inQuint: (x) => x * x * x * x * x,
-  outQuint: (x) => { const t = 1 - x; const t2 = t * t; return 1 - t2 * t2 * t; },
+  outQuint: (x) => {
+    const t = 1 - x;
+    const t2 = t * t;
+    return 1 - t2 * t2 * t;
+  },
   inOutQuint: (x) => {
     if (x < 0.5) return 16 * x * x * x * x * x;
     const t = -2 * x + 2;
@@ -108,7 +119,10 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
     x < 0.5 ? (1 - sqrt(1 - 4 * x * x)) / 2 : (sqrt(1 - 4 * (x - 1) * (x - 1)) + 1) / 2,
 
   inBack: (x) => c3 * x * x * x - c1 * x * x,
-  outBack: (x) => { const t = x - 1; return 1 + c3 * t * t * t + c1 * t * t; },
+  outBack: (x) => {
+    const t = x - 1;
+    return 1 + c3 * t * t * t + c1 * t * t;
+  },
   inOutBack: (x) =>
     x < 0.5
       ? (4 * x * x * ((c2 + 1) * 2 * x - c2)) / 2

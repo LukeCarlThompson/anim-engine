@@ -206,7 +206,8 @@ export const createTimeline = (
         batch.started = true;
         const batchElapsed = elapsedMs - batch.startAt;
         for (const anim of batch.animations) {
-          const localProgress = anim.durationMs > 0 ? Math.min(batchElapsed / anim.durationMs, 1) : 1;
+          const localProgress =
+            anim.durationMs > 0 ? Math.min(batchElapsed / anim.durationMs, 1) : 1;
           anim.setProgress(localProgress);
         }
       }

@@ -7,6 +7,7 @@
  * Each benchmark calls the easing function 10,000 times per sample.
  */
 import { bench, describe } from "vitest";
+
 import { easingFunctions } from "../easing/easing";
 
 const FRAMES = 10_000;

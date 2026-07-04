@@ -25,8 +25,7 @@ const meta = {
     container.appendChild(title);
 
     const description = document.createElement("p");
-    description.textContent =
-      "Move your mouse over the track — the block smoothly chases it";
+    description.textContent = "Move your mouse over the track — the block smoothly chases it";
     description.style.cssText = "margin:0;color:#666;font-size:13px;";
     container.appendChild(description);
 
