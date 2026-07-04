@@ -20,7 +20,7 @@ export type SingleTweenOptions = {
 };
 
 export type Keyframe = {
-  at: number;
+  at: DynamicValue;
   value: DynamicValue;
   ease?: EaseName | EaseFunction;
 };
@@ -51,9 +51,11 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
   const { onStarted, onUpdate, onEnded } = options;
 
-  let rawFrom: number | (() => number) = options.from;
-  let rawTo: number | (() => number) = options.to;
+  const rawFrom: DynamicValue = options.from;
+  const rawTo: DynamicValue = options.to;
   const rawDurationMs: DynamicValue = options.durationMs;
+  let cachedFrom: number = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+  let cachedTo: number = typeof rawTo === "function" ? rawTo() : rawTo;
   let cachedDurationMs: number = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
 
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
@@ -65,9 +67,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 
   const update = (deltaMs: number) => {
     if (stopped) return;
-    const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-    const to = typeof rawTo === "function" ? rawTo() : rawTo;
-    const completed = updateTween(state, deltaMs, cachedDurationMs, currentEase, from, to);
+    const completed = updateTween(state, deltaMs, cachedDurationMs, currentEase, cachedFrom, cachedTo);
     onUpdate?.(state.currentValue, state.velocity);
     if (completed) handleCompletion();
   };
@@ -78,11 +78,11 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
     state.progress = 0;
-    const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-    state.currentValue = initFrom;
-    state.velocity = 0;
-
+    cachedFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+    cachedTo = typeof rawTo === "function" ? rawTo() : rawTo;
     cachedDurationMs = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
+    state.currentValue = cachedFrom;
+    state.velocity = 0;
 
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
@@ -114,8 +114,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   };
 
   const skipToEnd = () => {
-    const skipTo = typeof rawTo === "function" ? rawTo() : rawTo;
-    state.currentValue = skipTo;
+    state.currentValue = cachedTo;
     state.velocity = 0;
     state.progress = 1;
     onUpdate?.(state.currentValue, state.velocity);
@@ -167,9 +166,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       if (status === "playing") pause();
       const clamped = Math.max(0, Math.min(1, value));
       state.progress = clamped;
-      const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-      const to = typeof rawTo === "function" ? rawTo() : rawTo;
-      state.currentValue = from + (to - from) * currentEase(clamped);
+      state.currentValue = cachedFrom + (cachedTo - cachedFrom) * currentEase(clamped);
       state.velocity = 0;
       onUpdate?.(state.currentValue, state.velocity);
     },
@@ -187,22 +184,18 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 // ─── Keyframe mode ───
 
 const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation => {
-  const keyframes = options.keyframes;
+  const rawKeyframes = options.keyframes;
   const onUpdate = options.onUpdate;
   const onProgress = options.onProgress;
   const onEnded = options.onEnded;
 
-  // Sort keyframes by time
-  const sorted = [...keyframes].sort((a, b) => a.at - b.at);
-  const totalDurationMs = sorted[sorted.length - 1].at;
-  const invTotalDuration = 1 / totalDurationMs;
+  // Resolve helpers
+  const resolveKeyframeValue = (kf: Keyframe): number =>
+    typeof kf.value === "function" ? kf.value() : kf.value;
+  const resolveKeyframeAt = (kf: Keyframe): number =>
+    typeof kf.at === "function" ? kf.at() : kf.at;
 
-  // Resolve a keyframe's value (function or literal)
-  const resolveKeyframeValue = (kf: Keyframe): number => {
-    return typeof kf.value === "function" ? kf.value() : kf.value;
-  };
-
-  // Create segment from one keyframe to the next
+  // Mutable segment state — rebuilt on each play()
   type Segment = {
     from: number;
     to: number;
@@ -210,39 +203,56 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     durationMs: number;
     easeFn: EaseFunction;
   };
-  const segments: Segment[] = [];
+  let segments: Segment[] = [];
+  let prefixSum: number[] = [0];
+  let totalDurationMs = 0;
+  let invTotalDuration = 0;
 
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const current = sorted[i];
-    const next = sorted[i + 1];
-    const from = resolveKeyframeValue(current);
-    const to = resolveKeyframeValue(next);
-    segments.push({
-      from,
-      to,
-      range: to - from,
-      durationMs: next.at - current.at,
-      easeFn: resolveEasing(next.ease ?? "inOutSine"),
-    });
-  }
+  const rebuild = () => {
+    // Resolve at values, sort, and build segments
+    const sorted = [...rawKeyframes]
+      .map((kf) => ({ ...kf, at: resolveKeyframeAt(kf) }))
+      .sort((a, b) => a.at - b.at);
 
-  // Pre-compute prefix sums for O(1) elapsed-time lookups
-  const prefixSum: number[] = [0];
-  for (let i = 0; i < segments.length; i++) {
-    prefixSum.push(prefixSum[i] + segments[i].durationMs);
-  }
+    totalDurationMs = sorted[sorted.length - 1].at;
+    invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 0;
 
-  if (segments.length === 0) {
-    // Single keyframe — just hold the value
-    return createSingleTween({
-      from: resolveKeyframeValue(sorted[0]),
-      to: resolveKeyframeValue(sorted[0]),
-      durationMs: totalDurationMs,
-      ease: "linear",
-      onUpdate,
-      onEnded,
-    });
-  }
+    segments = [];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i];
+      const next = sorted[i + 1];
+      const from = resolveKeyframeValue(current);
+      const to = resolveKeyframeValue(next);
+      segments.push({
+        from,
+        to,
+        range: to - from,
+        durationMs: next.at - current.at,
+        easeFn: resolveEasing(next.ease ?? "inOutSine"),
+      });
+    }
+
+    // Single keyframe — create a hold segment
+    if (segments.length === 0) {
+      const v = resolveKeyframeValue(sorted[0]);
+      segments.push({
+        from: v,
+        to: v,
+        range: 0,
+        durationMs: totalDurationMs,
+        easeFn: resolveEasing("linear"),
+      });
+    }
+
+    // Rebuild prefix sums
+    prefixSum = [0];
+    for (let i = 0; i < segments.length; i++) {
+      prefixSum.push(prefixSum[i] + segments[i].durationMs);
+    }
+  };
+
+  // Initial build
+  rebuild();
 
   // State
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
@@ -250,7 +260,7 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
   let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
   let currentSegmentIndex = 0;
-  let previousValue = resolveKeyframeValue(sorted[0]);
+  let previousValue = segments[0].from;
 
   const ticker = getTicker();
 
@@ -313,6 +323,7 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
+    rebuild();
     stopped = false;
     currentSegmentIndex = 0;
     segmentElapsed = 0;
