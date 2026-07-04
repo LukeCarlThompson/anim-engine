@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
+
 import { createAnimation } from "../animation/create-animation";
+import type { Animation, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { easingFunctions, EASE_NAMES } from "./easing";
-import type { AnimControls, EaseName } from "../shared/types";
 
 // Start the ticker for Storybook demos
 getTicker().start();
@@ -193,7 +194,7 @@ const meta = {
     container.appendChild(controls);
 
     // State
-    let tween: AnimControls<number> | null = null;
+    let tween: Animation<number> | null = null;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";

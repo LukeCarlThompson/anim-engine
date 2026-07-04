@@ -1,13 +1,13 @@
-import type { AnimControls } from "../shared/types";
+import type { Animation } from "../shared/types";
 
 export type TimelineKeyframe =
   | {
       at: number;
-      animations: AnimControls<number>[];
+      animations: Animation<number>[];
     }
   | {
       gap: number;
-      animations: AnimControls<number>[];
+      animations: Animation<number>[];
     };
 
 export type TimelineOptions = {
@@ -17,8 +17,8 @@ export type TimelineOptions = {
   onEnded?: () => void;
 };
 
-export type TimelineHandle = {
-  play: () => Promise<TimelineHandle>;
+export type Timeline = {
+  play: () => Promise<Timeline>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -31,17 +31,15 @@ export type TimelineHandle = {
 import { getTicker } from "../ticker/get-ticker";
 
 type Batch = {
-  anims: AnimControls<number>[];
+  animations: Animation<number>[];
   startAt: number;
   endAt: number;
   started: boolean;
 };
 
-type Resolve = (value: TimelineHandle) => void;
+type Resolve = (value: Timeline) => void;
 
-export type Timeline = TimelineHandle;
-
-export const createTimeline = (options: TimelineOptions): TimelineHandle => {
+export const createTimeline = (options: TimelineOptions): Timeline => {
   const { onStarted, onProgress, onEnded } = options;
 
   // Derive batches from keyframes
@@ -52,7 +50,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     const startAt = "at" in keyframe ? keyframe.at : lastBatchEnd + keyframe.gap;
     const maxDuration = Math.max(...keyframe.animations.map((a) => a.getDurationMs()));
     const endAt = startAt + maxDuration;
-    batches.push({ anims: keyframe.animations, startAt, endAt, started: false });
+    batches.push({ animations: keyframe.animations, startAt, endAt, started: false });
     lastBatchEnd = endAt;
   }
 
@@ -69,14 +67,14 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   // ─── Lifecycle ───
 
-  const play = (): Promise<TimelineHandle> => {
+  const play = (): Promise<Timeline> => {
     if (status === "dead") throw new Error("Cannot play a dead timeline");
     elapsedMs = 0;
     pendingAnimations = 0;
     batches.forEach((b) => {
       b.started = false;
     });
-    const promise = new Promise<TimelineHandle>((resolve) => {
+    const promise = new Promise<Timeline>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -91,7 +89,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     ticker.remove(update);
     for (const batch of batches) {
       if (batch.started) {
-        for (const anim of batch.anims) {
+        for (const anim of batch.animations) {
           if (anim.status === "playing") anim.pause();
         }
       }
@@ -103,7 +101,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     status = "playing";
     for (const batch of batches) {
       if (batch.started) {
-        for (const anim of batch.anims) {
+        for (const anim of batch.animations) {
           if (anim.status === "paused") anim.resume();
         }
       }
@@ -117,12 +115,12 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     ticker.remove(update);
     for (const batch of batches) {
       if (batch.started) {
-        for (const anim of batch.anims) {
+        for (const anim of batch.animations) {
           anim.stop();
         }
       }
     }
-    resolvePromise?.(handle);
+    resolvePromise?.(timeline);
     resolvePromise = undefined;
   };
 
@@ -130,12 +128,12 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     status = "stopped";
     ticker.remove(update);
     for (const batch of batches) {
-      for (const anim of batch.anims) {
+      for (const anim of batch.animations) {
         anim.skipToEnd();
       }
     }
     onEnded?.();
-    resolvePromise?.(handle);
+    resolvePromise?.(timeline);
     resolvePromise = undefined;
   };
 
@@ -143,7 +141,7 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     status = "dead";
     ticker.remove(update);
     for (const batch of batches) {
-      for (const anim of batch.anims) {
+      for (const anim of batch.animations) {
         anim.kill();
       }
     }
@@ -152,15 +150,15 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
 
   // ─── Ticker callback ───
 
-  function update(deltaMs: number) {
+  const update = (deltaMs: number) => {
     if (status !== "playing") return;
     elapsedMs += deltaMs;
 
     for (const batch of batches) {
       if (!batch.started && elapsedMs >= batch.startAt) {
         batch.started = true;
-        pendingAnimations += batch.anims.length;
-        for (const anim of batch.anims) {
+        pendingAnimations += batch.animations.length;
+        for (const anim of batch.animations) {
           void anim.play().then(() => {
             pendingAnimations--;
             checkComplete();
@@ -174,25 +172,25 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     if (batches.every((b) => b.started) && pendingAnimations <= 0) {
       finish();
     }
-  }
+  };
 
-  function checkComplete() {
+  const checkComplete = () => {
     if (pendingAnimations <= 0 && status === "playing" && batches.every((b) => b.started)) {
       finish();
     }
-  }
+  };
 
-  function finish() {
+  const finish = () => {
     status = "stopped";
     ticker.remove(update);
     onEnded?.();
-    resolvePromise?.(handle);
+    resolvePromise?.(timeline);
     resolvePromise = undefined;
-  }
+  };
 
   const getDurationMs = () => totalDurationMs;
 
-  const handle: TimelineHandle = {
+  const timeline: Timeline = {
     play,
     pause,
     resume,
@@ -208,5 +206,5 @@ export const createTimeline = (options: TimelineOptions): TimelineHandle => {
     getDurationMs,
   };
 
-  return handle;
+  return timeline;
 };

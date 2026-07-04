@@ -1,5 +1,5 @@
-import type { AnimControls, DynamicValue, EaseFunction, EaseName } from "../shared/types";
 import { easingFunctions } from "../easing/easing";
+import type { Animation, DynamicValue, EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { updateTween } from "./update";
 import type { TweenState } from "./update";
@@ -7,12 +7,12 @@ import type { TweenState } from "./update";
 const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : easingFunctions[ease];
 
-type ResolveFunction = (value: AnimControls<number>) => void;
+type ResolveFunction = (value: Animation<number>) => void;
 
 export type SingleTweenOptions = {
-  from?: DynamicValue<number>;
+  from: DynamicValue<number>;
   to: DynamicValue<number>;
-  durationMs?: number;
+  durationMs: number;
   ease?: EaseName | EaseFunction;
   delayMs?: number;
   repeat?: number;
@@ -42,7 +42,7 @@ const isKeyframeMode = (options: AnimationOptions): options is KeyframeOptions =
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
-export const createAnimation = (options: AnimationOptions): AnimControls<number> => {
+export const createAnimation = (options: AnimationOptions): Animation<number> => {
   if (isKeyframeMode(options)) {
     return createKeyframeAnimation(options);
   }
@@ -51,18 +51,14 @@ export const createAnimation = (options: AnimationOptions): AnimControls<number>
 
 // ─── Single-tween mode (existing) ───
 
-const createSingleTween = (options: SingleTweenOptions): AnimControls<number> => {
-  const durationMs = options.durationMs ?? 1000;
+const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
   const repeatCount = options.repeat ?? 0;
   const yoyoEnabled = options.yoyo ?? false;
   const delayMs = options.delayMs ?? 0;
-  const onStarted = options.onStarted;
-  const onUpdate = options.onUpdate;
-  const onEnded = options.onEnded;
-  const onRepeat = options.onRepeat;
+  const { onStarted, onUpdate, onEnded, onRepeat, durationMs } = options;
 
-  let rawFrom: number | (() => number) = options.from ?? 0;
+  let rawFrom: number | (() => number) = options.from;
   let rawTo: number | (() => number) = options.to;
 
   const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
@@ -99,7 +95,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
 
   let currentEase: EaseFunction = resolveEasing(easeName);
 
-  const play = (): Promise<AnimControls<number>> => {
+  const play = (): Promise<Animation<number>> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
     repeatCounter = 0;
@@ -117,7 +113,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
       delayRemainingMs = 0;
     }
 
-    const promise = new Promise<AnimControls<number>>((resolve) => {
+    const promise = new Promise<Animation<number>>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -186,33 +182,13 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
     resolvePromise = undefined;
   }
 
-  const controls: AnimControls<number> = {
+  const controls: Animation<number> = {
     play,
     pause,
     resume,
     stop,
     skipToEnd,
     kill,
-    get from() {
-      return rawFrom;
-    },
-    set from(value: number | (() => number)) {
-      rawFrom = value;
-      if (status === "playing") state.progress = 0;
-    },
-    get to() {
-      return rawTo;
-    },
-    set to(value: number | (() => number)) {
-      rawTo = value;
-      if (status === "playing") state.progress = 0;
-    },
-    get ease() {
-      return currentEase;
-    },
-    set ease(value: EaseName | EaseFunction) {
-      currentEase = resolveEasing(value);
-    },
     setCurrent: (value: number) => {
       state.currentValue = value;
       state.velocity = 0;
@@ -240,7 +216,7 @@ const createSingleTween = (options: SingleTweenOptions): AnimControls<number> =>
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number> => {
+const createKeyframeAnimation = (options: KeyframeOptions): Animation<number> => {
   const keyframes = options.keyframes;
   const onUpdate = options.onUpdate;
   const onProgress = options.onProgress;
@@ -355,7 +331,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
   let segmentProgress = 0;
   let segmentElapsed = 0;
 
-  const play = (): Promise<AnimControls<number>> => {
+  const play = (): Promise<Animation<number>> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
     currentSegmentIndex = 0;
@@ -366,7 +342,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     previousValue = segments[0].from;
     state.velocity = 0;
 
-    const promise = new Promise<AnimControls<number>>((resolve) => {
+    const promise = new Promise<Animation<number>>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -416,31 +392,13 @@ const createKeyframeAnimation = (options: KeyframeOptions): AnimControls<number>
     resolvePromise = undefined;
   };
 
-  const controls: AnimControls<number> = {
+  const controls: Animation<number> = {
     play,
     pause,
     resume,
     stop,
     skipToEnd,
     kill,
-    get from() {
-      return segments[0]?.from ?? 0;
-    },
-    set from(_v: number | (() => number)) {
-      /* no-op */
-    },
-    get to() {
-      return segments[segments.length - 1]?.to ?? 0;
-    },
-    set to(_v: number | (() => number)) {
-      /* no-op */
-    },
-    get ease() {
-      return segments[segments.length - 1]?.easeFn ?? ((t: number) => t);
-    },
-    set ease(_v: EaseName | EaseFunction) {
-      /* no-op */
-    },
     setCurrent: (value: number) => {
       state.currentValue = value;
       state.velocity = 0;

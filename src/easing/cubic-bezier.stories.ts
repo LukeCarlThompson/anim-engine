@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
+
 import { createAnimation } from "../animation/create-animation";
+import type { Animation } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { cubicBezier } from "./easing";
-import type { AnimControls } from "../shared/types";
 
 getTicker().start();
 
@@ -309,7 +310,7 @@ const meta = {
     controls.appendChild(returnBtn);
     container.appendChild(controls);
 
-    let anim: AnimControls<number> | null = null;
+    let anim: Animation<number> | null = null;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";

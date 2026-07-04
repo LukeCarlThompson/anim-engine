@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
+
 import { createAnimation } from "../animation/create-animation";
+import type { Animation } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { lerpOklab, hexToRgba } from "./lerp-oklab";
-import type { AnimControls } from "../shared/types";
 
 getTicker().start();
 
@@ -325,7 +326,7 @@ const meta = {
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
-    let anim: AnimControls<number> | null = null;
+    let anim: Animation<number> | null = null;
 
     // Shared function to apply color at a given progress (0–1)
     const applyColor = (progress: number) => {

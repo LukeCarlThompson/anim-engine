@@ -80,7 +80,7 @@ anim.skipToEnd(); // jumps to end, resolves promise
 | `onEnded`    | `() => void`                | —          | Called when animation completes                              |
 | `onProgress` | `(progress) => void`        | —          | Called every frame with 0–1 progress                         |
 
-**Returns:** `AnimControls<number>`
+**Returns:** `Animation<number>`
 
 ### Keyframes
 
@@ -147,7 +147,7 @@ timeline.play();
 
 ### Continuous primitives
 
-Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a target. They return `ContinuousControls` (no `play`/`pause`/`promise`).
+Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a target. They return `Interpolation` (no `play`/`pause`/`promise`).
 
 #### createSpring
 
@@ -183,7 +183,7 @@ const follower = createSpring({
 
 All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => number)` — resolved every frame.
 
-**Returns:** `ContinuousControls<number>` — `start()`, `stop()`, `kill()`, `setCurrent(value)`.
+**Returns:** `Interpolation<number>` — `start()`, `stop()`, `kill()`, `setCurrent(value)`.
 
 #### createSmoothDamp
 
@@ -201,7 +201,7 @@ const damp = createSmoothDamp({
 
 Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTime` (seconds to reach target).
 
-**Returns:** `ContinuousControls<number>`
+**Returns:** `Interpolation<number>`
 
 #### createLerp
 
@@ -218,7 +218,7 @@ const lerp = createLerp({
 
 First-order exponential approach: `value += (target - value) * rate * deltaTime`. Frame-rate independent.
 
-**Returns:** `ContinuousControls<number>`
+**Returns:** `Interpolation<number>`
 
 ### createSmoothClamp
 
@@ -348,40 +348,40 @@ The function is called every frame inside the ticker update — no getter/setter
 
 ### Functions
 
-| Export                         | Description                          |
-| ------------------------------ | ------------------------------------ |
-| `createAnimation(options)`     | Timed or keyframe animation          |
-| `createTimeline(options)`      | Composited timeline of animations    |
-| `createSpring(options)`        | Physics spring (Verlet integration)  |
-| `createSmoothDamp(options)`    | Unity-style smooth damp              |
-| `createLerp(options)`          | Exponential lerp chase               |
-| `createSmoothClamp(threshold)` | Asymptotic clamp factory             |
-| `getTicker()`                  | Singleton ticker                     |
-| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing      |
-| `lerpOklab(from, to, t)`      | Oklab color interpolation            |
-| `hexToRgba(hex)`              | Parse hex color to normalized RGBA   |
+| Export                            | Description                         |
+| --------------------------------- | ----------------------------------- |
+| `createAnimation(options)`        | Timed or keyframe animation         |
+| `createTimeline(options)`         | Composited timeline of animations   |
+| `createSpring(options)`           | Physics spring (Verlet integration) |
+| `createSmoothDamp(options)`       | Unity-style smooth damp             |
+| `createLerp(options)`             | Exponential lerp chase              |
+| `createSmoothClamp(threshold)`    | Asymptotic clamp factory            |
+| `getTicker()`                     | Singleton ticker                    |
+| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing          |
+| `lerpOklab(from, to, t)`          | Oklab color interpolation           |
+| `hexToRgba(hex)`                  | Parse hex color to normalized RGBA  |
 
 ### Type exports
 
-| Type                    | Description                                                                                                            |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `AnimControls<T>`       | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
-| `ContinuousControls<T>` | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                            |
-| `EaseName`              | Union of 31 ease name strings                                                                                          |
-| `EaseFunction`          | `(t: number) => number`                                                                                                |
-| `DynamicValue<T>`       | `T \| (() => T)`                                                                                                       |
-| `Status`                | `"playing" \| "paused" \| "stopped" \| "dead"`                                                                         |
-| `AnimationOptions`      | Single tween or keyframe animation options                                                                             |
-| `SingleTweenOptions`    | `from`, `to`, `durationMs`, `ease`, `delay`, `repeat`, `yoyo`                                                          |
-| `KeyframeOptions`       | `keyframes: Keyframe[]`                                                                                                |
-| `Keyframe`              | `{ at, value, ease? }`                                                                                                 |
-| `TimelineOptions`       | `keyframes: TimelineKeyframe[]`, `loop?`, `onStarted?`, `onProgress?`, `onEnded?`                                      |
-| `TimelineKeyframe`      | `{ at?: number, gap?: number, animations }`                                                                            |
-| `SpringOptions`         | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                 |
-| `SmoothDampOptions`     | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                    |
-| `LerpOptions`           | `from`, `to`, `rate`, `onUpdate`                                                                                       |
-| `RgbaTuple`             | `readonly [number, number, number, number]`                                                                            |
-| `TickerControls`        | `start`, `stop`, `update`                                                                                              |
+| Type                 | Description                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `Animation<T>`       | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
+| `Interpolation<T>`   | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                            |
+| `EaseName`           | Union of 31 ease name strings                                                                                          |
+| `EaseFunction`       | `(t: number) => number`                                                                                                |
+| `DynamicValue<T>`    | `T \| (() => T)`                                                                                                       |
+| `Status`             | `"playing" \| "paused" \| "stopped" \| "dead"`                                                                         |
+| `AnimationOptions`   | Single tween or keyframe animation options                                                                             |
+| `SingleTweenOptions` | `from`, `to`, `durationMs`, `ease`, `delay`, `repeat`, `yoyo`                                                          |
+| `KeyframeOptions`    | `keyframes: Keyframe[]`                                                                                                |
+| `Keyframe`           | `{ at, value, ease? }`                                                                                                 |
+| `TimelineOptions`    | `keyframes: TimelineKeyframe[]`, `loop?`, `onStarted?`, `onProgress?`, `onEnded?`                                      |
+| `TimelineKeyframe`   | `{ at?: number, gap?: number, animations }`                                                                            |
+| `SpringOptions`      | `from`, `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                 |
+| `SmoothDampOptions`  | `from`, `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                    |
+| `LerpOptions`        | `from`, `to`, `rate`, `onUpdate`                                                                                       |
+| `RgbaTuple`          | `readonly [number, number, number, number]`                                                                            |
+| `TickerControls`     | `start`, `stop`, `update`                                                                                              |
 
 ## Game engine integration
 
@@ -477,3 +477,5 @@ requestAnimationFrame(gameLoop);
 ## License
 
 MIT
+
+<!-- TODO: Make animations updateable without a ticker? -->

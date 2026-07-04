@@ -1,4 +1,4 @@
-import type { ContinuousControls, DynamicValue } from "../shared/types";
+import type { Interpolation, DynamicValue } from "../shared/types";
 
 export type SmoothDampOptions = {
   from: () => number;
@@ -11,7 +11,7 @@ import { getTicker } from "../ticker/get-ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
-export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls<number> => {
+export const createSmoothDamp = (options: SmoothDampOptions): Interpolation<number> => {
   const onUpdate = options.onUpdate;
 
   const state: SmoothDampState = { current: 0, velocity: 0 };
@@ -54,7 +54,7 @@ export const createSmoothDamp = (options: SmoothDampOptions): ContinuousControls
     onUpdate(state.current, state.velocity);
   }
 
-  const controls: ContinuousControls<number> = {
+  const controls: Interpolation<number> = {
     start,
     stop,
     kill,

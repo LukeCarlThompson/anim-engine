@@ -1,4 +1,4 @@
-import type { ContinuousControls, DynamicValue } from "../shared/types";
+import type { Interpolation, DynamicValue } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
@@ -10,7 +10,7 @@ export type LerpOptions = {
   onUpdate: (value: number, velocity: number) => void;
 };
 
-export const createLerp = (options: LerpOptions): ContinuousControls<number> => {
+export const createLerp = (options: LerpOptions): Interpolation<number> => {
   const onUpdate = options.onUpdate;
 
   const state: LerpState = { current: 0 };
@@ -58,7 +58,7 @@ export const createLerp = (options: LerpOptions): ContinuousControls<number> => 
     onUpdate(state.current, currentVelocity);
   }
 
-  const controls: ContinuousControls<number> = {
+  const controls: Interpolation<number> = {
     start,
     stop,
     kill,

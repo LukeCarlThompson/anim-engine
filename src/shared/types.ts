@@ -39,19 +39,16 @@ export type Status = "playing" | "paused" | "stopped" | "dead";
 
 export type DynamicValue<T> = T | (() => T);
 
-// === AnimControls ===
+// === Animation ===
 
-export type AnimControls<T> = {
-  play: () => Promise<AnimControls<T>>;
+export type Animation<T> = {
+  play: () => Promise<Animation<T>>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
   skipToEnd: () => void;
   kill: () => void;
 
-  from: DynamicValue<T>;
-  to: DynamicValue<T>;
-  ease: EaseName | EaseFunction;
   setCurrent: (value: T) => void;
 
   currentValue: T;
@@ -61,9 +58,9 @@ export type AnimControls<T> = {
   getDurationMs: () => number;
 };
 
-// === ContinuousControls ===
+// === Interpolation ===
 
-export type ContinuousControls<T> = {
+export type Interpolation<T> = {
   start: () => void;
   stop: () => void;
   kill: () => void;

@@ -1,4 +1,4 @@
-import type { ContinuousControls, DynamicValue } from "../shared/types";
+import type { Interpolation, DynamicValue } from "../shared/types";
 export type SpringOptions = {
   from?: DynamicValue<number>;
   to: DynamicValue<number>;
@@ -14,7 +14,7 @@ import { getTicker } from "../ticker/get-ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
-export const createSpring = (options: SpringOptions): ContinuousControls<number> => {
+export const createSpring = (options: SpringOptions): Interpolation<number> => {
   const precision = options.precision ?? 0.01;
   const onUpdate = options.onUpdate;
 
@@ -78,7 +78,7 @@ export const createSpring = (options: SpringOptions): ContinuousControls<number>
     }
   }
 
-  const controls: ContinuousControls<number> = {
+  const controls: Interpolation<number> = {
     start,
     stop,
     kill,

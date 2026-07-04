@@ -85,18 +85,6 @@ test("dynamic from/to functions are evaluated at play time", async () => {
   expect(tween.currentValue).toBe(80);
 });
 
-test("changing to mid-play resets progress", async () => {
-  const ticker = getTicker();
-  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
-  tween.play();
-  ticker.update(500);
-  expect(Math.trunc(tween.currentValue)).toBe(50);
-  tween.to = 200;
-  expect(tween.progress).toBe(0);
-  ticker.update(1000);
-  expect(Math.trunc(tween.currentValue)).toBe(200);
-});
-
 test("dead status throws on play()", () => {
   const tween = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
   tween.kill();
