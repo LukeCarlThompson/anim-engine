@@ -2,7 +2,7 @@ import type { Interpolation, DynamicValue } from "../shared/types";
 
 export type SmoothDampOptions = {
   to: () => number;
-  smoothTime: DynamicValue<number>;
+  smoothTimeMs: DynamicValue<number>;
   maxSpeed?: DynamicValue<number>;
   onUpdate?: (value: number, velocity: number) => void;
 };
@@ -46,9 +46,9 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
     if (!active) return;
 
     const target = options.to();
-    const smoothTime = resolveValue(options.smoothTime);
+    const smoothTimeMs = resolveValue(options.smoothTimeMs);
     const maxSpeed = options.maxSpeed !== undefined ? resolveValue(options.maxSpeed) : Infinity;
-    smoothDampStep(state, target, smoothTime, maxSpeed, deltaMs);
+    smoothDampStep(state, target, smoothTimeMs, maxSpeed, deltaMs);
 
     onUpdate?.(state.current, state.velocity);
   }

@@ -9,7 +9,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.3,
+      smoothTimeMs: 300,
       onUpdate: (v) => {
         values.push(v);
       },
@@ -31,7 +31,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.5,
+      smoothTimeMs: 500,
       onUpdate: (v) => {
         values.push(v);
       },
@@ -49,7 +49,7 @@ describe("createSmoothDamp", () => {
   it("default start position is at target", () => {
     const sd = createSmoothDamp({
       to: () => 100,
-      smoothTime: 0.3,
+      smoothTimeMs: 300,
     });
 
     expect(sd.currentValue).toBe(100);
@@ -59,7 +59,7 @@ describe("createSmoothDamp", () => {
   it("setCurrentValue before first tick sets initial position", () => {
     const sd = createSmoothDamp({
       to: () => 100,
-      smoothTime: 0.3,
+      smoothTimeMs: 300,
     });
     sd.setCurrentValue(50);
 
@@ -72,7 +72,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 1,
+      smoothTimeMs: 1000,
       onUpdate: (v) => {
         values.push(v);
       },
@@ -91,7 +91,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.2,
+      smoothTimeMs: 200,
       onUpdate: (v) => {
         values.push(v);
       },
@@ -118,7 +118,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.3,
+      smoothTimeMs: 300,
       onUpdate: (v) => {
         values.push(v);
       },
@@ -140,7 +140,7 @@ describe("createSmoothDamp", () => {
     const velocities: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.3,
+      smoothTimeMs: 300,
       onUpdate: (_v, vel) => {
         velocities.push(vel);
       },
@@ -160,7 +160,7 @@ describe("createSmoothDamp", () => {
     const values: number[] = [];
     const sd = createSmoothDamp({
       to: () => target,
-      smoothTime: 0.1,
+      smoothTimeMs: 100,
       maxSpeed: 10,
       onUpdate: (v) => {
         values.push(v);

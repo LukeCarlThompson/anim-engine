@@ -311,7 +311,7 @@ import { createSmoothDamp } from "anim-engine";
 
 const damp = createSmoothDamp({
   to: () => 100,
-  smoothTime: 0.3,
+  smoothTimeMs: 300,
   maxSpeed: Infinity,
   onUpdate: (value, velocity) => (sprite.x = value),
 });
@@ -319,7 +319,7 @@ const damp = createSmoothDamp({
 damp.setCurrentValue(0); // jump to start — damp chases back to 100
 ```
 
-Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTime` (seconds to reach target).
+Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTimeMs` (milliseconds to reach target).
 
 **Returns:** `Interpolation`
 
@@ -612,7 +612,7 @@ requestAnimationFrame(gameLoop);
 | `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
 | `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                  |
-| `SmoothDampOptions`  | `to`, `smoothTime`, `maxSpeed?`, `onUpdate`                                                                     |
+| `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `onUpdate`                                                                     |
 | `LerpOptions`        | `to`, `rate`, `onUpdate`                                                                                        |
 | `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
 | `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |

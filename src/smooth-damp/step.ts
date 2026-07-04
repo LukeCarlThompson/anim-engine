@@ -14,12 +14,12 @@ export type SmoothDampState = {
 export const smoothDampStep = (
   state: SmoothDampState,
   target: number,
-  smoothTime: number,
+  smoothTimeMs: number,
   maxSpeed: number,
   deltaMs: number,
 ): void => {
   const deltaTime = deltaMs / 1000;
-  const st = Math.max(0.0001, smoothTime);
+  const st = Math.max(0.0001, smoothTimeMs / 1000);
   const omega = 2 / st;
   const x = omega * deltaTime;
   // Taylor series approximation of exp(-x)

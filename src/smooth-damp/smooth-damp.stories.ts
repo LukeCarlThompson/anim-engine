@@ -8,11 +8,11 @@ getTicker().start();
 const meta = {
   title: "Smooth Damp",
   argTypes: {
-    smoothTime: { control: { type: "range", min: 0.1, max: 2, step: 0.1 } },
+    smoothTimeMs: { control: { type: "range", min: 100, max: 2000, step: 100 } },
     maxSpeed: { control: { type: "range", min: 10, max: 500, step: 10 } },
   },
-  args: { smoothTime: 0.4, maxSpeed: 200 },
-  render: ({ smoothTime, maxSpeed }) => {
+  args: { smoothTimeMs: 400, maxSpeed: 200 },
+  render: ({ smoothTimeMs, maxSpeed }) => {
     const container = document.createElement("div");
     container.style.cssText = `
       display: flex; flex-direction: column; align-items: center;
@@ -125,20 +125,20 @@ const meta = {
       return { wrapper, slider, val };
     };
 
-    const smoothTimeCtrl = makeSlider("smoothTime", 0.1, 2, 0.1, smoothTime, "#61afef");
+    const smoothTimeMsCtrl = makeSlider("smoothTimeMs", 100, 2000, 100, smoothTimeMs, "#61afef");
     const maxSpeedCtrl = makeSlider("maxSpeed", 10, 500, 10, maxSpeed, "#e5c07b");
 
-    controls.appendChild(smoothTimeCtrl.wrapper);
+    controls.appendChild(smoothTimeMsCtrl.wrapper);
     controls.appendChild(maxSpeedCtrl.wrapper);
     container.appendChild(controls);
 
     let targetX = 30;
-    let currentSmoothTime = smoothTime;
+    let currentSmoothTimeMs = smoothTimeMs;
     let currentMaxSpeed = maxSpeed;
 
     const damp = createSmoothDamp({
       to: () => targetX,
-      smoothTime: () => currentSmoothTime,
+      smoothTimeMs: () => currentSmoothTimeMs,
       maxSpeed: () => currentMaxSpeed,
       onUpdate: (value, velocity) => {
         block.style.transform = `translateY(-50%) translateX(${value}px)`;
@@ -169,8 +169,8 @@ const meta = {
       targetDot.style.display = "none";
     });
 
-    smoothTimeCtrl.slider.addEventListener("input", () => {
-      currentSmoothTime = Number(smoothTimeCtrl.slider.value);
+    smoothTimeMsCtrl.slider.addEventListener("input", () => {
+      currentSmoothTimeMs = Number(smoothTimeMsCtrl.slider.value);
     });
     maxSpeedCtrl.slider.addEventListener("input", () => {
       currentMaxSpeed = Number(maxSpeedCtrl.slider.value);
