@@ -1,3 +1,4 @@
+import gsap from "gsap";
 /**
  * Benchmarks: anim-engine vs GSAP.
  *
@@ -6,9 +7,9 @@
  * No manual kill() — auto-cleanup measured.
  */
 import { bench, describe } from "vitest";
+
 import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
-import gsap from "gsap";
 
 // ─── Constants ───
 

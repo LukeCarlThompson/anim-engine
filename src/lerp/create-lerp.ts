@@ -10,7 +10,7 @@ export type LerpOptions = {
   onUpdate: (value: number, velocity: number) => void;
 };
 
-export const createLerp = (options: LerpOptions): Interpolation<number> => {
+export const createLerp = (options: LerpOptions): Interpolation => {
   const onUpdate = options.onUpdate;
 
   const state: LerpState = { current: 0 };
@@ -58,7 +58,7 @@ export const createLerp = (options: LerpOptions): Interpolation<number> => {
     onUpdate(state.current, currentVelocity);
   }
 
-  const controls: Interpolation<number> = {
+  const controls: Interpolation = {
     start,
     stop,
     kill,

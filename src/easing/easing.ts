@@ -129,12 +129,7 @@ export const easingFunctions: Record<EaseName, EaseFunction> = {
  * @param p2y - Second control point y coordinate.
  * @returns An EaseFunction suitable for use with animate() or createTimeline().
  */
-export const cubicBezier = (
-  p1x: number,
-  p1y: number,
-  p2x: number,
-  p2y: number,
-): EaseFunction => {
+export const cubicBezier = (p1x: number, p1y: number, p2x: number, p2y: number): EaseFunction => {
   // Pre-compute sample points: (x, y) pairs at evenly-spaced t values
   const sampleSize = 64;
   const samplesX = new Float64Array(sampleSize);

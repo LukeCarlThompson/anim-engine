@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
-import { createSmoothDamp } from "./create-smooth-damp";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createSmoothDamp } from "./create-smooth-damp";
 
 getTicker().start();
 

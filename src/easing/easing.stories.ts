@@ -194,7 +194,7 @@ const meta = {
     container.appendChild(controls);
 
     // State
-    let tween: Animation<number> | null = null;
+    let tween: Animation | null = null;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";

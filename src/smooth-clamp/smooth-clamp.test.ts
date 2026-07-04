@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+
 import { createSmoothClamp } from "./smooth-clamp";
 
 test("returns near-linear output for small inputs", () => {

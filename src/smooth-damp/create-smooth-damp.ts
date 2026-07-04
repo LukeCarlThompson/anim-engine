@@ -11,7 +11,7 @@ import { getTicker } from "../ticker/get-ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
-export const createSmoothDamp = (options: SmoothDampOptions): Interpolation<number> => {
+export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
   const onUpdate = options.onUpdate;
 
   const state: SmoothDampState = { current: 0, velocity: 0 };
@@ -54,7 +54,7 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation<numb
     onUpdate(state.current, state.velocity);
   }
 
-  const controls: Interpolation<number> = {
+  const controls: Interpolation = {
     start,
     stop,
     kill,

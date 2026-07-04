@@ -1,6 +1,7 @@
 import { beforeEach, expect, test } from "vitest";
-import { createAnimation } from "./create-animation";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createAnimation } from "./create-animation";
 
 beforeEach(() => {
   getTicker().stop();
@@ -78,7 +79,12 @@ test("dynamic from/to functions are evaluated at play time", async () => {
   const ticker = getTicker();
   let from = 20;
   let to = 80;
-  const tween = createAnimation({ from: () => from, to: () => to, durationMs: 100, ease: "linear" });
+  const tween = createAnimation({
+    from: () => from,
+    to: () => to,
+    durationMs: 100,
+    ease: "linear",
+  });
   const p = tween.play();
   ticker.update(100);
   await p;

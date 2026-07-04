@@ -1,7 +1,8 @@
 import { beforeEach, expect, test } from "vitest";
+
 import { createAnimation } from "../animation/create-animation";
-import { createTimeline } from "./create-timeline";
 import { getTicker } from "../ticker/get-ticker";
+import { createTimeline } from "./create-timeline";
 
 beforeEach(() => {
   getTicker().stop();

@@ -365,8 +365,8 @@ The function is called every frame inside the ticker update — no getter/setter
 
 | Type                 | Description                                                                                                            |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Animation<T>`       | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
-| `Interpolation<T>`   | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                            |
+| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress`, `status` |
+| `Interpolation`      | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                          |
 | `EaseFunction`       | `(t: number) => number`                                                                                                |
 | `DynamicValue<T>`    | `T \| (() => T)`                                                                                                       |

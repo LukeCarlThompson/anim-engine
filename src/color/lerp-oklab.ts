@@ -25,17 +25,16 @@ const rgbToLmsMatrix = [
 
 const lmsPrimeToLabMatrix = [
   // L
-  0.2104542553, 0.7936177850, -0.0040720468,
+  0.2104542553, 0.793617785, -0.0040720468,
   // a
-  1.9779984951, -2.4285922050, 0.4505937099,
+  1.9779984951, -2.428592205, 0.4505937099,
   // b
-  0.0259040371, 0.7827717662, -0.8086757660,
+  0.0259040371, 0.7827717662, -0.808675766,
 ] as const;
 
 const labToLmsPrimeMatrix = [
-  1.0, 0.3963377922, 0.2158037583,
-  1.0, -0.1055613423, -0.0638541728,
-  1.0, -0.0894841825, -1.2914855377,
+  1.0, 0.3963377922, 0.2158037583, 1.0, -0.1055613423, -0.0638541728, 1.0, -0.0894841825,
+  -1.2914855377,
 ] as const;
 
 const lmsToLinearRgbMatrix = [
@@ -44,7 +43,7 @@ const lmsToLinearRgbMatrix = [
   // G
   -1.2684380046, 2.6097574011, -0.3413193965,
   // B
-  -0.0041960863, -0.7034186147, 1.7076147010,
+  -0.0041960863, -0.7034186147, 1.707614701,
 ] as const;
 
 /**
@@ -71,23 +70,16 @@ const linearToSrgb = (channel: number): number => {
  * Convert an RGB tuple to Oklab [L, a, b].
  * All values in [0, 1] range (except a/b which can be negative).
  */
-const rgbToOklab = (
-  r: number,
-  g: number,
-  b: number,
-): [number, number, number] => {
+const rgbToOklab = (r: number, g: number, b: number): [number, number, number] => {
   // Linearize sRGB
   const rLin = srgbToLinear(r);
   const gLin = srgbToLinear(g);
   const bLin = srgbToLinear(b);
 
   // Linear RGB → LMS
-  const lLms =
-    rgbToLmsMatrix[0] * rLin + rgbToLmsMatrix[1] * gLin + rgbToLmsMatrix[2] * bLin;
-  const mLms =
-    rgbToLmsMatrix[3] * rLin + rgbToLmsMatrix[4] * gLin + rgbToLmsMatrix[5] * bLin;
-  const sLms =
-    rgbToLmsMatrix[6] * rLin + rgbToLmsMatrix[7] * gLin + rgbToLmsMatrix[8] * bLin;
+  const lLms = rgbToLmsMatrix[0] * rLin + rgbToLmsMatrix[1] * gLin + rgbToLmsMatrix[2] * bLin;
+  const mLms = rgbToLmsMatrix[3] * rLin + rgbToLmsMatrix[4] * gLin + rgbToLmsMatrix[5] * bLin;
+  const sLms = rgbToLmsMatrix[6] * rLin + rgbToLmsMatrix[7] * gLin + rgbToLmsMatrix[8] * bLin;
 
   // LMS → LMS' (cube root)
   const lPrime = Math.cbrt(lLms);
@@ -118,17 +110,11 @@ const rgbToOklab = (
 const oklabToRgb = (L: number, aL: number, bL: number): [number, number, number] => {
   // Oklab → LMS'
   const lPrime =
-    labToLmsPrimeMatrix[0] * L +
-    labToLmsPrimeMatrix[1] * aL +
-    labToLmsPrimeMatrix[2] * bL;
+    labToLmsPrimeMatrix[0] * L + labToLmsPrimeMatrix[1] * aL + labToLmsPrimeMatrix[2] * bL;
   const mPrime =
-    labToLmsPrimeMatrix[3] * L +
-    labToLmsPrimeMatrix[4] * aL +
-    labToLmsPrimeMatrix[5] * bL;
+    labToLmsPrimeMatrix[3] * L + labToLmsPrimeMatrix[4] * aL + labToLmsPrimeMatrix[5] * bL;
   const sPrime =
-    labToLmsPrimeMatrix[6] * L +
-    labToLmsPrimeMatrix[7] * aL +
-    labToLmsPrimeMatrix[8] * bL;
+    labToLmsPrimeMatrix[6] * L + labToLmsPrimeMatrix[7] * aL + labToLmsPrimeMatrix[8] * bL;
 
   // LMS' → LMS (cube)
   const lLms = lPrime * lPrime * lPrime;

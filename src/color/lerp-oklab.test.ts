@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+
 import { lerpOklab, hexToRgba } from "./lerp-oklab";
 
 // === lerpOklab ===

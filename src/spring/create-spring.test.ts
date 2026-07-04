@@ -1,6 +1,7 @@
 import { beforeEach, expect, test } from "vitest";
-import { createSpring } from "./create-spring";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createSpring } from "./create-spring";
 
 beforeEach(() => {
   getTicker().stop();
@@ -53,13 +54,18 @@ test("setCurrent teleports mid-animation", async () => {
   expect(spring.velocity).toBe(0);
 });
 
-
 test("onUpdate receives velocity", () => {
   const ticker = getTicker();
   const velocities: number[] = [];
   const spring = createSpring({
-    from: 0, to: 100, stiffness: 200, damping: 15, mass: 1,
-    onUpdate: (_v, vel) => { velocities.push(vel); },
+    from: 0,
+    to: 100,
+    stiffness: 200,
+    damping: 15,
+    mass: 1,
+    onUpdate: (_v, vel) => {
+      velocities.push(vel);
+    },
   });
 
   ticker.update(16);

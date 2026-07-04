@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { createSmoothDamp } from "./create-smooth-damp";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createSmoothDamp } from "./create-smooth-damp";
 
 describe("createSmoothDamp", () => {
   it("approaches a static target over time", () => {
@@ -116,14 +117,15 @@ describe("createSmoothDamp", () => {
     expect(sd.status).toBe("inactive");
   });
 
-
   it("onUpdate receives velocity", () => {
     const velocities: number[] = [];
     const sd = createSmoothDamp({
       from: () => 0,
       to: () => 100,
       smoothTime: 0.3,
-      onUpdate: (_v, vel) => { velocities.push(vel); },
+      onUpdate: (_v, vel) => {
+        velocities.push(vel);
+      },
     });
 
     getTicker().update(16);

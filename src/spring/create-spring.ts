@@ -14,7 +14,7 @@ import { getTicker } from "../ticker/get-ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
-export const createSpring = (options: SpringOptions): Interpolation<number> => {
+export const createSpring = (options: SpringOptions): Interpolation => {
   const precision = options.precision ?? 0.01;
   const onUpdate = options.onUpdate;
 
@@ -78,7 +78,7 @@ export const createSpring = (options: SpringOptions): Interpolation<number> => {
     }
   }
 
-  const controls: Interpolation<number> = {
+  const controls: Interpolation = {
     start,
     stop,
     kill,

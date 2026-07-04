@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { createLerp } from "./create-lerp";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createLerp } from "./create-lerp";
 
 describe("createLerp", () => {
   it("approaches a static target over time", () => {
@@ -117,14 +118,15 @@ describe("createLerp", () => {
     expect(lerp.status).toBe("inactive");
   });
 
-
   it("onUpdate receives velocity that decreases as it approaches target", () => {
     const velocities: number[] = [];
     const lerp = createLerp({
       from: () => 0,
       to: () => 100,
       rate: 3,
-      onUpdate: (_v, vel) => { velocities.push(vel); },
+      onUpdate: (_v, vel) => {
+        velocities.push(vel);
+      },
     });
 
     for (let i = 0; i < 30; i++) getTicker().update(16);

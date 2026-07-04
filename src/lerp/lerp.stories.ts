@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
-import { createLerp } from "./create-lerp";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createLerp } from "./create-lerp";
 
 getTicker().start();
 

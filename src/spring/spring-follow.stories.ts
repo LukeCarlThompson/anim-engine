@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
-import { createSpring } from "./create-spring";
+
 import { getTicker } from "../ticker/get-ticker";
+import { createSpring } from "./create-spring";
 
 getTicker().start();
 

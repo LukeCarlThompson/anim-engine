@@ -41,18 +41,18 @@ export type DynamicValue<T> = T | (() => T);
 
 // === Animation ===
 
-export type Animation<T> = {
-  play: () => Promise<Animation<T>>;
+export type Animation = {
+  play: () => Promise<Animation>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
   skipToEnd: () => void;
   kill: () => void;
 
-  setCurrent: (value: T) => void;
+  setCurrent: (value: number) => void;
 
-  currentValue: T;
-  velocity: T;
+  currentValue: number;
+  velocity: number;
   progress: number;
   status: Status;
   getDurationMs: () => number;
@@ -60,14 +60,14 @@ export type Animation<T> = {
 
 // === Interpolation ===
 
-export type Interpolation<T> = {
+export type Interpolation = {
   start: () => void;
   stop: () => void;
   kill: () => void;
 
-  setCurrent: (value: T) => void;
+  setCurrent: (value: number) => void;
 
-  currentValue: T;
-  velocity: T;
+  currentValue: number;
+  velocity: number;
   status: "active" | "inactive" | "dead";
 };

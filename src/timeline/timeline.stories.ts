@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
+
 import { createAnimation } from "../animation/create-animation";
-import { createTimeline } from "./create-timeline";
 import { getTicker } from "../ticker/get-ticker";
+import { createTimeline } from "./create-timeline";
 
 getTicker().start();
 

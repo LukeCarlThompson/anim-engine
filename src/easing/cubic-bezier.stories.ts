@@ -310,7 +310,7 @@ const meta = {
     controls.appendChild(returnBtn);
     container.appendChild(controls);
 
-    let anim: Animation<number> | null = null;
+    let anim: Animation | null = null;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";

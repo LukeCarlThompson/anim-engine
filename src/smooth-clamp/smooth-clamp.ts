@@ -10,9 +10,7 @@
  * @param threshold - The asymptotic maximum output (never exceeded).
  * @returns A function that applies smooth clamping to an input value.
  */
-export const createSmoothClamp = (
-  threshold: number,
-): (input: number) => number => {
+export const createSmoothClamp = (threshold: number): ((input: number) => number) => {
   return (input: number): number => {
     if (!isFinite(input)) {
       return input >= 0 ? threshold : -threshold;

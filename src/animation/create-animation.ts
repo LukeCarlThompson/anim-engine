@@ -7,7 +7,7 @@ import type { TweenState } from "./update";
 const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : easingFunctions[ease];
 
-type ResolveFunction = (value: Animation<number>) => void;
+type ResolveFunction = (value: Animation) => void;
 
 export type SingleTweenOptions = {
   from: DynamicValue<number>;
@@ -42,7 +42,7 @@ const isKeyframeMode = (options: AnimationOptions): options is KeyframeOptions =
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
-export const createAnimation = (options: AnimationOptions): Animation<number> => {
+export const createAnimation = (options: AnimationOptions): Animation => {
   if (isKeyframeMode(options)) {
     return createKeyframeAnimation(options);
   }
@@ -51,7 +51,7 @@ export const createAnimation = (options: AnimationOptions): Animation<number> =>
 
 // ─── Single-tween mode (existing) ───
 
-const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
+const createSingleTween = (options: SingleTweenOptions): Animation => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
   const repeatCount = options.repeat ?? 0;
   const yoyoEnabled = options.yoyo ?? false;
@@ -95,7 +95,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
 
   let currentEase: EaseFunction = resolveEasing(easeName);
 
-  const play = (): Promise<Animation<number>> => {
+  const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
     repeatCounter = 0;
@@ -113,7 +113,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
       delayRemainingMs = 0;
     }
 
-    const promise = new Promise<Animation<number>>((resolve) => {
+    const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -182,7 +182,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
     resolvePromise = undefined;
   }
 
-  const controls: Animation<number> = {
+  const controls: Animation = {
     play,
     pause,
     resume,
@@ -216,7 +216,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation<number> => {
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: KeyframeOptions): Animation<number> => {
+const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
   const keyframes = options.keyframes;
   const onUpdate = options.onUpdate;
   const onProgress = options.onProgress;
@@ -331,7 +331,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation<number> =>
   let segmentProgress = 0;
   let segmentElapsed = 0;
 
-  const play = (): Promise<Animation<number>> => {
+  const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
     stopped = false;
     currentSegmentIndex = 0;
@@ -342,7 +342,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation<number> =>
     previousValue = segments[0].from;
     state.velocity = 0;
 
-    const promise = new Promise<Animation<number>>((resolve) => {
+    const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -392,7 +392,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation<number> =>
     resolvePromise = undefined;
   };
 
-  const controls: Animation<number> = {
+  const controls: Animation = {
     play,
     pause,
     resume,

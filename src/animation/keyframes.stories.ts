@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
-import { createAnimation } from "./create-animation";
-import { getTicker } from "../ticker/get-ticker";
+
 import { createSmoothClamp } from "../smooth-clamp/smooth-clamp";
+import { getTicker } from "../ticker/get-ticker";
+import { createAnimation } from "./create-animation";
 
 getTicker().start();
 

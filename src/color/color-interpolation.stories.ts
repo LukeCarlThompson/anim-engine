@@ -326,7 +326,7 @@ const meta = {
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
-    let anim: Animation<number> | null = null;
+    let anim: Animation | null = null;
 
     // Shared function to apply color at a given progress (0–1)
     const applyColor = (progress: number) => {

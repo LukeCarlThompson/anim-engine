@@ -3,11 +3,11 @@ import type { Animation } from "../shared/types";
 export type TimelineKeyframe =
   | {
       at: number;
-      animations: Animation<number>[];
+      animations: Animation[];
     }
   | {
       gap: number;
-      animations: Animation<number>[];
+      animations: Animation[];
     };
 
 export type TimelineOptions = {
@@ -31,7 +31,7 @@ export type Timeline = {
 import { getTicker } from "../ticker/get-ticker";
 
 type Batch = {
-  animations: Animation<number>[];
+  animations: Animation[];
   startAt: number;
   endAt: number;
   started: boolean;
