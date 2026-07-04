@@ -290,21 +290,21 @@ createAnimation({
 }).play();
 ```
 
-**Custom game loop:** Create an independent ticker and call `update(deltaMs)` from your own loop. Syncs to PixiJS ticker, ThreeJS `requestAnimationFrame`, or a fixed-step physics loop.
+**Custom game loop:** Call `getTicker().update(deltaMs)` from your own loop. Syncs to PixiJS ticker, ThreeJS `requestAnimationFrame`, or a fixed-step physics loop.
 
 ```ts
-import { createTicker } from "anim-engine";
+import { getTicker } from "anim-engine";
 
-const ticker = createTicker();
+const animEngineTicker = getTicker();
 
 // Call once per frame from your game loop
 function gameLoop(deltaMs: number) {
-  ticker.update(deltaMs);
+  animEngineTicker.update(deltaMs);
   // ... physics, rendering
 }
 ```
 
-**Stop:** Call `getTicker().stop()` or `ticker.stop()` to clean up the rAF loop.
+**Stop:** Call `getTicker().stop()` or `animEngineTicker.stop()` to clean up the rAF loop.
 
 ### Easing
 
@@ -356,12 +356,10 @@ The function is called every frame inside the ticker update — no getter/setter
 | `createSmoothDamp(options)`    | Unity-style smooth damp              |
 | `createLerp(options)`          | Exponential lerp chase               |
 | `createSmoothClamp(threshold)` | Asymptotic clamp factory             |
-| `createTicker()`               | Ticker factory for custom game loops |
 | `getTicker()`                  | Singleton ticker                     |
-
-| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing |
-| `lerpOklab(from, to, t)` | Oklab color interpolation |
-| `hexToRgba(hex)` | Parse hex color to normalized RGBA |
+| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing      |
+| `lerpOklab(from, to, t)`      | Oklab color interpolation            |
+| `hexToRgba(hex)`              | Parse hex color to normalized RGBA   |
 
 ### Type exports
 
@@ -400,9 +398,9 @@ const sprite = Sprite.from("texture.png");
 app.stage.addChild(sprite);
 
 // Sync anim-engine ticker to PixiJS ticker
-const engineTicker = getTicker();
+const animEngineTicker = getTicker();
 app.ticker.add((delta) => {
-  engineTicker.update(delta.deltaMS);
+  animEngineTicker.update(delta.deltaMS);
 });
 
 createAnimation({
@@ -430,12 +428,12 @@ const mesh = new THREE.Mesh(
 );
 scene.add(mesh);
 
-const engineTicker = getTicker();
+const animEngineTicker = getTicker();
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
-  engineTicker.update(clock.getDelta() * 1000);
+  animEngineTicker.update(clock.getDelta() * 1000);
   renderer.render(scene, camera);
 }
 animate();
@@ -452,15 +450,15 @@ createAnimation({
 ### Custom game loop
 
 ```ts
-import { createTicker, createSpring } from "anim-engine";
+import { getTicker, createSpring } from "anim-engine";
 
-const ticker = createTicker();
+const animEngineTicker = getTicker();
 
 function gameLoop(timestamp: number) {
   const deltaMs = timestamp - lastTimestamp;
   lastTimestamp = timestamp;
 
-  ticker.update(deltaMs);
+  animEngineTicker.update(deltaMs);
   // ... physics, rendering, etc.
 
   requestAnimationFrame(gameLoop);

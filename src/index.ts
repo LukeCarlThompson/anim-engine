@@ -9,7 +9,7 @@ export { createSmoothDamp } from "./smooth-damp/create-smooth-damp";
 export { createLerp } from "./lerp/create-lerp";
 
 // Ticker
-export { getTicker, createTicker } from "./ticker/get-ticker";
+export { getTicker } from "./ticker/get-ticker";
 
 // Easing
 export { easingFunctions, EASE_NAMES, cubicBezier } from "./easing/easing";
