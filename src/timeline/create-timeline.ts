@@ -1,10 +1,14 @@
 import type { AnimControls } from "../shared/types";
 
-export type TimelineKeyframe = {
-  at?: number;
-  gap?: number;
-  animations: AnimControls<number>[];
-};
+export type TimelineKeyframe =
+  | {
+      at: number;
+      animations: AnimControls<number>[];
+    }
+  | {
+      gap: number;
+      animations: AnimControls<number>[];
+    };
 
 export type TimelineOptions = {
   keyframes: TimelineKeyframe[];
@@ -38,18 +42,14 @@ type Resolve = (value: TimelineHandle) => void;
 export type Timeline = TimelineHandle;
 
 export const createTimeline = (options: TimelineOptions): TimelineHandle => {
-  const {
-    onStarted,
-    onProgress,
-    onEnded,
-  } = options;
+  const { onStarted, onProgress, onEnded } = options;
 
   // Derive batches from keyframes
   const batches: Batch[] = [];
   let lastBatchEnd = 0;
 
   for (const keyframe of options.keyframes) {
-    const startAt = keyframe.at !== undefined ? keyframe.at : lastBatchEnd + (keyframe.gap ?? 0);
+    const startAt = 'at' in keyframe ? keyframe.at : lastBatchEnd + keyframe.gap;
     const maxDuration = Math.max(...keyframe.animations.map((a) => a.getDurationMs()));
     const endAt = startAt + maxDuration;
     batches.push({ anims: keyframe.animations, startAt, endAt, started: false });
