@@ -24,6 +24,7 @@
     "build-storybook": "npm run lint && npm run test && storybook build",
     "prepublishOnly": "npm run build",
     "bench": "vitest bench src/benchmarks/ --run",
+    "bench:baseline": "vitest bench src/benchmarks/ --run --outputJson baselines/benchmark.json",
     "format": "oxfmt src/",
     "format:check": "oxfmt --check src/",
     "fmt": "oxfmt src/"
