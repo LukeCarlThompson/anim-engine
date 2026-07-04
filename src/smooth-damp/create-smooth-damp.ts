@@ -4,14 +4,18 @@ export type SmoothDampOptions = {
   to: () => number;
   smoothTimeMs: DynamicValue<number>;
   maxSpeed?: DynamicValue<number>;
+  precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
+  onEnded?: () => void;
 };
 import { getTicker } from "../ticker/get-ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
 export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
+  const precision = options.precision ?? 0.01;
   const onUpdate = options.onUpdate;
+  const onEnded = options.onEnded;
 
   const state: SmoothDampState = { current: 0, velocity: 0 };
   let active = true;
@@ -51,6 +55,16 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
     smoothDampStep(state, target, smoothTimeMs, maxSpeed, deltaMs);
 
     onUpdate?.(state.current, state.velocity);
+
+    if (
+      onEnded &&
+      Math.abs(state.current - target) < precision &&
+      Math.abs(state.velocity) < precision
+    ) {
+      state.current = target;
+      state.velocity = 0;
+      onEnded();
+    }
   }
 
   const controls: Interpolation = {

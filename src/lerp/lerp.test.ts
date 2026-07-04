@@ -165,6 +165,29 @@ describe("createLerp", () => {
     lerp.kill();
   });
 
+  it("fires onEnded when settled", () => {
+    let target = 0;
+    let ended = false;
+    const lerp = createLerp({
+      to: () => target,
+      smoothTimeMs: 300,
+      precision: 0.01,
+      onEnded: () => {
+        ended = true;
+      },
+    });
+
+    target = 100;
+
+    for (let i = 0; i < 120; i++) {
+      getTicker().update(16);
+    }
+
+    expect(ended).toBe(true);
+    expect(lerp.currentValue).toBeCloseTo(100, 0);
+    lerp.kill();
+  });
+
   it("smoothTimeMs can be a dynamic accessor function", () => {
     let target = 0;
     let currentSmoothTimeMs = 1000;

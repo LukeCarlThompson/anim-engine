@@ -155,6 +155,29 @@ describe("createSmoothDamp", () => {
     sd.kill();
   });
 
+  it("fires onEnded when settled", () => {
+    let target = 0;
+    let ended = false;
+    const sd = createSmoothDamp({
+      to: () => target,
+      smoothTimeMs: 300,
+      precision: 0.01,
+      onEnded: () => {
+        ended = true;
+      },
+    });
+
+    target = 100;
+
+    for (let i = 0; i < 300; i++) {
+      getTicker().update(16);
+    }
+
+    expect(ended).toBe(true);
+    expect(sd.currentValue).toBeCloseTo(100, 0);
+    sd.kill();
+  });
+
   it("uses maxSpeed to cap velocity", () => {
     let target = 0;
     const values: number[] = [];

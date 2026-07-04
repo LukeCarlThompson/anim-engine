@@ -7,9 +7,10 @@ beforeEach(() => {
   getTicker().stop();
 });
 
-test("spring settles at target", () => {
+test("spring settles at target and fires onEnded", () => {
   const ticker = getTicker();
   let target = 0;
+  let ended = false;
 
   const spring = createSpring({
     to: () => target,
@@ -17,9 +18,11 @@ test("spring settles at target", () => {
     damping: 10,
     mass: 1,
     precision: 0.01,
+    onEnded: () => {
+      ended = true;
+    },
   });
 
-  // Change target — spring chases
   target = 100;
 
   for (let i = 0; i < 200; i++) {
@@ -27,7 +30,8 @@ test("spring settles at target", () => {
   }
 
   expect(spring.currentValue).toBeCloseTo(100, 0);
-  // Dynamic targets stay active (target function may return a new value)
+  expect(ended).toBe(true);
+  // Stays active — target function may return a new value
   expect(spring.status).toBe("active");
 });
 

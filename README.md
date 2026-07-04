@@ -611,9 +611,9 @@ requestAnimationFrame(gameLoop);
 | `KeyframeOptions`    | `keyframes: Keyframe[]`, `onUpdate`, `onProgress`, `onEnded`                                                             |
 | `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
 | `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
-| `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`                                                  |
-| `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `onUpdate`                                                                     |
-| `LerpOptions`        | `to`, `smoothTimeMs`, `onUpdate`                                                                                        |
+| `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
+| `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                                     |
+| `LerpOptions`        | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                                                        |
 | `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
 | `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
