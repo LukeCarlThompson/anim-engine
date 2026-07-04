@@ -52,7 +52,7 @@ test("spring with high stiffness settles faster", () => {
   expect(spring.currentValue).toBeCloseTo(100, 0);
 });
 
-test("setCurrent teleports mid-animation", () => {
+test("setCurrentValue teleports mid-animation", () => {
   const ticker = getTicker();
   let target = 0;
 
@@ -64,7 +64,7 @@ test("setCurrent teleports mid-animation", () => {
 
   target = 100;
   ticker.update(16);
-  spring.setCurrent(50);
+  spring.setCurrentValue(50);
   expect(spring.currentValue).toBe(50);
   expect(spring.velocity).toBe(0);
 });
@@ -76,9 +76,9 @@ test("default start position is at target", () => {
   spring.kill();
 });
 
-test("setCurrent before first tick sets initial position", () => {
+test("setCurrentValue before first tick sets initial position", () => {
   const spring = createSpring({ to: () => 100, stiffness: 200, damping: 15 });
-  spring.setCurrent(50);
+  spring.setCurrentValue(50);
 
   expect(spring.currentValue).toBe(50);
   spring.kill();

@@ -71,18 +71,18 @@ describe("createLerp", () => {
     lerp.kill();
   });
 
-  it("setCurrent before first tick sets initial position", () => {
+  it("setCurrentValue before first tick sets initial position", () => {
     const lerp = createLerp({
       to: () => 100,
       rate: 2,
     });
-    lerp.setCurrent(50);
+    lerp.setCurrentValue(50);
 
     expect(lerp.currentValue).toBe(50);
     lerp.kill();
   });
 
-  it("setCurrent teleports the value", () => {
+  it("setCurrentValue teleports the value", () => {
     let target = 0;
     const lerp = createLerp({
       to: () => target,
@@ -92,7 +92,7 @@ describe("createLerp", () => {
 
     target = 100;
     getTicker().update(16);
-    lerp.setCurrent(500);
+    lerp.setCurrentValue(500);
 
     expect(lerp.currentValue).toBe(500);
     lerp.kill();

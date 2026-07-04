@@ -49,11 +49,12 @@ export type Animation = {
   skipToEnd: () => void;
   kill: () => void;
 
-  setCurrent: (value: number) => void;
+  setCurrentValue: (value: number) => void;
 
   currentValue: number;
   velocity: number;
   progress: number;
+  setProgress: (value: number) => void;
   status: Status;
   getDurationMs: () => number;
 };
@@ -65,7 +66,7 @@ export type Interpolation = {
   stop: () => void;
   kill: () => void;
 
-  setCurrent: (value: number) => void;
+  setCurrentValue: (value: number) => void;
 
   currentValue: number;
   velocity: number;

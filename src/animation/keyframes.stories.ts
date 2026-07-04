@@ -111,7 +111,7 @@ const meta = {
 
     const play = () => {
       reset();
-      anim.setCurrent(0);
+      anim.setCurrentValue(0);
       const p = anim.play();
       void p.then(() => {
         playBtn.textContent = "▶ Play";

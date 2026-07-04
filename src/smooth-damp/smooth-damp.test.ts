@@ -56,18 +56,18 @@ describe("createSmoothDamp", () => {
     sd.kill();
   });
 
-  it("setCurrent before first tick sets initial position", () => {
+  it("setCurrentValue before first tick sets initial position", () => {
     const sd = createSmoothDamp({
       to: () => 100,
       smoothTime: 0.3,
     });
-    sd.setCurrent(50);
+    sd.setCurrentValue(50);
 
     expect(sd.currentValue).toBe(50);
     sd.kill();
   });
 
-  it("setCurrent teleports the value", () => {
+  it("setCurrentValue teleports the value", () => {
     let target = 0;
     const values: number[] = [];
     const sd = createSmoothDamp({
@@ -80,7 +80,7 @@ describe("createSmoothDamp", () => {
 
     target = 100;
     getTicker().update(16);
-    sd.setCurrent(500);
+    sd.setCurrentValue(500);
 
     expect(sd.currentValue).toBe(500);
     sd.kill();

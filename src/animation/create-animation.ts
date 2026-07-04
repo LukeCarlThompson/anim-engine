@@ -185,7 +185,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     stop,
     skipToEnd,
     kill,
-    setCurrent: (value: number) => {
+    setCurrentValue: (value: number) => {
       state.currentValue = value;
       state.velocity = 0;
     },
@@ -198,7 +198,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     get progress() {
       return state.progress;
     },
-    set progress(value: number) {
+    setProgress(value: number) {
       state.progress = Math.max(0, Math.min(1, value));
     },
     get status() {
@@ -399,7 +399,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
     stop,
     skipToEnd,
     kill,
-    setCurrent: (value: number) => {
+    setCurrentValue: (value: number) => {
       state.currentValue = value;
       state.velocity = 0;
     },
@@ -412,7 +412,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
     get progress() {
       return state.progress;
     },
-    set progress(value: number) {
+    setProgress(value: number) {
       state.progress = Math.max(0, Math.min(1, value));
     },
     get status() {

@@ -284,7 +284,7 @@ const spring = createSpring({
   },
 });
 
-spring.setCurrent(0); // jump to start — spring chases back to 100
+spring.setCurrentValue(0); // jump to start — spring chases back to 100
 
 // Dynamic target — mouse chase
 const targetX = { value: 0 };
@@ -302,7 +302,7 @@ const follower = createSpring({
 
 All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => number)` — resolved every frame.
 
-**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrent(value)`, `currentValue`, `velocity`, `status`. Starts at the `to()` value. Use `setCurrent(value)` to jump elsewhere.
+**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrentValue(value)`, `currentValue`, `velocity`, `status`. Starts at the `to()` value. Use `setCurrentValue(value)` to jump elsewhere.
 
 #### createSmoothDamp
 
@@ -316,7 +316,7 @@ const damp = createSmoothDamp({
   onUpdate: (value, velocity) => (sprite.x = value),
 });
 
-damp.setCurrent(0); // jump to start — damp chases back to 100
+damp.setCurrentValue(0); // jump to start — damp chases back to 100
 ```
 
 Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTime` (seconds to reach target).
@@ -334,7 +334,7 @@ const lerp = createLerp({
   onUpdate: (value, velocity) => (sprite.x = value),
 });
 
-lerp.setCurrent(0); // jump to start — lerp chases back to 100
+lerp.setCurrentValue(0); // jump to start — lerp chases back to 100
 ```
 
 First-order exponential approach: `value += (target - value) * rate * deltaTime`. Frame-rate independent.
@@ -352,7 +352,7 @@ const result = clamp(1000); // → ~44.96 (approaches 45 asymptotically)
 const result2 = clamp(-500); // → ~-44.96 (symmetric)
 ```
 
-Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns a function `(value: number) => number` with a `setCurrent(0)` method to reset position.
+Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns a function `(value: number) => number` with a `setCurrentValue(0)` method to reset position.
 
 ### Color
 
@@ -598,8 +598,8 @@ requestAnimationFrame(gameLoop);
 
 | Type                 | Description                                                                                                             |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrent`, `currentValue`, `velocity`, `progress` (r/w), `status` |
-| `Interpolation`      | `start`, `stop`, `kill`, `setCurrent`, `currentValue`, `velocity`, `status`                                             |
+| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrentValue`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
+| `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
 | `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `progress`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                           |
 | `EaseFunction`       | `(t: number) => number`                                                                                                 |

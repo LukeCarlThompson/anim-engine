@@ -63,7 +63,7 @@ export const createSpring = (options: SpringOptions): Interpolation => {
     start,
     stop,
     kill,
-    setCurrent: (value: number) => {
+    setCurrentValue: (value: number) => {
       state.current = value;
       state.velocity = 0;
     },
