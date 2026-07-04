@@ -81,16 +81,11 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       onStarted?.(state.currentValue);
       deltaMs = -delayRemainingMs;
     }
-    const { from, to } = resolveValues();
+    const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+    const to = typeof rawTo === "function" ? rawTo() : rawTo;
     const completed = updateTween(state, deltaMs, durationMs, currentEase, from, to);
     onUpdate?.(state.currentValue, state.velocity);
     if (completed) handleCompletion();
-  };
-
-  const resolveValues = () => {
-    const from = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-    const to = typeof rawTo === "function" ? rawTo() : rawTo;
-    return { from, to };
   };
 
   let currentEase: EaseFunction = resolveEasing(easeName);
@@ -101,8 +96,8 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     repeatCounter = 0;
     isReversed = false;
     state.progress = 0;
-    const { from } = resolveValues();
-    state.currentValue = from;
+    const initFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+    state.currentValue = initFrom;
     state.velocity = 0;
 
     if (delayMs > 0) {
@@ -143,8 +138,8 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   };
 
   const skipToEnd = () => {
-    const { to } = resolveValues();
-    state.currentValue = to;
+    const skipTo = typeof rawTo === "function" ? rawTo() : rawTo;
+    state.currentValue = skipTo;
     state.velocity = 0;
     state.progress = 1;
     if (status === "playing" || status === "paused") {
@@ -170,8 +165,9 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       repeatCounter++;
       if (yoyoEnabled) isReversed = !isReversed;
       state.progress = 0;
-      const { from, to } = resolveValues();
-      state.currentValue = isReversed ? to : from;
+      const revFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
+      const revTo = typeof rawTo === "function" ? rawTo() : rawTo;
+      state.currentValue = isReversed ? revTo : revFrom;
       state.velocity = 0;
       onRepeat?.(state.currentValue);
       return;
