@@ -23,6 +23,7 @@ export type TickerControls = {
  */
 export const createTicker = (): TickerControls => {
   const activeAnimations: (TickHandler | undefined)[] = [];
+  let needsCompact = false;
   let animationFrameRequestId: number | undefined = undefined;
   let previousFrameTime: number | undefined = undefined;
 
@@ -53,15 +54,17 @@ export const createTicker = (): TickerControls => {
       const anim = activeAnimations[i];
       if (anim) anim(deltaMs);
     }
-    // Compact undefined tombstones
-    let writeIndex = 0;
-    for (let readIndex = 0; readIndex < activeAnimations.length; readIndex++) {
-      const anim = activeAnimations[readIndex];
-      if (anim !== undefined) {
-        activeAnimations[writeIndex++] = anim;
+    if (needsCompact) {
+      let writeIndex = 0;
+      for (let readIndex = 0; readIndex < activeAnimations.length; readIndex++) {
+        const anim = activeAnimations[readIndex];
+        if (anim !== undefined) {
+          activeAnimations[writeIndex++] = anim;
+        }
       }
+      activeAnimations.length = writeIndex;
+      needsCompact = false;
     }
-    activeAnimations.length = writeIndex;
   };
 
   const add = (handler: TickHandler) => {
@@ -70,7 +73,10 @@ export const createTicker = (): TickerControls => {
 
   const remove = (handler: TickHandler) => {
     const index = activeAnimations.indexOf(handler);
-    if (index >= 0) activeAnimations[index] = undefined;
+    if (index >= 0) {
+      activeAnimations[index] = undefined;
+      needsCompact = true;
+    }
   };
 
   return { start, stop, update, add, remove };

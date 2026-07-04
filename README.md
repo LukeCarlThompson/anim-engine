@@ -267,10 +267,10 @@ Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 
 
 | Benchmark                                | anim-engine  | GSAP         | Ratio        |
 | ---------------------------------------- | ------------ | ------------ | ------------ |
-| **Single tween** (1000 frames)           | 12,666 ops/s | 11,164 ops/s | 1.13× faster |
-| **Keyframe** (3 segments, 1000 frames)   | 14,012 ops/s | 3,541 ops/s  | 3.96× faster |
-| **50 concurrent tweens** (500 frames)    | 592 ops/s    | 471 ops/s    | 1.26× faster |
-| **50 concurrent keyframes** (500 frames) | 720 ops/s    | 174 ops/s    | 4.14× faster |
+| **Single tween** (1000 frames)           | 23,512 ops/s | 10,829 ops/s | 2.17× faster |
+| **Keyframe** (3 segments, 1000 frames)   | 21,427 ops/s | 3,538 ops/s  | 6.06× faster |
+| **50 concurrent tweens** (500 frames)    | 608 ops/s    | 468 ops/s    | 1.30× faster |
+| **50 concurrent keyframes** (500 frames) | 746 ops/s    | 174 ops/s    | 4.29× faster |
 
 Run locally: `npm run bench`
 

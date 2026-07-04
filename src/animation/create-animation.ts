@@ -225,6 +225,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
   // Sort keyframes by time
   const sorted = [...keyframes].sort((a, b) => a.at - b.at);
   const totalDurationMs = sorted[sorted.length - 1].at;
+  const invTotalDuration = 1 / totalDurationMs;
 
   // Resolve a keyframe's value (function or literal)
   const resolveKeyframeValue = (kf: Keyframe): number => {
@@ -232,15 +233,18 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
   };
 
   // Create segment from one keyframe to the next
-  type Segment = { from: number; to: number; durationMs: number; easeFn: EaseFunction };
+  type Segment = { from: number; to: number; range: number; durationMs: number; easeFn: EaseFunction };
   const segments: Segment[] = [];
 
   for (let i = 0; i < sorted.length - 1; i++) {
     const current = sorted[i];
     const next = sorted[i + 1];
+    const from = resolveKeyframeValue(current);
+    const to = resolveKeyframeValue(next);
     segments.push({
-      from: resolveKeyframeValue(current),
-      to: resolveKeyframeValue(next),
+      from,
+      to,
+      range: to - from,
       durationMs: next.at - current.at,
       easeFn: resolveEasing(next.ease ?? "inOutSine"),
     });
@@ -289,7 +293,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
     // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
     const eased = segment.easeFn(segmentProgress);
     previousValue = state.currentValue;
-    state.currentValue = segment.from + (segment.to - segment.from) * eased;
+    state.currentValue = segment.from + segment.range * eased;
 
     if (segmentProgress >= 1) {
       state.currentValue = segment.to;
@@ -300,7 +304,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
 
     // Compute global progress (O(1) via prefix sum)
     const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
-    state.progress = Math.min(elapsedTotal / totalDurationMs, 1);
+    state.progress = Math.min(elapsedTotal * invTotalDuration, 1);
     onProgress?.(state.progress);
 
     onUpdate?.(state.currentValue, state.velocity);
@@ -315,7 +319,7 @@ const createKeyframeAnimation = (options: KeyframeOptions): Animation => {
         previousValue = state.currentValue;
         state.velocity = 0;
         // Update global progress to end of previous segment (O(1) via prefix sum)
-        state.progress = Math.min(prefixSum[currentSegmentIndex] / totalDurationMs, 1);
+        state.progress = Math.min(prefixSum[currentSegmentIndex] * invTotalDuration, 1);
         onProgress?.(state.progress);
       } else {
         status = "stopped";
