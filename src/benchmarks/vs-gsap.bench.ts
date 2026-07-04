@@ -1,4 +1,8 @@
 import gsap from "gsap";
+import { CustomEase } from "gsap/CustomEase";
+
+gsap.registerPlugin(CustomEase);
+
 /**
  * Benchmarks: anim-engine vs GSAP.
  *
@@ -9,6 +13,7 @@ import gsap from "gsap";
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
+import { cubicBezier } from "../easing/easing";
 import { getTicker } from "../ticker/get-ticker";
 
 // ─── Constants ───
@@ -92,6 +97,40 @@ describe("linear single tween (1000 frames to completion)", () => {
   bench("gsap", () => {
     const target = { x: 0 };
     gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: "none" });
+    advanceGSAPFrames(SINGLE_FRAMES);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  CUBIC BEZIER SINGLE TWEEN — custom bezier lookup
+// ═══════════════════════════════════════════════════
+
+// Build equivalent cubic bezier ease functions
+const cbEase = cubicBezier(0.25, 0.1, 0.25, 1);
+const gsapCbEase = CustomEase.create("cb-ease", "M0,0 C0.25,0.1 0.25,1 1,1");
+
+// Pre-warm: ensure lookup/binary-search paths are compiled
+cbEase(0.5);
+
+describe("cubic bezier single tween (1000 frames to completion)", () => {
+  bench("anim-engine", () => {
+    const target = { x: 0 };
+    const a = createAnimation({
+      from: 0,
+      to: 100,
+      durationMs: SINGLE_DURATION_MS,
+      ease: cbEase,
+      onUpdate: (v) => {
+        target.x = v;
+      },
+    });
+    a.play();
+    advanceAnimEngineFrames(SINGLE_FRAMES);
+  });
+
+  bench("gsap", () => {
+    const target = { x: 0 };
+    gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: gsapCbEase });
     advanceGSAPFrames(SINGLE_FRAMES);
   });
 });

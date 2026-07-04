@@ -124,12 +124,15 @@ const slideIn = createAnimation({
   onUpdate: (v) => (sprite.x = v),
 });
 
-const timeline = createTimeline([
-  { at: 0, animation: [fadeIn, slideIn] }, // both start together
-  { gap: 200, animation: slideIn }, // single animation — no array needed
-], {
-  onProgress: (progress) => console.log(`overall: ${progress}`),
-});
+const timeline = createTimeline(
+  [
+    { at: 0, animation: [fadeIn, slideIn] }, // both start together
+    { gap: 200, animation: slideIn }, // single animation — no array needed
+  ],
+  {
+    onProgress: (progress) => console.log(`overall: ${progress}`),
+  },
+);
 
 timeline.play();
 ```
@@ -142,12 +145,12 @@ type TimelineLayer =
   | { gap: number; animation: Animation | Animation[] };
 ```
 
-| Parameter   | Type                 | Description                                                    |
-| ----------- | -------------------- | -------------------------------------------------------------- |
-| `layers`    | `TimelineLayer[]`    | Array of layers with `at` (absolute) or `gap` (relative) start |
-| `options.onStarted`  | `() => void` | Called when timeline begins                                    |
+| Parameter            | Type                 | Description                                                    |
+| -------------------- | -------------------- | -------------------------------------------------------------- |
+| `layers`             | `TimelineLayer[]`    | Array of layers with `at` (absolute) or `gap` (relative) start |
+| `options.onStarted`  | `() => void`         | Called when timeline begins                                    |
 | `options.onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                   |
-| `options.onEnded`    | `() => void` | Called when timeline finishes                                  |
+| `options.onEnded`    | `() => void`         | Called when timeline finishes                                  |
 
 `gap` is relative to the end of all animations in the previous layer. Pass a single `Animation` or an array for parallel animations within the layer.
 
@@ -265,15 +268,16 @@ Perceptually uniform Oklab interpolation — avoids muddy brown midpoints that R
 
 Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
 
-| Benchmark                                       | anim-engine  | GSAP         | Ratio        |
-| ----------------------------------------------- | ------------ | ------------ | ------------ |
-| **Single tween** (cubic, 1000 frames)           | 42,533 ops/s | 10,654 ops/s | 3.99× faster |
-| **Single tween** (linear, 1000 frames)          | 30,576 ops/s | 16,721 ops/s | 1.83× faster |
-| **Keyframe** (3 segments, 1000 frames)          | 35,185 ops/s | 3,573 ops/s  | 9.85× faster |
-| **50 concurrent tweens** (500 frames)           | 961 ops/s    | 468 ops/s    | 2.05× faster |
-| **50 concurrent keyframes** (500 frames)        | 1,060 ops/s  | 171 ops/s    | 6.22× faster |
+| Benchmark                                    | anim-engine  | GSAP         | Ratio        |
+| -------------------------------------------- | ------------ | ------------ | ------------ |
+| **Single tween** (cubic, 1000 frames)        | 43,265 ops/s | 9,542 ops/s  | 4.53× faster |
+| **Single tween** (linear, 1000 frames)       | 30,461 ops/s | 16,195 ops/s | 1.88× faster |
+| **Single tween** (cubic bezier, 1000 frames) | 21,439 ops/s | 12,869 ops/s | 1.67× faster |
+| **Keyframe** (3 segments, 1000 frames)       | 35,307 ops/s | 3,560 ops/s  | 9.92× faster |
+| **50 concurrent tweens** (500 frames)        | 942 ops/s    | 473 ops/s    | 1.99× faster |
+| **50 concurrent keyframes** (500 frames)     | 918 ops/s    | 171 ops/s    | 5.38× faster |
 
-Easing functions are matched between libraries (cubic = GSAP `power2`). The linear benchmark strips out easing computation to show pure framework overhead.
+Easing functions are matched between libraries (cubic = GSAP `power2.out`, cubic bezier = identical control points via GSAP `CustomEase`). Linear strips out easing to show pure framework overhead.
 
 Run locally: `npm run bench`
 
@@ -357,18 +361,18 @@ The function is called every frame inside the ticker update — no getter/setter
 
 ### Functions
 
-| Export                            | Description                         |
-| --------------------------------- | ----------------------------------- |
-| `createAnimation(options)`        | Timed or keyframe animation         |
+| Export                             | Description                         |
+| ---------------------------------- | ----------------------------------- |
+| `createAnimation(options)`         | Timed or keyframe animation         |
 | `createTimeline(layers, options?)` | Composited timeline of animations   |
-| `createSpring(options)`           | Physics spring (Verlet integration) |
-| `createSmoothDamp(options)`       | Unity-style smooth damp             |
-| `createLerp(options)`             | Exponential lerp chase              |
-| `createSmoothClamp(threshold)`    | Asymptotic clamp factory            |
-| `getTicker()`                     | Singleton ticker                    |
-| `cubicBezier(p1x, p1y, p2x, p2y)` | Custom cubic bezier easing          |
-| `lerpOklab(from, to, t)`          | Oklab color interpolation           |
-| `hexToRgba(hex)`                  | Parse hex color to normalized RGBA  |
+| `createSpring(options)`            | Physics spring (Verlet integration) |
+| `createSmoothDamp(options)`        | Unity-style smooth damp             |
+| `createLerp(options)`              | Exponential lerp chase              |
+| `createSmoothClamp(threshold)`     | Asymptotic clamp factory            |
+| `getTicker()`                      | Singleton ticker                    |
+| `cubicBezier(p1x, p1y, p2x, p2y)`  | Custom cubic bezier easing          |
+| `lerpOklab(from, to, t)`           | Oklab color interpolation           |
+| `hexToRgba(hex)`                   | Parse hex color to normalized RGBA  |
 
 ### Type exports
 
@@ -474,16 +478,6 @@ function gameLoop(timestamp: number) {
 requestAnimationFrame(gameLoop);
 ```
 
-## Design
-
-- **No target mutation** — pure numeric engine. Bridge values to your world via `onUpdate`.
-- **No GC pressure** — zero allocations in the update loop. Pre-computed lookup tables, flat arrays with tombstone compaction.
-- **All functions, no classes** — factory closures throughout. No `this`, no `class`, arrow functions only.
-- **No barrel files** — explicit path imports for reliable tree-shaking and no circular deps.
-- **`undefined` over `null`** — no `null` literals in library source.
-
 ## License
 
 MIT
-
-<!-- TODO: Make animations updateable without a ticker? -->
