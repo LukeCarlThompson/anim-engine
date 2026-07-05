@@ -1,4 +1,4 @@
-import type { KeyframedAnimationOptions } from "../animation/create-animation";
+import type { KeyframeAnimationOptions } from "../animation/create-animation";
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
 import { easingFunctions } from "../easing/easing";
@@ -7,8 +7,8 @@ import type { EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 
 export type TimelineLayer =
-  | { animation: KeyframedAnimationOptions; at: DynamicValue }
-  | { animation: KeyframedAnimationOptions; gap: number };
+  | { animation: KeyframeAnimationOptions; at: DynamicValue }
+  | { animation: KeyframeAnimationOptions; gap: number };
 
 export type Timeline = {
   play: () => Promise<Timeline>;

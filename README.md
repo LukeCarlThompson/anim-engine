@@ -273,8 +273,8 @@ timeline.play();
 
 ```ts
 type TimelineLayer =
-  | { animation: KeyframedAnimationOptions; at: DynamicValue }
-  | { animation: KeyframedAnimationOptions; gap: number };
+  | { animation: KeyframeAnimationOptions; at: DynamicValue }
+  | { animation: KeyframeAnimationOptions; gap: number };
 ```
 
 | Parameter            | Type                 | Description                                                    |
@@ -663,25 +663,25 @@ requestAnimationFrame(gameLoop);
 
 ### Type exports
 
-| Type                        | Description                                                                                                             |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`                 | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
-| `Interpolation`             | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                        |
-| `Timeline`                  | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                             |
-| `EaseName`                  | Union of 31 ease name strings                                                                                           |
-| `EaseFunction`              | `(t: number) => number`                                                                                                 |
-| `DynamicValue`              | `number \| (() => number)`                                                                                              |
-| `AnimationStatus`           | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
-| `InterpolationStatus`       | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                                                |
-| `AnimationOptions`          | Single tween or keyframe animation options (discriminated union)                                                        |
-| `Keyframe`                  | `{ value, gap?, ease? }`                                                                                                |
-| `KeyframedAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                               |
-| `TimelineLayer`             | `{ animation: KeyframedAnimationOptions; at: DynamicValue } \| { animation: KeyframedAnimationOptions; gap: number }`     |
-| `SpringOptions`             | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                               |
-| `SmoothDampOptions`         | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
-| `LerpOptions`               | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |
-| `RgbaTuple`                 | `readonly [number, number, number, number]`                                                                             |
-| `TickerControls`            | `start`, `stop`, `update`, `add`, `remove`                                                                              |
+| Type                       | Description                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Animation`                | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
+| `Interpolation`            | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                        |
+| `Timeline`                 | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                             |
+| `EaseName`                 | Union of 31 ease name strings                                                                                           |
+| `EaseFunction`             | `(t: number) => number`                                                                                                 |
+| `DynamicValue`             | `number \| (() => number)`                                                                                              |
+| `AnimationStatus`          | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
+| `InterpolationStatus`      | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                                                |
+| `AnimationOptions`         | Single tween or keyframe animation options (discriminated union)                                                        |
+| `Keyframe`                 | `{ value, gap?, ease? }`                                                                                                |
+| `KeyframeAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                               |
+| `TimelineLayer`            | `{ animation: KeyframeAnimationOptions; at: DynamicValue } \| { animation: KeyframeAnimationOptions; gap: number }`     |
+| `SpringOptions`            | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                               |
+| `SmoothDampOptions`        | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
+| `LerpOptions`              | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |
+| `RgbaTuple`                | `readonly [number, number, number, number]`                                                                             |
+| `TickerControls`           | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
 ## License
 
