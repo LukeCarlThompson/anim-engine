@@ -1,4 +1,13 @@
-# anim-engine
+<h1 align="center">anim-engine</h1>
+
+<div align="center">
+
+[![NPM Version](https://img.shields.io/npm/v/anim-engine.svg)](https://www.npmjs.com/package/anim-engine)
+[![License](https://img.shields.io/npm/l/anim-engine.svg)](https://github.com/LukeCarlThompson/anim-engine/blob/main/packages/anim-engine/LICENSE)
+[![CI](https://github.com/LukeCarlThompson/anim-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/LukeCarlThompson/anim-engine/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue)](https://www.typescriptlang.org/)
+
+</div>
 
 **Renderer-agnostic animation for JavaScript runtimes.** A fast, lightweight, pure-numeric animation engine.
 
@@ -33,7 +42,7 @@ ESM only. Tree-shakeable — import only what you use.
 ```ts
 import { createAnimation, getTicker } from "anim-engine";
 
-// The ticker drives all animations. Start it once.
+// The ticker drives all animations. Start it once or drive it with an external ticker.
 getTicker().start();
 
 const anim = createAnimation({
@@ -63,28 +72,28 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 
 ## Key advantages
 
-|                              |                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+|                              |                                                                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | ⚡ **Fast**                  | 1.7–7.5× faster than GSAP overall; 3.0–6.2× when comparing equivalent `onUpdate` callback dispatch (see [benchmarks](#benchmarks)). |
-| 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                             |
-| 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.         |
-| 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                  |
-| 🧩 **Composable models**     | Animations, keyframes, and timelines compose cleanly — put tweens inside timelines, nest keyframes anywhere.   |
-| 🔄 **Continuous primitives** | Spring, smooth damp, and lerp chase live targets with zero setup — pass `() => value` for dynamic targets.     |
-| 🚫 **No GC pressure**        | Zero object allocations in hot update paths. State is mutated in place.                                        |
-| 🎨 **Perceptual color**      | Oklab interpolation via `lerpOklab` — no muddy browns. Compose it into any `onUpdate`.                         |
-| 📐 **TypeScript-first**      | Full type exports, exhaustive discriminated unions, no `any`.                                                  |
-| 🔧 **Ticker control**        | Bring your own game loop or use the built-in rAF ticker. Explicit — never auto-starts.                         |
+| 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                                                  |
+| 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.                              |
+| 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                                       |
+| 🧩 **Composable models**     | Animations, keyframes, and timelines compose cleanly — put tweens inside timelines, nest keyframes anywhere.                        |
+| 🔄 **Continuous primitives** | Spring, smooth damp, and lerp chase live targets with zero setup — pass `() => value` for dynamic targets.                          |
+| 🚫 **No GC pressure**        | Zero object allocations in hot update paths. State is mutated in place.                                                             |
+| 🎨 **Perceptual color**      | Oklab interpolation via `lerpOklab` — no muddy browns. Compose it into any `onUpdate`.                                              |
+| 📐 **TypeScript-first**      | Full type exports, exhaustive discriminated unions, no `any`.                                                                       |
+| 🔧 **Ticker control**        | Bring your own game loop or use the built-in rAF ticker. Explicit — never auto-starts.                                              |
 
 ## Primitives
 
 ### Timed (return `Animation`)
 
-| Primitive                                   | Returns      | Description                                              |
-| ------------------------------------------- | ------------ | -------------------------------------------------------- |
-| [`createAnimation`](#createanimation)       | `Animation`  | Timed tween from A to B with easing and delay |
-| [`createAnimation` (keyframes)](#keyframes) | `Animation`  | Multi-segment interpolation with per-segment easing      |
-| [`createTimeline`](#createtimeline)         | `Timeline`   | Orchestrate multiple animations on a shared timeline     |
+| Primitive                                   | Returns     | Description                                          |
+| ------------------------------------------- | ----------- | ---------------------------------------------------- |
+| [`createAnimation`](#createanimation)       | `Animation` | Timed tween from A to B with easing and delay        |
+| [`createAnimation` (keyframes)](#keyframes) | `Animation` | Multi-segment interpolation with per-segment easing  |
+| [`createTimeline`](#createtimeline)         | `Timeline`  | Orchestrate multiple animations on a shared timeline |
 
 Animations have `play()`/`pause()`/`resume()`/`stop()`/`skipToEnd()`/`kill()` controls, return a `Promise` from `play()`, and emit `onUpdate`/`onEnded`/`onProgress` callbacks.
 
@@ -135,15 +144,16 @@ anim.skipToEnd(); // jumps to end, resolves promise
 
 **Single-tween options:**
 
-| Option       | Type                                         | Default       | Description                                                  |
-| ------------ | -------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| `from`       | `number \| () => number`                     | —             | Start value                                                  |
-| `to`         | `number \| () => number`                     | —             | End value                                                    |
-| `durationMs` | `number \| () => number`                     | —             | Duration in milliseconds                                     |
-| `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"` | Easing function or name                                    |
+| Option       | Type                                        | Default       | Description                                                  |
+| ------------ | ------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `from`       | `number \| () => number`                    | —             | Start value                                                  |
+| `to`         | `number \| () => number`                    | —             | End value                                                    |
+| `durationMs` | `number \| () => number`                    | —             | Duration in milliseconds                                     |
+| `ease`       | `EaseName \| EaseFunction`                  | `"inOutSine"` | Easing function or name                                      |
 | `onStarted`  | `() => void`                                | —             | Called when playback begins                                  |
-| `onUpdate`   | `(value: number, velocity: number) => void`  | —             | Called every frame with current value and velocity (units/s) |
+| `onUpdate`   | `(value: number, velocity: number) => void` | —             | Called every frame with current value and velocity (units/s) |
 | `onEnded`    | `() => void`                                | —             | Called when animation completes                              |
+
 **Returns:** `Animation`
 
 ### Keyframes
@@ -169,13 +179,13 @@ Each keyframe's `gap` is in milliseconds from the previous keyframe. Total durat
 
 **Keyframe options:**
 
-| Option       | Type                                        | Description                                               |
-| ------------ | ------------------------------------------- | --------------------------------------------------------- |
-| `keyframes`  | `Keyframe[]`                                | Array of `{ value, gap?, ease? }` keyframes               |
-| `onStarted`  | `() => void`                                | Called when playback begins                               |
-| `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity        |
-| `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress               |
-| `onEnded`    | `() => void`                               | Called when the keyframe animation completes              |
+| Option       | Type                                        | Description                                        |
+| ------------ | ------------------------------------------- | -------------------------------------------------- |
+| `keyframes`  | `Keyframe[]`                                | Array of `{ value, gap?, ease? }` keyframes        |
+| `onStarted`  | `() => void`                                | Called when playback begins                        |
+| `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity |
+| `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress        |
+| `onEnded`    | `() => void`                                | Called when the keyframe animation completes       |
 
 **Returns:** `Animation`
 
@@ -226,7 +236,6 @@ const flash = createTimeline([
 ]);
 await flash.play();
 ```
-
 
 ### createTimeline
 
@@ -374,8 +383,8 @@ Perceptually uniform Oklab interpolation. Straight RGB lerp produces muddy trans
 ```ts
 import { lerpOklab, hexToRgba } from "anim-engine";
 
-hexToRgba("#ff6b6b");  // → [1, 0.42, 0.42, 1]
-hexToRgba("#f80");      // → [1, 0.533, 0, 1] (shorthand)
+hexToRgba("#ff6b6b"); // → [1, 0.42, 0.42, 1]
+hexToRgba("#f80"); // → [1, 0.533, 0, 1] (shorthand)
 hexToRgba("#ff804080"); // → [1, 0.502, 0.251, 0.502] (with alpha)
 
 const fromColor = hexToRgba("#ff6b6b");
@@ -498,28 +507,28 @@ Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 
 
 GSAP defaults to mutating target properties directly. This is faster than dispatching callbacks but couples GSAP to the mutation pattern. Anim-engine always dispatches via `onUpdate` (renderer-agnostic).
 
-| Benchmark                                    | anim-engine  | GSAP         | Ratio        |
-| -------------------------------------------- | ------------ | ------------ | ------------ |
-| **Single tween** (cubic, 1000 frames)        | 40,814 ops/s | 10,776 ops/s | 3.8× faster  |
-| **Single tween** (linear, 1000 frames)       | 28,590 ops/s | 14,499 ops/s | 2.0× faster  |
-| **Single tween** (cubic bezier, 1000 frames) | 21,449 ops/s | 12,637 ops/s | 1.7× faster  |
-| **Keyframe** (3 segments, 1000 frames)       | 26,741 ops/s | 3,549 ops/s  | 7.5× faster  |
-| **50 concurrent tweens** (500 frames)        | 892 ops/s    | 438 ops/s    | 2.0× faster  |
-| **200 concurrent tweens** (500 frames)       | 200 ops/s    | 106 ops/s    | 1.9× faster  |
-| **1000 concurrent tweens** (500 frames)      | 38 ops/s     | 22 ops/s     | 1.7× faster  |
-| **50 concurrent keyframes** (500 frames)     | 934 ops/s    | 174 ops/s    | 5.4× faster  |
-| **50-layer timeline** (staggered, 500 frames)| 710 ops/s    | 404 ops/s    | 1.8× faster  |
-| **50 tweens re-play** (2 cycles, 500 frames) | 558 ops/s    | 128 ops/s    | 4.4× faster  |
+| Benchmark                                     | anim-engine  | GSAP         | Ratio       |
+| --------------------------------------------- | ------------ | ------------ | ----------- |
+| **Single tween** (cubic, 1000 frames)         | 40,814 ops/s | 10,776 ops/s | 3.8× faster |
+| **Single tween** (linear, 1000 frames)        | 28,590 ops/s | 14,499 ops/s | 2.0× faster |
+| **Single tween** (cubic bezier, 1000 frames)  | 21,449 ops/s | 12,637 ops/s | 1.7× faster |
+| **Keyframe** (3 segments, 1000 frames)        | 26,741 ops/s | 3,549 ops/s  | 7.5× faster |
+| **50 concurrent tweens** (500 frames)         | 892 ops/s    | 438 ops/s    | 2.0× faster |
+| **200 concurrent tweens** (500 frames)        | 200 ops/s    | 106 ops/s    | 1.9× faster |
+| **1000 concurrent tweens** (500 frames)       | 38 ops/s     | 22 ops/s     | 1.7× faster |
+| **50 concurrent keyframes** (500 frames)      | 934 ops/s    | 174 ops/s    | 5.4× faster |
+| **50-layer timeline** (staggered, 500 frames) | 710 ops/s    | 404 ops/s    | 1.8× faster |
+| **50 tweens re-play** (2 cycles, 500 frames)  | 558 ops/s    | 128 ops/s    | 4.4× faster |
 
 ### vs GSAP onUpdate (fair comparison)
 
 gsap also supports `onUpdate` callbacks, which is equivalent to anim-engine's renderer-agnostic model. This is the apples-to-apples comparison.
 
-| Benchmark                              | anim-engine  | GSAP (onUpdate) | Ratio        |
-| -------------------------------------- | ------------ | --------------- | ------------ |
-| **Single tween** (cubic, 1000 frames)  | 40,814 ops/s | 6,618 ops/s     | 6.2× faster  |
-| **50 concurrent tweens** (500 frames)  | 892 ops/s    | 273 ops/s       | 3.3× faster  |
-| **200 concurrent tweens** (500 frames) | 200 ops/s    | 66 ops/s        | 3.0× faster  |
+| Benchmark                              | anim-engine  | GSAP (onUpdate) | Ratio       |
+| -------------------------------------- | ------------ | --------------- | ----------- |
+| **Single tween** (cubic, 1000 frames)  | 40,814 ops/s | 6,618 ops/s     | 6.2× faster |
+| **50 concurrent tweens** (500 frames)  | 892 ops/s    | 273 ops/s       | 3.3× faster |
+| **200 concurrent tweens** (500 frames) | 200 ops/s    | 66 ops/s        | 3.0× faster |
 
 Run locally: `npm run bench`
 
@@ -625,25 +634,25 @@ requestAnimationFrame(gameLoop);
 
 ### Type exports
 
-| Type                 | Description                                                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
-| `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
-| `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                                            |
-| `EaseName`           | Union of 31 ease name strings                                                                                           |
-| `EaseFunction`       | `(t: number) => number`                                                                                                 |
-| `DynamicValue`       | `number \| (() => number)`                                                                                             |
-| `AnimationStatus`    | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
-| `InterpolationStatus` | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                           |
-| `AnimationOptions`   | Single tween or keyframe animation options (discriminated union)                                                         |
-| `Keyframe`           | `{ value, gap?, ease? }`                                                                                                |
-| `KeyframedAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                                |
-| `TimelineLayer`      | `{ keyframe: KeyframedAnimationOptions; at: DynamicValue } \| { keyframe: KeyframedAnimationOptions; gap: number }`      |
-| `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
-| `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                                     |
-| `LerpOptions`        | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                                                        |
-| `RgbaTuple`          | `readonly [number, number, number, number]`                                                                             |
-| `TickerControls`     | `start`, `stop`, `update`, `add`, `remove`                                                                              |
+| Type                        | Description                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Animation`                 | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
+| `Interpolation`             | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                        |
+| `Timeline`                  | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                             |
+| `EaseName`                  | Union of 31 ease name strings                                                                                           |
+| `EaseFunction`              | `(t: number) => number`                                                                                                 |
+| `DynamicValue`              | `number \| (() => number)`                                                                                              |
+| `AnimationStatus`           | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
+| `InterpolationStatus`       | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                                                |
+| `AnimationOptions`          | Single tween or keyframe animation options (discriminated union)                                                        |
+| `Keyframe`                  | `{ value, gap?, ease? }`                                                                                                |
+| `KeyframedAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                               |
+| `TimelineLayer`             | `{ keyframe: KeyframedAnimationOptions; at: DynamicValue } \| { keyframe: KeyframedAnimationOptions; gap: number }`     |
+| `SpringOptions`             | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                               |
+| `SmoothDampOptions`         | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
+| `LerpOptions`               | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |
+| `RgbaTuple`                 | `readonly [number, number, number, number]`                                                                             |
+| `TickerControls`            | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
 ## License
 
