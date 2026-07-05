@@ -11,6 +11,7 @@ export type SingleTweenOptions = {
   ease?: EaseName | EaseFunction;
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
+  onProgress?: (progress: number) => void;
   onEnded?: () => void;
 };
 
@@ -68,6 +69,7 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 const createSingleTween = ({
   onStarted,
   onUpdate,
+  onProgress,
   onEnded,
   from: rawFrom,
   to: rawTo,
@@ -105,6 +107,7 @@ const createSingleTween = ({
       easeFn: resolveEasing(easeName),
       onStarted,
       onUpdate,
+      onProgress,
       onEnded: handleEnded,
     });
   };
