@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
-import { createAnimation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { createTimeline } from "./create-timeline";
 
@@ -118,58 +117,54 @@ const meta = {
     controls.appendChild(resetBtn);
     container.appendChild(controls);
 
-    // Build animations
-    const moveA = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 800,
-      ease: "outQuart",
-      onUpdate: (v) => {
-        els[0].style.transform = `translateX(${v}px)`;
-      },
-    });
-    const moveB = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 700,
-      ease: "outBounce",
-      onUpdate: (v) => {
-        els[1].style.transform = `translateX(${v}px)`;
-      },
-    });
-    const moveC = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 1000,
-      ease: "outElastic",
-      onUpdate: (v) => {
-        els[2].style.transform = `translateX(${v}px)`;
-      },
-    });
-    const moveD = createAnimation({
-      from: 0,
-      to: 640,
-      durationMs: 600,
-      ease: "inOutBack",
-      onUpdate: (v) => {
-        els[3].style.transform = `translateX(${v}px)`;
-      },
-    });
-
     const resetAll = () =>
       els.forEach((el) => {
         el.style.transform = "translateX(0px)";
       });
 
+    // Build timeline with keyframe configs directly — no Animation objects needed
     const timeline = createTimeline(
       [
-        { at: 0, animation: [moveA, moveB] },
-        { gap: 200, animation: [moveC] },
-        { gap: 200, animation: [moveD] },
+        {
+          at: 0,
+          keyframe: {
+            keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
+            onUpdate: (v) => {
+              els[0].style.transform = `translateX(${v}px)`;
+            },
+          },
+        },
+        {
+          at: 0,
+          keyframe: {
+            keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
+            onUpdate: (v) => {
+              els[1].style.transform = `translateX(${v}px)`;
+            },
+          },
+        },
+        {
+          gap: 200,
+          keyframe: {
+            keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
+            onUpdate: (v) => {
+              els[2].style.transform = `translateX(${v}px)`;
+            },
+          },
+        },
+        {
+          gap: 200,
+          keyframe: {
+            keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
+            onUpdate: (v) => {
+              els[3].style.transform = `translateX(${v}px)`;
+            },
+          },
+        },
       ],
       {
         onProgress: (progress) => {
-          const pct = `${Math.round(progress * 100)}%`;
+          const pct = `${progress * 100}%`;
           timeFill.style.width = pct;
           scrubHandle.style.left = pct;
         },
@@ -185,7 +180,7 @@ const meta = {
     const scrubTo = (e: MouseEvent) => {
       const rect = timeBar.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const pct = `${Math.round(ratio * 100)}%`;
+      const pct = `${ratio * 100}%`;
       timeFill.style.width = pct;
       scrubHandle.style.left = pct;
       timeline.setProgress(ratio);

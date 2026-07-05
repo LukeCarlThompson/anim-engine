@@ -217,7 +217,7 @@ const meta = {
         onUpdate: (value, velocity) => {
           block.style.transform = `translateX(${value}px)`;
           if (tween) {
-            progressFill.style.width = `${Math.round(tween.progress * 100)}%`;
+            progressFill.style.width = `${tween.progress * 100}%`;
           }
 
           const absVel = Math.abs(velocity);
@@ -269,7 +269,7 @@ const meta = {
         onUpdate: (value, velocity) => {
           block.style.transform = `translateX(${value}px)`;
           if (tween) {
-            progressFill.style.width = `${Math.round(tween.progress * 100)}%`;
+            progressFill.style.width = `${tween.progress * 100}%`;
           }
           const absVel = Math.abs(velocity);
           const barPercent = Math.min(absVel * 25, 100);

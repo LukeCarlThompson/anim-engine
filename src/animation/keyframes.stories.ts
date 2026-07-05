@@ -99,18 +99,18 @@ const meta = {
 
     const anim = createAnimation({
       keyframes: [
-        { at: 0, value: 0 },
-        { at: 0.2 * durationMs, value: 200, ease: "outQuart" },
-        { at: 0.5 * durationMs, value: 450, ease: "outCubic" },
-        { at: 0.75 * durationMs, value: 350, ease: "outQuart" },
-        { at: 1 * durationMs, value: 630, ease: "outElastic" },
+        { value: 0 },
+        { value: 200, gap: 0.2 * durationMs, ease: "outQuart" },
+        { value: 450, gap: 0.3 * durationMs, ease: "outCubic" },
+        { value: 350, gap: 0.25 * durationMs, ease: "outQuart" },
+        { value: 630, gap: 0.25 * durationMs, ease: "outElastic" },
       ],
       onUpdate: (value, velocity) => {
         const rotation = smoothClamp(velocity * 0.05);
         block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
       },
       onProgress: (p) => {
-        const pct = `${Math.round(p * 100)}%`;
+        const pct = `${p * 100}%`;
         progressFill.style.width = pct;
         scrubHandle.style.left = pct;
       },
@@ -131,7 +131,7 @@ const meta = {
     const scrubTo = (e: MouseEvent) => {
       const rect = progressBar.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const pct = `${Math.round(ratio * 100)}%`;
+      const pct = `${ratio * 100}%`;
       progressFill.style.width = pct;
       scrubHandle.style.left = pct;
       anim.setProgress(ratio);

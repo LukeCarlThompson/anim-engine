@@ -274,9 +274,9 @@ test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like
   const ticker = getTicker();
   const tween = createAnimation({
     keyframes: [
-      { at: 0, value: 0 },
-      { at: 200, value: 0, ease: "linear" },
-      { at: 300, value: 100, ease: "linear" },
+      { value: 0 },
+      { value: 0, gap: 200, ease: "linear" },
+      { value: 100, gap: 100, ease: "linear" },
     ],
   });
   const p = tween.play();
@@ -301,58 +301,6 @@ test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like
   await p;
 
   // THEN — reaches end value
-  expect(tween.currentValue).toBe(100);
-});
-
-// ─── setCurrentValue ───
-
-test("GIVEN a running linear tween WHEN setCurrentValue is called THEN it teleports the value and resets velocity", async () => {
-  // GIVEN
-  const ticker = getTicker();
-  const tween = createAnimation({
-    from: 0,
-    to: 100,
-    durationMs: 1000,
-    ease: "linear",
-  });
-  const p = tween.play();
-
-  // WHEN
-  ticker.update(300);
-  tween.setCurrentValue(500);
-
-  // THEN
-  expect(tween.currentValue).toBe(500);
-  expect(tween.velocity).toBe(0);
-
-  tween.stop();
-  await p;
-});
-
-test("GIVEN a running tween WHEN setCurrentValue is called mid-way THEN it teleports and subsequent updates animate from the new position", async () => {
-  // GIVEN
-  const ticker = getTicker();
-  const tween = createAnimation({
-    from: 0,
-    to: 100,
-    durationMs: 1000,
-    ease: "linear",
-  });
-  const p = tween.play();
-
-  // WHEN — advance 300ms (at 30), then teleport to 500
-  ticker.update(300);
-  tween.setCurrentValue(500);
-
-  // THEN — immediate teleport
-  expect(tween.currentValue).toBe(500);
-  expect(tween.velocity).toBe(0);
-
-  // WHEN — advance another 700ms (the remaining progress from the original duration perspective)
-  ticker.update(700);
-  await p;
-
-  // THEN — completes at the to value
   expect(tween.currentValue).toBe(100);
 });
 
@@ -384,10 +332,7 @@ test("GIVEN keyframes with 2 points WHEN played THEN it behaves the same as a si
   // GIVEN
   const ticker = getTicker();
   const a = createAnimation({
-    keyframes: [
-      { at: 0, value: 0 },
-      { at: 100, value: 100, ease: "linear" },
-    ],
+    keyframes: [{ value: 0 }, { value: 100, gap: 100, ease: "linear" }],
     onUpdate: () => {},
   });
 
@@ -406,9 +351,9 @@ test("GIVEN keyframes with 3 points WHEN played through THEN it interpolates bet
   const values: number[] = [];
   const a = createAnimation({
     keyframes: [
-      { at: 0, value: 0 },
-      { at: 100, value: 100, ease: "linear" },
-      { at: 200, value: 50, ease: "linear" },
+      { value: 0 },
+      { value: 100, gap: 100, ease: "linear" },
+      { value: 50, gap: 100, ease: "linear" },
     ],
     onUpdate: (v) => {
       values.push(Math.round(v));
@@ -430,10 +375,7 @@ test("GIVEN a keyframe animation with velocity tracking WHEN it moves THEN veloc
   const ticker = getTicker();
   const velocities: number[] = [];
   const a = createAnimation({
-    keyframes: [
-      { at: 0, value: 0 },
-      { at: 1000, value: 100, ease: "linear" },
-    ],
+    keyframes: [{ value: 0 }, { value: 100, gap: 1000, ease: "linear" }],
     onUpdate: (_v, vel) => {
       velocities.push(vel);
     },

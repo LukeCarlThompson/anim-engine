@@ -356,7 +356,7 @@ const meta = {
       midDisplay.textContent = `Mid: ${hexStr}`;
       midDisplay.style.color = hexStr;
 
-      const pct = Math.round(progress * 100);
+      const pct = progress * 100;
       scrubInput.value = String(pct);
       scrubVal.textContent = `${pct}%`;
     };

@@ -1,11 +1,13 @@
 import { easingFunctions } from "../easing/easing";
 import type { Animation, DynamicValue, EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
-import { updateTween } from "./update";
-import type { TweenState } from "./update";
+import { createKeyframeRunner, createTweenRunner } from "./runner";
+import type { Runner } from "./runner";
 
 const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : easingFunctions[ease];
+
+const resolveValue = (v: DynamicValue): number => (typeof v === "function" ? v() : v);
 
 type ResolveFunction = (value: Animation) => void;
 
@@ -20,13 +22,14 @@ export type SingleTweenOptions = {
 };
 
 export type Keyframe = {
-  at: DynamicValue;
   value: DynamicValue;
   ease?: EaseName | EaseFunction;
+  gap?: DynamicValue;
 };
 
 export type KeyframedAnimationOptions = {
   keyframes: Keyframe[];
+  onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
@@ -45,50 +48,62 @@ export const createAnimation = (options: AnimationOptions): Animation => {
   return createSingleTween(options);
 };
 
-// ─── Single-tween mode (existing) ───
+// ─── Single-tween mode ───
 
 const createSingleTween = (options: SingleTweenOptions): Animation => {
   const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
   const { onStarted, onUpdate, onEnded } = options;
+  const rawFrom = options.from;
+  const rawTo = options.to;
+  const rawDurationMs = options.durationMs;
 
-  const rawFrom: DynamicValue = options.from;
-  const rawTo: DynamicValue = options.to;
-  const rawDurationMs: DynamicValue = options.durationMs;
-  let cachedFrom: number = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-  let cachedTo: number = typeof rawTo === "function" ? rawTo() : rawTo;
-  let cachedDurationMs: number = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
-
-  const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
+  let cachedDurationMs = resolveValue(rawDurationMs);
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
 
   const ticker = getTicker();
 
-  const update = (deltaMs: number) => {
-    if (stopped) return;
-    const completed = updateTween(state, deltaMs, cachedDurationMs, currentEase, cachedFrom, cachedTo);
-    onUpdate?.(state.currentValue, state.velocity);
-    if (completed) handleCompletion();
+  let runner: Runner;
+
+  const finish = () => {
+    status = "stopped";
+    ticker.remove(runner);
+    resolvePromise?.(controls);
+    resolvePromise = undefined;
   };
 
-  let currentEase: EaseFunction = resolveEasing(easeName);
+  const buildRunner = (): Runner => {
+    const from = resolveValue(rawFrom);
+    const to = resolveValue(rawTo);
+    cachedDurationMs = resolveValue(rawDurationMs);
+    return createTweenRunner({
+      from,
+      to,
+      durationMs: cachedDurationMs,
+      easeFn: resolveEasing(easeName),
+      onStarted,
+      onUpdate,
+      onEnded,
+      onComplete: finish,
+    });
+  };
+
+  const hasDynamic =
+    typeof rawFrom === "function" ||
+    typeof rawTo === "function" ||
+    typeof rawDurationMs === "function";
+
+  runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
-    stopped = false;
-    state.progress = 0;
-    cachedFrom = typeof rawFrom === "function" ? rawFrom() : rawFrom;
-    cachedTo = typeof rawTo === "function" ? rawTo() : rawTo;
-    cachedDurationMs = typeof rawDurationMs === "function" ? rawDurationMs() : rawDurationMs;
-    state.currentValue = cachedFrom;
-    state.velocity = 0;
-
+    if (hasDynamic) runner = buildRunner();
+    else runner.reset();
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner);
     onStarted?.();
     return promise;
   };
@@ -96,51 +111,36 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(update);
+    ticker.remove(runner);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner);
   };
 
   const stop = () => {
-    stopped = true;
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
-    state.currentValue = cachedTo;
-    state.velocity = 0;
-    state.progress = 1;
-    onUpdate?.(state.currentValue, state.velocity);
-    if (status === "playing" || status === "paused") {
-      onEnded?.();
-    }
+    runner.evaluate(1);
+    if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(update);
-    stopped = true;
+    ticker.remove(runner);
     resolvePromise = undefined;
   };
-
-  function handleCompletion() {
-    onEnded?.();
-    status = "stopped";
-    ticker.remove(update);
-    resolvePromise?.(controls);
-    resolvePromise = undefined;
-  }
 
   const controls: Animation = {
     play,
@@ -149,26 +149,18 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     stop,
     skipToEnd,
     kill,
-    setCurrentValue: (value: number) => {
-      state.currentValue = value;
-      state.velocity = 0;
-    },
     get currentValue() {
-      return state.currentValue;
+      return runner.currentValue;
     },
     get velocity() {
-      return state.velocity;
+      return runner.velocity;
     },
     get progress() {
-      return state.progress;
+      return runner.progress;
     },
     setProgress(value: number) {
       if (status === "playing") pause();
-      const clamped = Math.max(0, Math.min(1, value));
-      state.progress = clamped;
-      state.currentValue = cachedFrom + (cachedTo - cachedFrom) * currentEase(clamped);
-      state.velocity = 0;
-      onUpdate?.(state.currentValue, state.velocity);
+      runner.evaluate(Math.max(0, Math.min(1, value)));
     },
     get status() {
       return status;
@@ -184,202 +176,101 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 // ─── Keyframe mode ───
 
 const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation => {
-  const rawKeyframes = options.keyframes;
-  const onUpdate = options.onUpdate;
-  const onProgress = options.onProgress;
-  const onEnded = options.onEnded;
+  const { keyframes: rawKeyframes, onStarted, onUpdate, onProgress, onEnded } = options;
 
-  // Resolve helpers
-  const resolveKeyframeValue = (kf: Keyframe): number =>
-    typeof kf.value === "function" ? kf.value() : kf.value;
-  const resolveKeyframeAt = (kf: Keyframe): number =>
-    typeof kf.at === "function" ? kf.at() : kf.at;
-
-  // Mutable segment state — rebuilt on each play()
-  type Segment = {
-    from: number;
-    to: number;
-    range: number;
-    durationMs: number;
-    easeFn: EaseFunction;
-  };
-  let segments: Segment[] = [];
-  let prefixSum: number[] = [0];
-  let totalDurationMs = 0;
-  let invTotalDuration = 0;
-
-  const rebuild = () => {
-    // Resolve at values, sort, and build segments
-    const sorted = [...rawKeyframes]
-      .map((kf) => ({ ...kf, at: resolveKeyframeAt(kf) }))
-      .sort((a, b) => a.at - b.at);
-
-    totalDurationMs = sorted[sorted.length - 1].at;
-    invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 0;
-
-    segments = [];
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i];
-      const next = sorted[i + 1];
-      const from = resolveKeyframeValue(current);
-      const to = resolveKeyframeValue(next);
-      segments.push({
-        from,
-        to,
-        range: to - from,
-        durationMs: next.at - current.at,
-        easeFn: resolveEasing(next.ease ?? "inOutSine"),
-      });
+  const resolveKeyframeGaps = (): number => {
+    let total = 0;
+    for (let i = 1; i < rawKeyframes.length; i++) {
+      total += resolveValue(rawKeyframes[i].gap ?? 0);
     }
-
-    // Single keyframe — create a hold segment
-    if (segments.length === 0) {
-      const v = resolveKeyframeValue(sorted[0]);
-      segments.push({
-        from: v,
-        to: v,
-        range: 0,
-        durationMs: totalDurationMs,
-        easeFn: resolveEasing("linear"),
-      });
-    }
-
-    // Rebuild prefix sums
-    prefixSum = [0];
-    for (let i = 0; i < segments.length; i++) {
-      prefixSum.push(prefixSum[i] + segments[i].durationMs);
-    }
+    return total;
   };
 
-  // Initial build
-  rebuild();
-
-  // State
-  const state: TweenState = { progress: 0, currentValue: 0, velocity: 0 };
+  let cachedDurationMs = resolveKeyframeGaps();
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let stopped = false;
   let resolvePromise: ResolveFunction | undefined;
-  let currentSegmentIndex = 0;
-  let previousValue = segments[0].from;
 
   const ticker = getTicker();
 
-  const update = (deltaMs: number) => {
-    if (stopped) return;
+  let runner: Runner;
 
-    const segment = segments[currentSegmentIndex];
-    segmentElapsed += deltaMs;
-
-    // Advance segment progress
-    segmentProgress += deltaMs / segment.durationMs;
-    if (segmentProgress >= 1) {
-      segmentProgress = 1;
-    }
-
-    // Compute eased value directly (don't use updateTween to avoid state.progress conflict)
-    const eased = segment.easeFn(segmentProgress);
-    previousValue = state.currentValue;
-    state.currentValue = segment.from + segment.range * eased;
-
-    if (segmentProgress >= 1) {
-      state.currentValue = segment.to;
-      state.velocity = 0;
-    } else {
-      state.velocity = (state.currentValue - previousValue) / (deltaMs / 1000);
-    }
-
-    // Compute global progress (O(1) via prefix sum)
-    const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
-    state.progress = Math.min(elapsedTotal * invTotalDuration, 1);
-    onProgress?.(state.progress);
-
-    onUpdate?.(state.currentValue, state.velocity);
-
-    // Check if segment completed
-    if (segmentProgress >= 1) {
-      if (currentSegmentIndex < segments.length - 1) {
-        currentSegmentIndex++;
-        segmentElapsed = 0;
-        segmentProgress = 0;
-        state.currentValue = segments[currentSegmentIndex].from;
-        previousValue = state.currentValue;
-        state.velocity = 0;
-        // Update global progress to end of previous segment (O(1) via prefix sum)
-        state.progress = Math.min(prefixSum[currentSegmentIndex] * invTotalDuration, 1);
-        onProgress?.(state.progress);
-      } else {
-        status = "stopped";
-        ticker.remove(update);
-        onEnded?.();
-        resolvePromise?.(controls);
-        resolvePromise = undefined;
-      }
-    }
+  const finish = () => {
+    status = "stopped";
+    ticker.remove(runner);
+    resolvePromise?.(controls);
+    resolvePromise = undefined;
   };
 
-  // Separate segment progress tracker (state.progress is overridden with global progress)
-  let segmentProgress = 0;
-  let segmentElapsed = 0;
+  const buildRunner = (): Runner => {
+    const resolvedKeyframes = rawKeyframes.map((kf, i) => ({
+      value: resolveValue(kf.value),
+      gap: i === 0 ? 0 : resolveValue(kf.gap ?? 0),
+      easeFn: resolveEasing(kf.ease ?? "inOutSine"),
+    }));
+    return createKeyframeRunner({
+      keyframes: resolvedKeyframes,
+      onStarted,
+      onUpdate,
+      onProgress,
+      onEnded,
+      onComplete: finish,
+    });
+  };
+
+  const hasDynamic = rawKeyframes.some(
+    (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
+  );
+
+  runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
-    rebuild();
-    stopped = false;
-    currentSegmentIndex = 0;
-    segmentElapsed = 0;
-    segmentProgress = 0;
-    state.progress = 0;
-    state.currentValue = segments[0].from;
-    previousValue = segments[0].from;
-    state.velocity = 0;
-
+    if (hasDynamic) {
+      runner = buildRunner();
+      cachedDurationMs = resolveKeyframeGaps();
+    } else {
+      runner.reset();
+    }
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner);
+    onStarted?.();
     return promise;
   };
 
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(update);
+    ticker.remove(runner);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner);
   };
 
   const stop = () => {
-    stopped = true;
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
-    const last = segments[segments.length - 1];
-    state.currentValue = last.to;
-    state.velocity = 0;
-    state.progress = 1;
-    onUpdate?.(state.currentValue, state.velocity);
-    if (status === "playing" || status === "paused") {
-      onEnded?.();
-    }
+    runner.evaluate(1);
+    if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(update);
-    stopped = true;
+    ticker.remove(runner);
     resolvePromise = undefined;
   };
 
@@ -390,49 +281,24 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     stop,
     skipToEnd,
     kill,
-    setCurrentValue: (value: number) => {
-      state.currentValue = value;
-      state.velocity = 0;
-    },
     get currentValue() {
-      return state.currentValue;
+      return runner.currentValue;
     },
     get velocity() {
-      return state.velocity;
+      return runner.velocity;
     },
     get progress() {
-      return state.progress;
+      return runner.progress;
     },
     setProgress(value: number) {
       if (status === "playing") pause();
-      const clamped = Math.max(0, Math.min(1, value));
-      state.progress = clamped;
-
-      const elapsed = clamped * totalDurationMs;
-      let segIdx = 0;
-      for (let i = 0; i < segments.length; i++) {
-        if (elapsed <= prefixSum[i + 1]) {
-          segIdx = i;
-          break;
-        }
-        segIdx = i;
-      }
-
-      const segment = segments[segIdx];
-      const segStart = prefixSum[segIdx];
-      const segDuration = segment.durationMs;
-      const segProgress = segDuration > 0 ? (elapsed - segStart) / segDuration : 1;
-      const eased = segment.easeFn(Math.max(0, Math.min(1, segProgress)));
-      state.currentValue = segment.from + segment.range * eased;
-      state.velocity = 0;
-      onUpdate?.(state.currentValue, state.velocity);
-      onProgress?.(clamped);
+      runner.evaluate(Math.max(0, Math.min(1, value)));
     },
     get status() {
       return status;
     },
     get durationMs() {
-      return totalDurationMs;
+      return cachedDurationMs;
     },
   };
 
