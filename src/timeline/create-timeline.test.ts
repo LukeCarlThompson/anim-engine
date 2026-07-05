@@ -18,14 +18,18 @@ test("GIVEN a timeline with two parallel layers WHEN played to completion THEN b
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
-        onUpdate: (v) => { x = v; },
+        onUpdate: (v) => {
+          x = v;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 200, gap: 100 }],
-        onUpdate: (v) => { y = v; },
+        onUpdate: (v) => {
+          y = v;
+        },
       },
     },
   ]);
@@ -50,14 +54,18 @@ test("GIVEN consecutive layers with gap:0 WHEN played THEN they play one after a
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
-        onUpdate: (v) => { values.push(v); },
+        onUpdate: (v) => {
+          values.push(v);
+        },
       },
     },
     {
       gap: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 200, gap: 100 }],
-        onUpdate: (v) => { values.push(v); },
+        onUpdate: (v) => {
+          values.push(v);
+        },
       },
     },
   ]);
@@ -84,14 +92,18 @@ test("GIVEN two parallel layers of different durations WHEN played THEN they run
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
-        onUpdate: (v) => { if (v >= 1) step1 = true; },
+        onUpdate: (v) => {
+          if (v >= 1) step1 = true;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 1, gap: 100 }],
-        onUpdate: (v) => { if (v >= 1) step2 = true; },
+        onUpdate: (v) => {
+          if (v >= 1) step2 = true;
+        },
       },
     },
   ]);
@@ -116,14 +128,18 @@ test("GIVEN a timeline with a gap between layers WHEN played THEN the gap is res
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
-        onUpdate: () => { times.push(1); },
+        onUpdate: () => {
+          times.push(1);
+        },
       },
     },
     {
       gap: 100,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
-        onUpdate: () => { times.push(2); },
+        onUpdate: () => {
+          times.push(2);
+        },
       },
     },
   ]);
@@ -364,7 +380,9 @@ test("GIVEN a running timeline WHEN paused and later resumed THEN it pauses prog
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 100, gap: 200 }],
-        onUpdate: (v) => { finalValue = v; },
+        onUpdate: (v) => {
+          finalValue = v;
+        },
       },
     },
   ]);
@@ -404,14 +422,18 @@ test("GIVEN a running timeline WHEN skipToEnd is called THEN all layers complete
         at: 0,
         keyframe: {
           keyframes: [{ value: 0 }, { value: 100, gap: 200 }],
-          onUpdate: (v) => { aValue = v; },
+          onUpdate: (v) => {
+            aValue = v;
+          },
         },
       },
       {
         gap: 0,
         keyframe: {
           keyframes: [{ value: 0 }, { value: 200, gap: 300 }],
-          onUpdate: (v) => { bValue = v; },
+          onUpdate: (v) => {
+            bValue = v;
+          },
         },
       },
     ],
@@ -528,14 +550,18 @@ test("GIVEN a timeline with two layers WHEN setProgress is called THEN all layer
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
-        onUpdate: (v) => { aValue = v; },
+        onUpdate: (v) => {
+          aValue = v;
+        },
       },
     },
     {
       gap: 100,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 200, gap: 300, ease: "linear" }],
-        onUpdate: (v) => { bValue = v; },
+        onUpdate: (v) => {
+          bValue = v;
+        },
       },
     },
   ]);
@@ -591,28 +617,36 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
-        onUpdate: (v) => { values.a = v; },
+        onUpdate: (v) => {
+          values.a = v;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
-        onUpdate: (v) => { values.b = v; },
+        onUpdate: (v) => {
+          values.b = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
-        onUpdate: (v) => { values.c = v; },
+        onUpdate: (v) => {
+          values.c = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
-        onUpdate: (v) => { values.d = v; },
+        onUpdate: (v) => {
+          values.d = v;
+        },
       },
     },
   ]);
@@ -644,28 +678,36 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
-        onUpdate: (v) => { values.a = v; },
+        onUpdate: (v) => {
+          values.a = v;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
-        onUpdate: (v) => { values.b = v; },
+        onUpdate: (v) => {
+          values.b = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
-        onUpdate: (v) => { values.c = v; },
+        onUpdate: (v) => {
+          values.c = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
-        onUpdate: (v) => { values.d = v; },
+        onUpdate: (v) => {
+          values.d = v;
+        },
       },
     },
   ]);
@@ -708,34 +750,42 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
-        onUpdate: (v) => { values.a = v; },
+        onUpdate: (v) => {
+          values.a = v;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
-        onUpdate: (v) => { values.b = v; },
+        onUpdate: (v) => {
+          values.b = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
-        onUpdate: (v) => { values.c = v; },
+        onUpdate: (v) => {
+          values.c = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
-        onUpdate: (v) => { values.d = v; },
+        onUpdate: (v) => {
+          values.d = v;
+        },
       },
     },
   ]);
 
   // WHEN — play partway into the timeline
-  const p = tl.play();
+  tl.play();
   ticker.update(500);
   await Promise.resolve();
   tl.pause();
@@ -761,28 +811,36 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
-        onUpdate: (v) => { values.a = v; },
+        onUpdate: (v) => {
+          values.a = v;
+        },
       },
     },
     {
       at: 0,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
-        onUpdate: (v) => { values.b = v; },
+        onUpdate: (v) => {
+          values.b = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
-        onUpdate: (v) => { values.c = v; },
+        onUpdate: (v) => {
+          values.c = v;
+        },
       },
     },
     {
       gap: 200,
       keyframe: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
-        onUpdate: (v) => { values.d = v; },
+        onUpdate: (v) => {
+          values.d = v;
+        },
       },
     },
   ]);
