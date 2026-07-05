@@ -332,10 +332,7 @@ test("GIVEN keyframes with 2 points WHEN played THEN it behaves the same as a si
   // GIVEN
   const ticker = getTicker();
   const a = createAnimation({
-    keyframes: [
-      { value: 0 },
-      { value: 100, gap: 100, ease: "linear" },
-    ],
+    keyframes: [{ value: 0 }, { value: 100, gap: 100, ease: "linear" }],
     onUpdate: () => {},
   });
 
@@ -378,10 +375,7 @@ test("GIVEN a keyframe animation with velocity tracking WHEN it moves THEN veloc
   const ticker = getTicker();
   const velocities: number[] = [];
   const a = createAnimation({
-    keyframes: [
-      { value: 0 },
-      { value: 100, gap: 1000, ease: "linear" },
-    ],
+    keyframes: [{ value: 0 }, { value: 100, gap: 1000, ease: "linear" }],
     onUpdate: (_v, vel) => {
       velocities.push(vel);
     },

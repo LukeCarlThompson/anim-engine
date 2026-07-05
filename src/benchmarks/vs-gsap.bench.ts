@@ -13,9 +13,9 @@ gsap.registerPlugin(CustomEase);
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
-import { createTimeline } from "../timeline/create-timeline";
 import { cubicBezier } from "../easing/easing";
 import { getTicker } from "../ticker/get-ticker";
+import { createTimeline } from "../timeline/create-timeline";
 
 // ─── Constants ───
 
@@ -76,14 +76,17 @@ describe("single tween (1000 frames to completion)", () => {
 
   bench("gsap (onUpdate)", () => {
     const target = { x: 0 };
-    gsap.to({ x: 0 }, {
-      x: 100,
-      duration: SINGLE_DURATION_MS / 1000,
-      ease: "power2.out",
-      onUpdate: function (this: { x: number }) {
-        target.x = this.x;
+    gsap.to(
+      { x: 0 },
+      {
+        x: 100,
+        duration: SINGLE_DURATION_MS / 1000,
+        ease: "power2.out",
+        onUpdate: function (this: { x: number }) {
+          target.x = this.x;
+        },
       },
-    });
+    );
     advanceGSAPFrames(SINGLE_FRAMES);
   });
 });
@@ -217,14 +220,17 @@ describe("50 concurrent tweens (500 frames to completion)", () => {
   bench("gsap (onUpdate)", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
     targets.forEach((_t, i) => {
-      gsap.to({ x: 0 }, {
-        x: 100,
-        duration: CONCURRENT_DURATION_MS / 1000,
-        ease: "power2.out",
-        onUpdate: function (this: { x: number }) {
-          targets[i].x = this.x;
+      gsap.to(
+        { x: 0 },
+        {
+          x: 100,
+          duration: CONCURRENT_DURATION_MS / 1000,
+          ease: "power2.out",
+          onUpdate: function (this: { x: number }) {
+            targets[i].x = this.x;
+          },
         },
-      });
+      );
     });
     advanceGSAPFrames(CONCURRENT_FRAMES);
   });
@@ -263,14 +269,17 @@ describe("200 concurrent tweens (500 frames to completion)", () => {
   bench("gsap (onUpdate)", () => {
     const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
     targets.forEach((_t, i) => {
-      gsap.to({ x: 0 }, {
-        x: 100,
-        duration: CONCURRENT_DURATION_MS / 1000,
-        ease: "power2.out",
-        onUpdate: function (this: { x: number }) {
-          targets[i].x = this.x;
+      gsap.to(
+        { x: 0 },
+        {
+          x: 100,
+          duration: CONCURRENT_DURATION_MS / 1000,
+          ease: "power2.out",
+          onUpdate: function (this: { x: number }) {
+            targets[i].x = this.x;
+          },
         },
-      });
+      );
     });
     advanceGSAPFrames(CONCURRENT_FRAMES);
   });

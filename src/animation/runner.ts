@@ -76,7 +76,10 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
   runner = step as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
-  Object.defineProperty(runner, "currentValue", { get: () => state.currentValue, configurable: true });
+  Object.defineProperty(runner, "currentValue", {
+    get: () => state.currentValue,
+    configurable: true,
+  });
   Object.defineProperty(runner, "velocity", { get: () => state.velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => state.progress, configurable: true });
   runner.onStarted = onStarted;
