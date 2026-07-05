@@ -110,7 +110,7 @@ const meta = {
         block.style.transform = `translateX(${value}px) rotate(${rotation}deg)`;
       },
       onProgress: (p) => {
-        const pct = `${Math.round(p * 100)}%`;
+        const pct = `${p * 100}%`;
         progressFill.style.width = pct;
         scrubHandle.style.left = pct;
       },
@@ -131,7 +131,7 @@ const meta = {
     const scrubTo = (e: MouseEvent) => {
       const rect = progressBar.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const pct = `${Math.round(ratio * 100)}%`;
+      const pct = `${ratio * 100}%`;
       progressFill.style.width = pct;
       scrubHandle.style.left = pct;
       anim.setProgress(ratio);

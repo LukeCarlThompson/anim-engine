@@ -333,7 +333,7 @@ const meta = {
         onUpdate: (value) => {
           block.style.transform = `translateX(${value}px)`;
           if (anim) {
-            progressFill.style.width = `${Math.round(anim.progress * 100)}%`;
+            progressFill.style.width = `${anim.progress * 100}%`;
           }
         },
         onEnded: () => {
@@ -375,7 +375,7 @@ const meta = {
         onUpdate: (value) => {
           block.style.transform = `translateX(${value}px)`;
           if (anim) {
-            progressFill.style.width = `${Math.round(anim.progress * 100)}%`;
+            progressFill.style.width = `${anim.progress * 100}%`;
           }
         },
         onEnded: () => {

@@ -129,34 +129,42 @@ const meta = {
           at: 0,
           keyframe: {
             keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
-            onUpdate: (v) => { els[0].style.transform = `translateX(${v}px)`; },
+            onUpdate: (v) => {
+              els[0].style.transform = `translateX(${v}px)`;
+            },
           },
         },
         {
           at: 0,
           keyframe: {
             keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
-            onUpdate: (v) => { els[1].style.transform = `translateX(${v}px)`; },
+            onUpdate: (v) => {
+              els[1].style.transform = `translateX(${v}px)`;
+            },
           },
         },
         {
           gap: 200,
           keyframe: {
             keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
-            onUpdate: (v) => { els[2].style.transform = `translateX(${v}px)`; },
+            onUpdate: (v) => {
+              els[2].style.transform = `translateX(${v}px)`;
+            },
           },
         },
         {
           gap: 200,
           keyframe: {
             keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
-            onUpdate: (v) => { els[3].style.transform = `translateX(${v}px)`; },
+            onUpdate: (v) => {
+              els[3].style.transform = `translateX(${v}px)`;
+            },
           },
         },
       ],
       {
         onProgress: (progress) => {
-          const pct = `${Math.round(progress * 100)}%`;
+          const pct = `${progress * 100}%`;
           timeFill.style.width = pct;
           scrubHandle.style.left = pct;
         },
@@ -172,7 +180,7 @@ const meta = {
     const scrubTo = (e: MouseEvent) => {
       const rect = timeBar.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const pct = `${Math.round(ratio * 100)}%`;
+      const pct = `${ratio * 100}%`;
       timeFill.style.width = pct;
       scrubHandle.style.left = pct;
       timeline.setProgress(ratio);
