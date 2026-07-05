@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
-import type { Animation } from "../shared/types";
+import type { Animation } from "../animation/create-animation";
 import { getTicker } from "../ticker/get-ticker";
 import { cubicBezier } from "./easing";
 
@@ -310,7 +310,7 @@ const meta = {
     controls.appendChild(returnBtn);
     container.appendChild(controls);
 
-    let anim: Animation | null = null;
+    let anim: Animation | undefined = undefined;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";
@@ -337,13 +337,13 @@ const meta = {
           }
         },
         onEnded: () => {
-          anim = null;
+          anim = undefined;
           playBtn.textContent = "▶ Play";
           progressFill.style.width = "100%";
         },
       });
 
-      anim.play();
+      void anim.play();
       playBtn.textContent = "⏸ Pause";
     };
 
@@ -379,11 +379,11 @@ const meta = {
           }
         },
         onEnded: () => {
-          anim = null;
+          anim = undefined;
           playBtn.textContent = "▶ Play";
         },
       });
-      anim.play();
+      void anim.play();
       playBtn.textContent = "⏸ Pause";
     });
 

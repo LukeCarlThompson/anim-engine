@@ -12,8 +12,6 @@ export type Runner = {
   velocity: number;
   progress: number;
   onStarted: (() => void) | undefined;
-  onUpdate: ((value: number, velocity: number) => void) | undefined;
-  onProgress: ((progress: number) => void) | undefined;
   onEnded: (() => void) | undefined;
 };
 
@@ -32,17 +30,16 @@ export type TweenRunnerConfig = {
   onEnded: () => void;
 };
 
-export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
-  const {
-    from,
-    to,
-    durationMs,
-    easeFn,
-    onStarted,
-    onUpdate = noOp,
-    onProgress = noOp,
-    onEnded,
-  } = config;
+export const createTweenRunner = ({
+  from,
+  to,
+  durationMs,
+  easeFn,
+  onStarted,
+  onUpdate = noOp,
+  onProgress = noOp,
+  onEnded,
+}: TweenRunnerConfig): Runner => {
   const state: TweenState = { progress: 0, currentValue: from, velocity: 0 };
 
   let runner!: Runner;
@@ -88,8 +85,6 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
   Object.defineProperty(runner, "velocity", { get: () => state.velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => state.progress, configurable: true });
   runner.onStarted = onStarted;
-  runner.onUpdate = onUpdate;
-  runner.onProgress = undefined;
   runner.onEnded = onEnded;
 
   return runner;
@@ -246,8 +241,6 @@ export const createKeyframeRunner = ({
   Object.defineProperty(runner, "velocity", { get: () => velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => globalProgress, configurable: true });
   runner.onStarted = onStarted;
-  runner.onUpdate = onUpdate;
-  runner.onProgress = onProgress;
   runner.onEnded = onEnded;
 
   return runner;

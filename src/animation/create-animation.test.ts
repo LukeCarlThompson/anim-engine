@@ -134,7 +134,7 @@ test("GIVEN a running tween WHEN killed THEN the promise stays unresolved and re
   // GIVEN
   const ticker = getTicker();
   const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
-  tween.play();
+  void tween.play();
 
   // WHEN
   ticker.update(300);
@@ -304,22 +304,22 @@ test("GIVEN a tween with three keyframes onUpdate callback WHEN it plays through
 
   // WHEN — advance in 50ms steps (segment 1: 0→50→100, segment 2: 100→75→50)
   const p = a.play();
-  ticker.update(50);   // first segment, 50%
-  ticker.update(50);   // first segment, 100% / start of second
-  ticker.update(50);   // second segment, 50%
-  ticker.update(50);   // second segment, 100%
+  ticker.update(50); // first segment, 50%
+  ticker.update(50); // first segment, 100% / start of second
+  ticker.update(50); // second segment, 50%
+  ticker.update(50); // second segment, 100%
   await p;
 
   // THEN
   expect(updates.length).toBe(4);
-  expect(updates[0].value).toBe(50);   // 50% through 0→100
-  expect(updates[1].value).toBe(100);  // 100% through 0→100
-  expect(updates[2].value).toBe(75);   // 50% through 100→50
-  expect(updates[3].value).toBe(50);   // 100% through 100→50
+  expect(updates[0].value).toBe(50); // 50% through 0→100
+  expect(updates[1].value).toBe(100); // 100% through 0→100
+  expect(updates[2].value).toBe(75); // 50% through 100→50
+  expect(updates[3].value).toBe(50); // 100% through 100→50
 
   // AND velocity positive during climb, zero at keyframe boundary, negative during descent, zero at end
   expect(updates[0].velocity).toBeGreaterThan(0);
-  expect(updates[1].velocity).toBe(0);          // end of first segment
+  expect(updates[1].velocity).toBe(0); // end of first segment
   expect(updates[2].velocity).toBeLessThan(0);
   expect(updates[3].velocity).toBe(0);
 });
@@ -371,18 +371,18 @@ test("GIVEN a tween with three keyframes and onProgress callback WHEN it plays t
 
   // WHEN — advance in 50ms steps
   const p = a.play();
-  ticker.update(50);   // 50ms into total 200ms → 0.25
-  ticker.update(50);   // 100ms into total 200ms → 0.5 (end of seg 1)
-  ticker.update(50);   // 150ms into total 200ms → 0.75
-  ticker.update(50);   // 200ms into total 200ms → 1.0
+  ticker.update(50); // 50ms into total 200ms → 0.25
+  ticker.update(50); // 100ms into total 200ms → 0.5 (end of seg 1)
+  ticker.update(50); // 150ms into total 200ms → 0.75
+  ticker.update(50); // 200ms into total 200ms → 1.0
   await p;
 
   // THEN — keyframe runner fires onProgress twice at segment boundaries
   // (end-of-segment + start-of-next), so we get 5 calls with a duplicate 0.5
   expect(progresses.length).toBe(5);
   expect(progresses[0]).toBeCloseTo(0.25);
-  expect(progresses[1]).toBeCloseTo(0.5);   // end of segment 1
-  expect(progresses[2]).toBeCloseTo(0.5);   // start of segment 2
+  expect(progresses[1]).toBeCloseTo(0.5); // end of segment 1
+  expect(progresses[2]).toBeCloseTo(0.5); // start of segment 2
   expect(progresses[3]).toBeCloseTo(0.75);
   expect(progresses[4]).toBe(1);
 });

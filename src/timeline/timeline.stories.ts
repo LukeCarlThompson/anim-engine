@@ -208,7 +208,7 @@ const meta = {
       } else {
         if (timeline.status === "stopped") {
           resetAll();
-          timeline.play();
+          void timeline.play();
         } else {
           timeline.resume();
         }

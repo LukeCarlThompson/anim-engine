@@ -154,7 +154,7 @@ const meta = {
 
     const play = () => {
       reset();
-      anim.play();
+      void anim.play();
       playing = true;
       playBtn.textContent = "⏸ Pause";
     };

@@ -529,7 +529,7 @@ test("GIVEN a running timeline WHEN stopped from paused state THEN the stop is h
   const tl = createTimeline([
     { at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] } },
   ]);
-  tl.play();
+  void tl.play();
 
   // Advance then pause then stop
   ticker.update(100);
@@ -785,7 +785,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
   ]);
 
   // WHEN — play partway into the timeline
-  tl.play();
+  void tl.play();
   ticker.update(500);
   await Promise.resolve();
   tl.pause();
