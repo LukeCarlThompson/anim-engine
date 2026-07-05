@@ -25,7 +25,6 @@ export type SingleTweenOptions = {
 export type Keyframe = {
   value: DynamicValue;
   ease?: EaseName | EaseFunction;
-  /** Time from the previous keyframe to this one. The first keyframe has no gap (starting point). */
   gap?: DynamicValue;
 };
 
@@ -60,6 +59,19 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const rawDurationMs = options.durationMs;
 
   let cachedDurationMs = resolveValue(rawDurationMs);
+  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
+  let resolvePromise: ResolveFunction | undefined;
+
+  const ticker = getTicker();
+
+  let runner: Runner;
+
+  const finish = () => {
+    status = "stopped";
+    ticker.remove(runner.step);
+    resolvePromise?.(controls);
+    resolvePromise = undefined;
+  };
 
   const buildRunner = (): Runner => {
     const from = resolveValue(rawFrom);
@@ -73,19 +85,11 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       onStarted,
       onUpdate,
       onEnded,
+      onComplete: finish,
     });
   };
 
-  let runner = buildRunner();
-  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let resolvePromise: ResolveFunction | undefined;
-
-  const ticker = getTicker();
-
-  const update = (deltaMs: number) => {
-    const completed = runner.step(deltaMs);
-    if (completed) finish();
-  };
+  runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
@@ -94,7 +98,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner.step);
     onStarted?.();
     return promise;
   };
@@ -102,18 +106,18 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(update);
+    ticker.remove(runner.step);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner.step);
   };
 
   const stop = () => {
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner.step);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -124,21 +128,14 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       onEnded?.();
     }
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner.step);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(update);
-    resolvePromise = undefined;
-  };
-
-  const finish = () => {
-    status = "stopped";
-    ticker.remove(update);
-    resolvePromise?.(controls);
+    ticker.remove(runner.step);
     resolvePromise = undefined;
   };
 
@@ -179,6 +176,29 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation => {
   const { keyframes: rawKeyframes, onStarted, onUpdate, onProgress, onEnded } = options;
 
+  const resolveKeyframeGaps = (): number => {
+    let total = 0;
+    for (let i = 1; i < rawKeyframes.length; i++) {
+      total += resolveValue(rawKeyframes[i].gap ?? 0);
+    }
+    return total;
+  };
+
+  let cachedDurationMs = resolveKeyframeGaps();
+  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
+  let resolvePromise: ResolveFunction | undefined;
+
+  const ticker = getTicker();
+
+  let runner: Runner;
+
+  const finish = () => {
+    status = "stopped";
+    ticker.remove(runner.step);
+    resolvePromise?.(controls);
+    resolvePromise = undefined;
+  };
+
   const buildRunner = (): Runner => {
     const resolvedKeyframes = rawKeyframes.map((kf, i) => ({
       value: resolveValue(kf.value),
@@ -191,28 +211,11 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
       onUpdate,
       onProgress,
       onEnded,
+      onComplete: finish,
     });
   };
 
-  const resolveKeyframeGaps = (): number => {
-    let total = 0;
-    for (let i = 1; i < rawKeyframes.length; i++) {
-      total += resolveValue(rawKeyframes[i].gap ?? 0);
-    }
-    return total;
-  };
-
-  let cachedDurationMs = resolveKeyframeGaps();
-  let runner = buildRunner();
-  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let resolvePromise: ResolveFunction | undefined;
-
-  const ticker = getTicker();
-
-  const update = (deltaMs: number) => {
-    const completed = runner.step(deltaMs);
-    if (completed) finish();
-  };
+  runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
@@ -222,7 +225,7 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner.step);
     onStarted?.();
     return promise;
   };
@@ -230,18 +233,18 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(update);
+    ticker.remove(runner.step);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(update);
+    ticker.add(runner.step);
   };
 
   const stop = () => {
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner.step);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -252,21 +255,14 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
       onEnded?.();
     }
     status = "stopped";
-    ticker.remove(update);
+    ticker.remove(runner.step);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(update);
-    resolvePromise = undefined;
-  };
-
-  const finish = () => {
-    status = "stopped";
-    ticker.remove(update);
-    resolvePromise?.(controls);
+    ticker.remove(runner.step);
     resolvePromise = undefined;
   };
 

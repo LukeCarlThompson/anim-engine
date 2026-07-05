@@ -24,6 +24,8 @@ export type Runner = {
   readonly onEnded: (() => void) | undefined;
 };
 
+const noop = () => {};
+
 // ─── Tween runner ───
 
 export type TweenRunnerConfig = {
@@ -34,16 +36,25 @@ export type TweenRunnerConfig = {
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
+  /** Called after onEnded fires — used by wrapper to clean up ticker/promise lifecycle. */
+  onComplete?: () => void;
 };
 
 export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
-  const { from, to, durationMs, easeFn, onStarted, onUpdate, onEnded } = config;
+  const { from, to, durationMs, easeFn } = config;
+  const onStarted = config.onStarted;
+  const onUpdate = config.onUpdate ?? noop;
+  const onEnded = config.onEnded;
+  const onComplete = config.onComplete;
   const state: TweenState = { progress: 0, currentValue: from, velocity: 0 };
 
   const step = (deltaMs: number): boolean => {
     const completed = updateTween(state, deltaMs, durationMs, easeFn, from, to);
-    onUpdate?.(state.currentValue, state.velocity);
-    if (completed) onEnded?.();
+    onUpdate(state.currentValue, state.velocity);
+    if (completed) {
+      onEnded?.();
+      onComplete?.();
+    }
     return completed;
   };
 
@@ -58,7 +69,7 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
       state.currentValue = from + range * easeFn(clamped);
       state.velocity = 0;
     }
-    onUpdate?.(state.currentValue, state.velocity);
+    onUpdate(state.currentValue, state.velocity);
     return state.currentValue;
   };
 
@@ -82,7 +93,7 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
       return state.progress;
     },
     onStarted,
-    onUpdate,
+    onUpdate: config.onUpdate,
     onProgress: undefined,
     onEnded,
   };
@@ -104,10 +115,17 @@ export type KeyframeRunnerConfig = {
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  /** Called after onEnded fires — used by wrapper to clean up ticker/promise lifecycle. */
+  onComplete?: () => void;
 };
 
 export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
-  const { keyframes, onStarted, onUpdate, onProgress, onEnded } = config;
+  const { keyframes } = config;
+  const onStarted = config.onStarted;
+  const onUpdate = config.onUpdate ?? noop;
+  const onProgress = config.onProgress ?? noop;
+  const onEnded = config.onEnded;
+  const onComplete = config.onComplete;
 
   // Build segments from consecutive keyframe pairs
   const segments: Segment[] = [];
@@ -130,7 +148,7 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
   }
 
   const totalDurationMs = prefixSum[prefixSum.length - 1];
-  const invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 0;
+  const invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 1;
 
   // State
   let currentValue = keyframes[0].value;
@@ -140,43 +158,70 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
   let segmentElapsed = 0;
   let segmentProgress = 0;
 
-  const step = (deltaMs: number): boolean => {
-    if (segments.length === 0) {
+  // Single-keyframe edge case — no segments, instant completion
+  if (segments.length === 0) {
+    const complete = () => {
       onEnded?.();
-      return true;
-    }
+      onComplete?.();
+    };
+    return {
+      step: (_deltaMs: number): boolean => {
+        onUpdate(currentValue, 0);
+        onProgress(1);
+        complete();
+        return true;
+      },
+      evaluate: (progress: number): number => {
+        onUpdate(currentValue, 0);
+        onProgress(Math.max(0, Math.min(1, progress)));
+        return currentValue;
+      },
+      reset: () => {},
+      get currentValue() {
+        return currentValue;
+      },
+      get velocity() {
+        return 0;
+      },
+      get progress() {
+        return 1;
+      },
+      onStarted,
+      onUpdate: config.onUpdate,
+      onProgress: config.onProgress,
+      onEnded,
+    };
+  }
 
+  const step = (deltaMs: number): boolean => {
     const segment = segments[currentSegmentIndex];
     segmentElapsed += deltaMs;
 
-    // Advance segment progress
-    if (segment.durationMs > 0) {
-      segmentProgress += deltaMs / segment.durationMs;
-    } else {
-      segmentProgress = 1;
-    }
+    // Advance segment progress (math handles zero-duration naturally: deltaMs/0 = Infinity)
+    segmentProgress += deltaMs / segment.durationMs;
     if (segmentProgress >= 1) {
       segmentProgress = 1;
     }
 
-    // Compute eased value
+    // Compute eased value (matches structure of old inline code for perf)
     const previousValue = currentValue;
+    const eased = segment.easeFn(segmentProgress);
+    currentValue = segment.from + segment.range * eased;
+
     if (segmentProgress >= 1) {
       currentValue = segment.to;
       velocity = 0;
     } else {
-      const eased = segment.easeFn(segmentProgress);
-      currentValue = segment.from + segment.range * eased;
       velocity = (currentValue - previousValue) / (deltaMs / 1000);
     }
 
-    // Compute global progress
+    // Global progress via prefix sum (O(1))
     const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
-    globalProgress = totalDurationMs > 0 ? Math.min(elapsedTotal * invTotalDuration, 1) : 1;
+    globalProgress = Math.min(elapsedTotal * invTotalDuration, 1);
+    onProgress(globalProgress);
+    onUpdate(currentValue, velocity);
 
-    onUpdate?.(currentValue, velocity);
-
-    // Check if segment completed
+    // Segment transition
     if (segmentProgress >= 1) {
       if (currentSegmentIndex < segments.length - 1) {
         currentSegmentIndex++;
@@ -184,11 +229,11 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
         segmentProgress = 0;
         currentValue = segments[currentSegmentIndex].from;
         velocity = 0;
-        globalProgress = totalDurationMs > 0 ? Math.min(prefixSum[currentSegmentIndex] * invTotalDuration, 1) : 1;
-        onProgress?.(globalProgress);
+        globalProgress = Math.min(prefixSum[currentSegmentIndex] * invTotalDuration, 1);
+        onProgress(globalProgress);
       } else {
-        onProgress?.(1);
         onEnded?.();
+        onComplete?.();
         return true;
       }
     }
@@ -198,13 +243,6 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
 
   const evaluate = (progress: number): number => {
     const clamped = Math.max(0, Math.min(1, progress));
-
-    if (segments.length === 0) {
-      globalProgress = 1;
-      currentValue = keyframes[0].value;
-      velocity = 0;
-      return currentValue;
-    }
 
     const elapsed = clamped * totalDurationMs;
 
@@ -233,8 +271,8 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
     segmentElapsed = elapsed - segStart;
     segmentProgress = clampedSegProgress;
 
-    onUpdate?.(currentValue, velocity);
-    onProgress?.(clamped);
+    onUpdate(currentValue, velocity);
+    onProgress(clamped);
     return currentValue;
   };
 
@@ -261,8 +299,8 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
       return globalProgress;
     },
     onStarted,
-    onUpdate,
-    onProgress,
+    onUpdate: config.onUpdate,
+    onProgress: config.onProgress,
     onEnded,
   };
 };

@@ -3,8 +3,8 @@ import type { KeyframedAnimationOptions } from "../animation/create-animation";
 import { easingFunctions } from "../easing/easing";
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import { getTicker } from "../ticker/get-ticker";
 import type { EaseFunction, EaseName } from "../shared/types";
+import { getTicker } from "../ticker/get-ticker";
 
 export type TimelineLayer =
   | { keyframe: KeyframedAnimationOptions; at: DynamicValue }
@@ -24,6 +24,8 @@ export type Timeline = {
 };
 
 type Resolve = (value: Timeline) => void;
+
+const noop = () => {};
 
 const resolveValue = (v: DynamicValue): number =>
   typeof v === "function" ? v() : v;
@@ -52,7 +54,6 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
   for (const layer of rawLayers) {
     const startAt = "at" in layer ? resolveValue(layer.at) : previousEndAt + layer.gap;
 
-    // Resolve keyframe config
     const kfs = layer.keyframe.keyframes;
     const resolvedKeyframes = kfs.map((kf, j) => ({
       value: resolveValue(kf.value),
@@ -60,7 +61,6 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
       easeFn: resolveEasing(kf.ease ?? "inOutSine"),
     }));
 
-    // Compute layer duration
     let layerDuration = 0;
     for (let i = 1; i < resolvedKeyframes.length; i++) {
       layerDuration += resolvedKeyframes[i].gap;
@@ -87,7 +87,6 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
     previousEndAt = endAt;
   }
 
-  // Sort by startAt
   activeLayers.sort((a, b) => a.startAt - b.startAt);
 
   const totalDurationMs = Math.max(0, ...activeLayers.map((l) => l.endAt));
@@ -103,7 +102,8 @@ export const createTimeline = (
     onEnded?: () => void;
   },
 ): Timeline => {
-  const { onStarted, onProgress, onEnded } = options ?? {};
+  const { onStarted, onEnded } = options ?? {};
+  const onProgress = options?.onProgress ?? noop;
   const rawLayers = layers;
 
   let state = buildFromConfigs(rawLayers);
@@ -113,18 +113,53 @@ export const createTimeline = (
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
   let resolvePromise: Resolve | undefined;
+  let remainingLayers = activeLayers.length;
 
   const ticker = getTicker();
+
+  const finish = () => {
+    status = "stopped";
+    ticker.remove(update);
+    onEnded?.();
+    resolvePromise?.(timeline);
+    resolvePromise = undefined;
+  };
+
+  const update = (deltaMs: number) => {
+    elapsedMs += deltaMs;
+
+    for (const layer of activeLayers) {
+      if (!layer.started && elapsedMs >= layer.startAt) {
+        layer.runner.reset();
+        layer.runner.onStarted?.();
+        layer.started = true;
+      }
+
+      if (layer.started && !layer.ended) {
+        const completed = layer.runner.step(deltaMs);
+        if (completed) {
+          layer.ended = true;
+          remainingLayers--;
+        }
+      }
+    }
+
+    onProgress(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
+
+    if (remainingLayers <= 0) {
+      finish();
+    }
+  };
 
   // ─── Lifecycle ───
 
   const play = (): Promise<Timeline> => {
     if (status === "dead") throw new Error("Cannot play a dead timeline");
 
-    // Re-resolve everything for fresh dynamic values
     state = buildFromConfigs(rawLayers);
     activeLayers = state.activeLayers;
     totalDurationMs = state.totalDurationMs;
+    remainingLayers = activeLayers.length;
     elapsedMs = 0;
 
     const promise = new Promise<Timeline>((resolve) => {
@@ -174,42 +209,6 @@ export const createTimeline = (
     resolvePromise = undefined;
   };
 
-  // ─── Ticker callback ───
-
-  const update = (deltaMs: number) => {
-    if (status !== "playing") return;
-    elapsedMs += deltaMs;
-
-    for (const layer of activeLayers) {
-      if (!layer.started && elapsedMs >= layer.startAt) {
-        layer.runner.reset();
-        layer.runner.onStarted?.();
-        layer.started = true;
-      }
-
-      if (layer.started && !layer.ended) {
-        const completed = layer.runner.step(deltaMs);
-        if (completed) {
-          layer.ended = true;
-        }
-      }
-    }
-
-    onProgress?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
-
-    if (activeLayers.every((l) => l.ended)) {
-      finish();
-    }
-  };
-
-  const finish = () => {
-    status = "stopped";
-    ticker.remove(update);
-    onEnded?.();
-    resolvePromise?.(timeline);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") pause();
 
@@ -231,6 +230,8 @@ export const createTimeline = (
         layer.ended = localProgress >= 1;
       }
     }
+
+    remainingLayers = activeLayers.filter((l) => !l.ended).length;
   };
 
   const timeline: Timeline = {
