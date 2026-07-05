@@ -65,7 +65,7 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 
 |                              |                                                                                                                |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| ⚡ **Fast**                  | 1.7–9.9× faster than GSAP across tweens, keyframes, and concurrent animations (see [benchmarks](#benchmarks)). |
+| ⚡ **Fast**                  | 1.7–8.0× faster than GSAP overall; 2.7–4.7× when comparing equivalent `onUpdate` callback dispatch (see [benchmarks](#benchmarks)). |
 | 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                             |
 | 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.         |
 | 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                  |
@@ -149,30 +149,31 @@ anim.skipToEnd(); // jumps to end, resolves promise
 
 ### Keyframes
 
-Multi-segment animation with per-keyframe easing. The last keyframe's `at` value determines total duration. Mutually exclusive with `from`/`to`/`durationMs`.
+Multi-segment animation with per-keyframe easing. The first keyframe is the starting point (no gap/ease). Each subsequent keyframe specifies the gap from the previous one and an optional easing. Total duration is the sum of all gaps.
 
 ```ts
 import { createAnimation } from "anim-engine";
 
 const anim = createAnimation({
   keyframes: [
-    { at: 0, value: 0 },
-    { at: 300, value: 50, ease: "outCubic" },
-    { at: 700, value: 80, ease: "inOutQuad" },
-    { at: 1000, value: 100 },
+    { value: 0 },
+    { value: 50, gap: 300, ease: "outCubic" },
+    { value: 80, gap: 400, ease: "inOutQuad" },
+    { value: 100, gap: 300 },
   ],
   onUpdate: (value) => (sprite.x = value),
   onProgress: (progress) => console.log(`${Math.round(progress * 100)}%`),
 });
 ```
 
-Each keyframe's `at` is in milliseconds — the last keyframe's `at` sets the total duration (1000ms in this example). If no `ease` is specified, the previous segment's ease carries forward.
+Each keyframe's `gap` is in milliseconds from the previous keyframe. Total duration is the sum of all gaps (1000ms in this example). If no `ease` is specified on a keyframe, `"inOutSine"` is used as the default.
 
 **Keyframe options:**
 
 | Option       | Type                                        | Description                                               |
 | ------------ | ------------------------------------------- | --------------------------------------------------------- |
-| `keyframes`  | `Keyframe[]`                                | Array of `{ at, value, ease? }` keyframes                 |
+| `keyframes`  | `Keyframe[]`                                | Array of `{ value, gap?, ease? }` keyframes               |
+| `onStarted`  | `() => void`                                | Called when playback begins                               |
 | `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity        |
 | `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress               |
 | `onEnded`    | `() => void`                               | Called when the keyframe animation completes              |
@@ -218,14 +219,11 @@ for (let i = 0; i < 6; i++) {
 For more complex sequences, use `createTimeline`:
 
 ```ts
-import { createAnimation, createTimeline } from "anim-engine";
-
-const fadeIn = createAnimation({ from: 0, to: 1, durationMs: 300 });
-const fadeOut = createAnimation({ from: 1, to: 0, durationMs: 300 });
+import { createTimeline } from "anim-engine";
 
 const flash = createTimeline([
-  { at: 0, animation: fadeIn },
-  { gap: 0, animation: fadeOut },
+  { at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 1, gap: 300 }] } },
+  { gap: 0, keyframe: { keyframes: [{ value: 1 }, { value: 0, gap: 300 }] } },
 ]);
 await flash.play();
 ```
@@ -233,30 +231,27 @@ await flash.play();
 
 ### createTimeline
 
-Compose multiple animations on a shared timeline with `at` or `gap` positions.
+Compose multiple keyframe animations on a shared timeline with `at` or `gap` positions. Parallelism comes from multiple layers at the same `at`.
 
 ```ts
-import { createAnimation, createTimeline } from "anim-engine";
-
-const fadeIn = createAnimation({
-  from: 0,
-  to: 1,
-  durationMs: 500,
-  onUpdate: (v) => (sprite.alpha = v),
-});
-
-const slideIn = createAnimation({
-  from: -100,
-  to: 0,
-  durationMs: 800,
-  ease: "outBack",
-  onUpdate: (v) => (sprite.x = v),
-});
+import { createTimeline } from "anim-engine";
 
 const timeline = createTimeline(
   [
-    { at: 0, animation: [fadeIn, slideIn] },
-    { gap: 200, animation: slideIn },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
+        onUpdate: (v) => (sprite.alpha = v),
+      },
+    },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
+        onUpdate: (v) => (sprite.x = v),
+      },
+    },
   ],
   {
     onProgress: (progress) => console.log(`overall: ${progress}`),
@@ -270,8 +265,8 @@ timeline.play();
 
 ```ts
 type TimelineLayer =
-  | { at: number; animation: Animation | Animation[] }
-  | { gap: number; animation: Animation | Animation[] };
+  | { keyframe: KeyframedAnimationOptions; at: DynamicValue }
+  | { keyframe: KeyframedAnimationOptions; gap: number };
 ```
 
 | Parameter            | Type                 | Description                                                    |
@@ -281,7 +276,7 @@ type TimelineLayer =
 | `options.onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                   |
 | `options.onEnded`    | `() => void`         | Called when timeline finishes                                  |
 
-`gap` is relative to the end of all animations in the previous layer. Pass a single `Animation` or an array for parallel animations within the layer.
+`gap` is relative to the end of the previous layer. Use multiple layers at the same `at` for parallel animations. A simple tween is expressed as a 2-keyframe sequence: `{ value: from }, { value: to, gap: durationMs }`.
 
 ### Continuous primitives
 
@@ -498,18 +493,34 @@ The function is called every frame inside the ticker update — no getter/setter
 
 ## Benchmarks
 
-Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24).
+Performance comparison against GSAP (vitest bench, Apple Silicon M-series, Node 24). All easing functions are matched between libraries.
+
+### vs GSAP internal mutation
+
+GSAP defaults to mutating target properties directly. This is faster than dispatching callbacks but couples GSAP to the mutation pattern. Anim-engine always dispatches via `onUpdate` (renderer-agnostic).
 
 | Benchmark                                    | anim-engine  | GSAP         | Ratio        |
 | -------------------------------------------- | ------------ | ------------ | ------------ |
-| **Single tween** (cubic, 1000 frames)        | 43,265 ops/s | 9,542 ops/s  | 4.53× faster |
-| **Single tween** (linear, 1000 frames)       | 30,461 ops/s | 16,195 ops/s | 1.88× faster |
-| **Single tween** (cubic bezier, 1000 frames) | 21,439 ops/s | 12,869 ops/s | 1.67× faster |
-| **Keyframe** (3 segments, 1000 frames)       | 35,307 ops/s | 3,560 ops/s  | 9.92× faster |
-| **50 concurrent tweens** (500 frames)        | 942 ops/s    | 473 ops/s    | 1.99× faster |
-| **50 concurrent keyframes** (500 frames)     | 918 ops/s    | 171 ops/s    | 5.38× faster |
+| **Single tween** (cubic, 1000 frames)        | 40,814 ops/s | 10,776 ops/s | 3.8× faster  |
+| **Single tween** (linear, 1000 frames)       | 28,590 ops/s | 14,499 ops/s | 2.0× faster  |
+| **Single tween** (cubic bezier, 1000 frames) | 21,449 ops/s | 12,637 ops/s | 1.7× faster  |
+| **Keyframe** (3 segments, 1000 frames)       | 26,741 ops/s | 3,549 ops/s  | 7.5× faster  |
+| **50 concurrent tweens** (500 frames)        | 892 ops/s    | 438 ops/s    | 2.0× faster  |
+| **200 concurrent tweens** (500 frames)       | 200 ops/s    | 106 ops/s    | 1.9× faster  |
+| **1000 concurrent tweens** (500 frames)      | 38 ops/s     | 22 ops/s     | 1.7× faster  |
+| **50 concurrent keyframes** (500 frames)     | 934 ops/s    | 174 ops/s    | 5.4× faster  |
+| **50-layer timeline** (staggered, 500 frames)| 710 ops/s    | 404 ops/s    | 1.8× faster  |
+| **50 tweens re-play** (2 cycles, 500 frames) | 558 ops/s    | 128 ops/s    | 4.4× faster  |
 
-Easing functions are matched between libraries (cubic = GSAP `power2.out`, cubic bezier = identical control points via GSAP `CustomEase`). Linear strips out easing to show pure framework overhead.
+### vs GSAP onUpdate (fair comparison)
+
+gsap also supports `onUpdate` callbacks, which is equivalent to anim-engine's renderer-agnostic model. This is the apples-to-apples comparison.
+
+| Benchmark                              | anim-engine  | GSAP (onUpdate) | Ratio        |
+| -------------------------------------- | ------------ | --------------- | ------------ |
+| **Single tween** (cubic, 1000 frames)  | 40,814 ops/s | 6,618 ops/s     | 6.2× faster  |
+| **50 concurrent tweens** (500 frames)  | 892 ops/s    | 273 ops/s       | 3.3× faster  |
+| **200 concurrent tweens** (500 frames) | 200 ops/s    | 66 ops/s        | 3.0× faster  |
 
 Run locally: `npm run bench`
 
@@ -617,7 +628,7 @@ requestAnimationFrame(gameLoop);
 
 | Type                 | Description                                                                                                             |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setCurrentValue`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
+| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
 | `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
 | `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                           |
@@ -626,8 +637,9 @@ requestAnimationFrame(gameLoop);
 | `AnimationStatus`    | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
 | `InterpolationStatus` | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                           |
 | `AnimationOptions`   | Single tween or keyframe animation options (discriminated union)                                                         |
-| `Keyframe`           | `{ at, value, ease? }`                                                                                                  |
-| `TimelineLayer`      | `{ at: number; animation: Animation \| Animation[] } \| { gap: number; animation: Animation \| Animation[] }`           |
+| `Keyframe`           | `{ value, gap?, ease? }`                                                                                                |
+| `KeyframedAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                                |
+| `TimelineLayer`      | `{ keyframe: KeyframedAnimationOptions; at: DynamicValue } \| { keyframe: KeyframedAnimationOptions; gap: number }`      |
 | `SpringOptions`      | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                                  |
 | `SmoothDampOptions`  | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                                     |
 | `LerpOptions`        | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                                                        |

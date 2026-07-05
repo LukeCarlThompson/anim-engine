@@ -13,6 +13,7 @@ gsap.registerPlugin(CustomEase);
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
+import { createTimeline } from "../timeline/create-timeline";
 import { cubicBezier } from "../easing/easing";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -66,11 +67,24 @@ describe("single tween (1000 frames to completion)", () => {
     // animation auto-completes and unregisters from ticker
   });
 
-  bench("gsap", () => {
+  bench("gsap (internal)", () => {
     const target = { x: 0 };
     gsap.to(target, { x: 100, duration: SINGLE_DURATION_MS / 1000, ease: "power2.out" });
     advanceGSAPFrames(SINGLE_FRAMES);
     // tween auto-completes
+  });
+
+  bench("gsap (onUpdate)", () => {
+    const target = { x: 0 };
+    gsap.to({ x: 0 }, {
+      x: 100,
+      duration: SINGLE_DURATION_MS / 1000,
+      ease: "power2.out",
+      onUpdate: function (this: { x: number }) {
+        target.x = this.x;
+      },
+    });
+    advanceGSAPFrames(SINGLE_FRAMES);
   });
 });
 
@@ -192,10 +206,71 @@ describe("50 concurrent tweens (500 frames to completion)", () => {
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
 
-  bench("gsap", () => {
+  bench("gsap (internal)", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
     targets.forEach((t) => {
       gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power2.out" });
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap (onUpdate)", () => {
+    const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      gsap.to({ x: 0 }, {
+        x: 100,
+        duration: CONCURRENT_DURATION_MS / 1000,
+        ease: "power2.out",
+        onUpdate: function (this: { x: number }) {
+          targets[i].x = this.x;
+        },
+      });
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  200 CONCURRENT TWEENS — all run to completion
+// ═══════════════════════════════════════════════════
+
+describe("200 concurrent tweens (500 frames to completion)", () => {
+  bench("anim-engine", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      const a = createAnimation({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        ease: "outCubic",
+        onUpdate: (v) => {
+          targets[i].x = v;
+        },
+      });
+      a.play();
+    });
+    advanceAnimEngineFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap (internal)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((t) => {
+      gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power2.out" });
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap (onUpdate)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      gsap.to({ x: 0 }, {
+        x: 100,
+        duration: CONCURRENT_DURATION_MS / 1000,
+        ease: "power2.out",
+        onUpdate: function (this: { x: number }) {
+          targets[i].x = this.x;
+        },
+      });
     });
     advanceGSAPFrames(CONCURRENT_FRAMES);
   });
@@ -237,5 +312,213 @@ describe("50 concurrent keyframe animations (500 frames to completion)", () => {
         .to(t, { x: 100, duration: d * 0.3, ease: "power2.out" }, d * 0.7);
     });
     advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  TIMELINE WITH 50 STAGGERED LAYERS — scheduler overhead
+// ═══════════════════════════════════════════════════
+
+describe("50-layer timeline (500 frames to completion)", () => {
+  bench("anim-engine", () => {
+    const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
+    const layers = targets.map((_t, i) => ({
+      at: i * 10,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 100, gap: CONCURRENT_DURATION_MS - i * 10 }],
+        onUpdate: (v: number) => {
+          targets[i].x = v;
+        },
+      },
+    }));
+    const tl = createTimeline(layers);
+    tl.play();
+    advanceAnimEngineFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap", () => {
+    const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
+    const tl = gsap.timeline();
+    const d = CONCURRENT_DURATION_MS / 1000;
+    targets.forEach((t, i) => {
+      tl.to(t, { x: 100, duration: Math.max(d - i * 0.01, 0.01), ease: "power2.out" }, i * 0.01);
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  RE-PLAY — 50 tweens, play → complete → play again
+// ═══════════════════════════════════════════════════
+
+describe("50 tweens re-play (2 cycles, 500 frames each)", () => {
+  bench("anim-engine", () => {
+    const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
+    const anims = targets.map(() =>
+      createAnimation({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        ease: "outCubic",
+      }),
+    );
+    for (let cycle = 0; cycle < 2; cycle++) {
+      anims.forEach((a) => a.play());
+      advanceAnimEngineFrames(CONCURRENT_FRAMES);
+    }
+  });
+
+  bench("gsap", () => {
+    const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
+    const tweens = targets.map((t) =>
+      gsap.to(t, {
+        x: 100,
+        duration: CONCURRENT_DURATION_MS / 1000,
+        ease: "power2.out",
+        paused: true,
+      }),
+    );
+    for (let cycle = 0; cycle < 2; cycle++) {
+      tweens.forEach((tw) => tw.restart());
+      advanceGSAPFrames(CONCURRENT_FRAMES);
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  DIAGNOSTIC — raw runner calls vs ticker
+// ═══════════════════════════════════════════════════
+
+import { createTweenRunner } from "../animation/runner";
+import type { EaseFunction } from "../shared/types";
+
+const testEase: EaseFunction = (t) => 1 - Math.pow(1 - t, 3); // outCubic equivalent
+
+describe("200 concurrent raw runner calls (500 frames, no ticker)", () => {
+  bench("anim-engine (raw runner)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    const runners = targets.map(() =>
+      createTweenRunner({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        easeFn: testEase,
+        onUpdate: (_v) => {},
+      }),
+    );
+    for (let f = 0; f < CONCURRENT_FRAMES; f++) {
+      for (let i = 0; i < runners.length; i++) {
+        runners[i](DT);
+      }
+    }
+  });
+
+  bench("anim-engine (via ticker)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      const a = createAnimation({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        ease: "outCubic",
+        onUpdate: (v) => {
+          targets[i].x = v;
+        },
+      });
+      a.play();
+    });
+    advanceAnimEngineFrames(CONCURRENT_FRAMES);
+  });
+});
+
+describe("200 concurrent tweens — worst case (all dynamic values)", () => {
+  bench("anim-engine (dynamic)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      const a = createAnimation({
+        from: () => 0,
+        to: () => 100,
+        durationMs: () => CONCURRENT_DURATION_MS,
+        ease: "outCubic",
+        onUpdate: (v) => {
+          targets[i].x = v;
+        },
+      });
+      a.play();
+    });
+    advanceAnimEngineFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap (internal)", () => {
+    const targets = Array.from({ length: 200 }, () => ({ x: 0 }));
+    targets.forEach((t) => {
+      gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power2.out" });
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  1000 CONCURRENT TWEENS — stress test
+// ═══════════════════════════════════════════════════
+
+describe("1000 concurrent tweens (500 frames to completion)", () => {
+  bench("anim-engine", () => {
+    const targets = Array.from({ length: 1000 }, () => ({ x: 0 }));
+    targets.forEach((_t, i) => {
+      const a = createAnimation({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        ease: "outCubic",
+        onUpdate: (v) => {
+          targets[i].x = v;
+        },
+      });
+      a.play();
+    });
+    advanceAnimEngineFrames(CONCURRENT_FRAMES);
+  });
+
+  bench("gsap (internal)", () => {
+    const targets = Array.from({ length: 1000 }, () => ({ x: 0 }));
+    targets.forEach((t) => {
+      gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power2.out" });
+    });
+    advanceGSAPFrames(CONCURRENT_FRAMES);
+  });
+});
+
+import { updateTween } from "../animation/update";
+import type { TweenState } from "../animation/update";
+
+describe("200 concurrent raw updateTween calls (500 frames, no runner)", () => {
+  bench("raw math only", () => {
+    const states: TweenState[] = Array.from({ length: 200 }, () => ({
+      progress: 0,
+      currentValue: 0,
+      velocity: 0,
+    }));
+    for (let f = 0; f < CONCURRENT_FRAMES; f++) {
+      for (let i = 0; i < states.length; i++) {
+        updateTween(states[i], DT, CONCURRENT_DURATION_MS, testEase, 0, 100);
+      }
+    }
+  });
+
+  bench("raw runner (no callback)", () => {
+    const runners = Array.from({ length: 200 }, () =>
+      createTweenRunner({
+        from: 0,
+        to: 100,
+        durationMs: CONCURRENT_DURATION_MS,
+        easeFn: testEase,
+      }),
+    );
+    for (let f = 0; f < CONCURRENT_FRAMES; f++) {
+      for (let i = 0; i < runners.length; i++) {
+        runners[i](DT);
+      }
+    }
   });
 });

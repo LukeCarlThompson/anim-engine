@@ -8,9 +8,9 @@ export type Runner = {
   (deltaMs: number): boolean;
   evaluate: (progress: number) => number;
   reset: () => void;
-  readonly currentValue: number;
-  readonly velocity: number;
-  readonly progress: number;
+  currentValue: number;
+  velocity: number;
+  progress: number;
   onStarted: (() => void) | undefined;
   onUpdate: ((value: number, velocity: number) => void) | undefined;
   onProgress: ((progress: number) => void) | undefined;
@@ -39,6 +39,8 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
   const onEnded = config.onEnded;
   const onComplete = config.onComplete;
   const state: TweenState = { progress: 0, currentValue: from, velocity: 0 };
+
+  let runner!: Runner;
 
   const step = (deltaMs: number): boolean => {
     const completed = updateTween(state, deltaMs, durationMs, easeFn, from, to);
@@ -71,7 +73,7 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
     state.velocity = 0;
   };
 
-  const runner = step as Runner;
+  runner = step as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
   Object.defineProperty(runner, "currentValue", { get: () => state.currentValue, configurable: true });
@@ -133,12 +135,16 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
   const totalDurationMs = prefixSum[prefixSum.length - 1];
   const invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 1;
 
+  // Mutable state
   let currentValue = keyframes[0].value;
   let velocity = 0;
   let globalProgress = 0;
   let currentSegmentIndex = 0;
   let segmentElapsed = 0;
   let segmentProgress = 0;
+
+  // Build runner first so step can sync properties to it
+  let runner!: Runner;
 
   if (segments.length === 0) {
     const complete = () => {
@@ -151,12 +157,12 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
       complete();
       return true;
     };
-    const evaluate = (progress: number): number => {
+    const evaluate = (prog: number): number => {
       onUpdate(currentValue, 0);
-      onProgress(Math.max(0, Math.min(1, progress)));
+      onProgress(Math.max(0, Math.min(1, prog)));
       return currentValue;
     };
-    const runner = step as Runner;
+    runner = step as Runner;
     runner.evaluate = evaluate;
     runner.reset = () => {};
     Object.defineProperty(runner, "currentValue", { get: () => currentValue, configurable: true });
@@ -253,7 +259,7 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
     segmentProgress = 0;
   };
 
-  const runner = step as Runner;
+  runner = step as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
   Object.defineProperty(runner, "currentValue", { get: () => currentValue, configurable: true });

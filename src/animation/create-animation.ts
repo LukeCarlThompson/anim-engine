@@ -89,11 +89,17 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     });
   };
 
+  const hasDynamic =
+    typeof rawFrom === "function" ||
+    typeof rawTo === "function" ||
+    typeof rawDurationMs === "function";
+
   runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
-    runner = buildRunner();
+    if (hasDynamic) runner = buildRunner();
+    else runner.reset();
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
@@ -202,12 +208,20 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     });
   };
 
+  const hasDynamic = rawKeyframes.some(
+    (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
+  );
+
   runner = buildRunner();
 
   const play = (): Promise<Animation> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
-    runner = buildRunner();
-    cachedDurationMs = resolveKeyframeGaps();
+    if (hasDynamic) {
+      runner = buildRunner();
+      cachedDurationMs = resolveKeyframeGaps();
+    } else {
+      runner.reset();
+    }
     const promise = new Promise<Animation>((resolve) => {
       resolvePromise = resolve;
     });
