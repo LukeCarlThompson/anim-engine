@@ -7,8 +7,7 @@ import type { Runner } from "./runner";
 const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : easingFunctions[ease];
 
-const resolveValue = (v: DynamicValue): number =>
-  typeof v === "function" ? v() : v;
+const resolveValue = (v: DynamicValue): number => (typeof v === "function" ? v() : v);
 
 type ResolveFunction = (value: Animation) => void;
 
@@ -150,15 +149,25 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     stop,
     skipToEnd,
     kill,
-    get currentValue() { return runner.currentValue; },
-    get velocity() { return runner.velocity; },
-    get progress() { return runner.progress; },
+    get currentValue() {
+      return runner.currentValue;
+    },
+    get velocity() {
+      return runner.velocity;
+    },
+    get progress() {
+      return runner.progress;
+    },
     setProgress(value: number) {
       if (status === "playing") pause();
       runner.evaluate(Math.max(0, Math.min(1, value)));
     },
-    get status() { return status; },
-    get durationMs() { return cachedDurationMs; },
+    get status() {
+      return status;
+    },
+    get durationMs() {
+      return cachedDurationMs;
+    },
   };
 
   return controls;
@@ -272,15 +281,25 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     stop,
     skipToEnd,
     kill,
-    get currentValue() { return runner.currentValue; },
-    get velocity() { return runner.velocity; },
-    get progress() { return runner.progress; },
+    get currentValue() {
+      return runner.currentValue;
+    },
+    get velocity() {
+      return runner.velocity;
+    },
+    get progress() {
+      return runner.progress;
+    },
     setProgress(value: number) {
       if (status === "playing") pause();
       runner.evaluate(Math.max(0, Math.min(1, value)));
     },
-    get status() { return status; },
-    get durationMs() { return cachedDurationMs; },
+    get status() {
+      return status;
+    },
+    get durationMs() {
+      return cachedDurationMs;
+    },
   };
 
   return controls;
