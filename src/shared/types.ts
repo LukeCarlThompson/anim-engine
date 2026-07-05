@@ -41,24 +41,6 @@ export type InterpolationStatus = "active" | "inactive" | "dead";
 
 export type DynamicValue = number | (() => number);
 
-// === Animation ===
-
-export type Animation = {
-  play: () => Promise<Animation>;
-  pause: () => void;
-  resume: () => void;
-  stop: () => void;
-  skipToEnd: () => void;
-  kill: () => void;
-
-  currentValue: number;
-  velocity: number;
-  progress: number;
-  setProgress: (value: number) => void;
-  status: AnimationStatus;
-  durationMs: number;
-};
-
 // === Interpolation ===
 
 export type Interpolation = {

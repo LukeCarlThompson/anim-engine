@@ -413,6 +413,7 @@ describe("200 concurrent raw runner calls (500 frames, no ticker)", () => {
         durationMs: CONCURRENT_DURATION_MS,
         easeFn: testEase,
         onUpdate: (_v) => {},
+        onEnded: () => {},
       }),
     );
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {
@@ -522,6 +523,7 @@ describe("200 concurrent raw updateTween calls (500 frames, no runner)", () => {
         to: 100,
         durationMs: CONCURRENT_DURATION_MS,
         easeFn: testEase,
+        onEnded: () => {},
       }),
     );
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {

@@ -17,12 +17,12 @@ export { EASE_NAMES, cubicBezier } from "./easing/easing";
 
 // Types
 export type {
+  Animation,
   Keyframe,
   AnimationOptions,
   KeyframeAnimationOptions,
 } from "./animation/create-animation";
 export type {
-  Animation,
   Interpolation,
   EaseName,
   AnimationStatus,

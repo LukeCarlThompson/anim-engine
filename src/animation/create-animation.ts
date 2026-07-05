@@ -1,15 +1,8 @@
 import { easingFunctions } from "../easing/easing";
-import type { Animation, DynamicValue, EaseFunction, EaseName } from "../shared/types";
+import type { AnimationStatus, DynamicValue, EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 import { createKeyframeRunner, createTweenRunner } from "./runner";
 import type { Runner } from "./runner";
-
-const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
-  typeof ease === "function" ? ease : easingFunctions[ease];
-
-const resolveValue = (v: DynamicValue): number => (typeof v === "function" ? v() : v);
-
-type ResolveFunction = (value: Animation) => void;
 
 export type SingleTweenOptions = {
   from: DynamicValue;
@@ -37,6 +30,28 @@ export type KeyframeAnimationOptions = {
 
 export type AnimationOptions = SingleTweenOptions | KeyframeAnimationOptions;
 
+export type Animation = {
+  play: () => Promise<void>;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  skipToEnd: () => void;
+  kill: () => void;
+
+  currentValue: number;
+  velocity: number;
+  progress: number;
+  setProgress: (value: number) => void;
+  status: AnimationStatus;
+  durationMs: number;
+};
+
+const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
+  typeof ease === "function" ? ease : easingFunctions[ease];
+
+const resolveValue = (value: DynamicValue): number =>
+  typeof value === "function" ? value() : value;
+
 const isKeyframeMode = (options: AnimationOptions): options is KeyframeAnimationOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
@@ -50,27 +65,34 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 
 // ─── Single-tween mode ───
 
-const createSingleTween = (options: SingleTweenOptions): Animation => {
-  const easeName: EaseName | EaseFunction = options.ease ?? "inOutSine";
-  const { onStarted, onUpdate, onEnded } = options;
-  const rawFrom = options.from;
-  const rawTo = options.to;
-  const rawDurationMs = options.durationMs;
-
+const createSingleTween = ({
+  onStarted,
+  onUpdate,
+  onEnded,
+  from: rawFrom,
+  to: rawTo,
+  durationMs: rawDurationMs,
+  ease: easeName = "inOutSine",
+}: SingleTweenOptions): Animation => {
   let cachedDurationMs = resolveValue(rawDurationMs);
-  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let resolvePromise: ResolveFunction | undefined;
+  let status: AnimationStatus = "stopped";
+  const hasDynamicProperty =
+    typeof rawFrom === "function" ||
+    typeof rawTo === "function" ||
+    typeof rawDurationMs === "function";
+  let resolvePromise: (() => void) | undefined;
 
   const ticker = getTicker();
 
-  let runner: Runner;
-
-  const finish = () => {
+  const handleEnded = () => {
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
+    onEnded?.();
     resolvePromise = undefined;
   };
+
+  let runner: Runner;
 
   const buildRunner = (): Runner => {
     const from = resolveValue(rawFrom);
@@ -83,23 +105,23 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       easeFn: resolveEasing(easeName),
       onStarted,
       onUpdate,
-      onEnded,
-      onComplete: finish,
+      onEnded: handleEnded,
     });
   };
 
-  const hasDynamic =
-    typeof rawFrom === "function" ||
-    typeof rawTo === "function" ||
-    typeof rawDurationMs === "function";
-
   runner = buildRunner();
 
-  const play = (): Promise<Animation> => {
-    if (status === "dead") throw new Error("Cannot play a dead animation");
-    if (hasDynamic) runner = buildRunner();
-    else runner.reset();
-    const promise = new Promise<Animation>((resolve) => {
+  const play = (): Promise<void> => {
+    if (status === "dead") {
+      throw new Error("Cannot play a dead animation");
+    }
+    if (hasDynamicProperty) {
+      runner = buildRunner();
+    } else {
+      runner.reset();
+    }
+
+    const promise = new Promise<void>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -123,7 +145,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const stop = () => {
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -132,7 +154,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -142,7 +164,14 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     resolvePromise = undefined;
   };
 
-  const controls: Animation = {
+  const setProgress = (value: number) => {
+    if (status === "playing") {
+      pause();
+    }
+    runner.evaluate(Math.max(0, Math.min(1, value)));
+  };
+
+  const animation: Animation = {
     play,
     pause,
     resume,
@@ -158,10 +187,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     get progress() {
       return runner.progress;
     },
-    setProgress(value: number) {
-      if (status === "playing") pause();
-      runner.evaluate(Math.max(0, Math.min(1, value)));
-    },
+    setProgress,
     get status() {
       return status;
     },
@@ -170,14 +196,18 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     },
   };
 
-  return controls;
+  return animation;
 };
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation => {
-  const { keyframes: rawKeyframes, onStarted, onUpdate, onProgress, onEnded } = options;
-
+const createKeyframeAnimation = ({
+  keyframes: rawKeyframes,
+  onStarted,
+  onUpdate,
+  onProgress,
+  onEnded,
+}: KeyframeAnimationOptions): Animation => {
   const resolveKeyframeGaps = (): number => {
     let total = 0;
     for (let i = 1; i < rawKeyframes.length; i++) {
@@ -187,19 +217,24 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
   };
 
   let cachedDurationMs = resolveKeyframeGaps();
-  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
-  let resolvePromise: ResolveFunction | undefined;
+  let status: AnimationStatus = "stopped";
+  let resolvePromise: (() => void) | undefined;
+
+  const hasDynamicProperty = rawKeyframes.some(
+    (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
+  );
 
   const ticker = getTicker();
 
-  let runner: Runner;
-
-  const finish = () => {
+  const handleEnded = () => {
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
+    onEnded?.();
     resolvePromise = undefined;
   };
+
+  let runner: Runner;
 
   const buildRunner = (): Runner => {
     const resolvedKeyframes = rawKeyframes.map((kf, i) => ({
@@ -212,26 +247,21 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
       onStarted,
       onUpdate,
       onProgress,
-      onEnded,
-      onComplete: finish,
+      onEnded: handleEnded,
     });
   };
 
-  const hasDynamic = rawKeyframes.some(
-    (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
-  );
-
   runner = buildRunner();
 
-  const play = (): Promise<Animation> => {
+  const play = (): Promise<void> => {
     if (status === "dead") throw new Error("Cannot play a dead animation");
-    if (hasDynamic) {
+    if (hasDynamicProperty) {
       runner = buildRunner();
       cachedDurationMs = resolveKeyframeGaps();
     } else {
       runner.reset();
     }
-    const promise = new Promise<Animation>((resolve) => {
+    const promise = new Promise<void>((resolve) => {
       resolvePromise = resolve;
     });
     status = "playing";
@@ -255,7 +285,7 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
   const stop = () => {
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -264,7 +294,7 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
     if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
     ticker.remove(runner);
-    resolvePromise?.(controls);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -274,7 +304,14 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
     resolvePromise = undefined;
   };
 
-  const controls: Animation = {
+  const setProgress = (value: number) => {
+    if (status === "playing") {
+      pause();
+    }
+    runner.evaluate(Math.max(0, Math.min(1, value)));
+  };
+
+  const animation: Animation = {
     play,
     pause,
     resume,
@@ -290,10 +327,7 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
     get progress() {
       return runner.progress;
     },
-    setProgress(value: number) {
-      if (status === "playing") pause();
-      runner.evaluate(Math.max(0, Math.min(1, value)));
-    },
+    setProgress,
     get status() {
       return status;
     },
@@ -302,5 +336,5 @@ const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation =
     },
   };
 
-  return controls;
+  return animation;
 };

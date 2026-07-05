@@ -251,6 +251,79 @@ test("GIVEN a linear tween with onUpdate callback WHEN it progresses through fra
   expect(updates[3]).toBe(100);
 });
 
+test("GIVEN a single tween with onUpdate callback WHEN it progresses through every tick THEN it is called on each frame with the correct value and velocity", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const updates: Array<{ value: number; velocity: number }> = [];
+  const tween = createAnimation({
+    from: 0,
+    to: 100,
+    durationMs: 200,
+    ease: "linear",
+    onUpdate: (v, vel) => {
+      updates.push({ value: Math.round(v), velocity: vel });
+    },
+  });
+
+  // WHEN — advance in 50ms steps (4 frames)
+  const p = tween.play();
+  ticker.update(50);
+  ticker.update(50);
+  ticker.update(50);
+  ticker.update(50);
+  await p;
+
+  // THEN — onUpdate fired on every frame, with correct values
+  expect(updates.length).toBe(4);
+  expect(updates[0].value).toBe(25);
+  expect(updates[1].value).toBe(50);
+  expect(updates[2].value).toBe(75);
+  expect(updates[3].value).toBe(100);
+
+  // AND velocity is non-zero during motion and zero at end
+  expect(updates[0].velocity).toBeGreaterThan(0);
+  expect(updates[1].velocity).toBeGreaterThan(0);
+  expect(updates[2].velocity).toBeGreaterThan(0);
+  expect(updates[3].velocity).toBe(0);
+});
+
+test("GIVEN a tween with three keyframes onUpdate callback WHEN it plays through all segments THEN it receives the correct interpolated values", async () => {
+  // GIVEN — 0→100 over 100ms, then 100→50 over 100ms
+  const ticker = getTicker();
+  const updates: Array<{ value: number; velocity: number }> = [];
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      { value: 100, gap: 100, ease: "linear" },
+      { value: 50, gap: 100, ease: "linear" },
+    ],
+    onUpdate: (v, vel) => {
+      updates.push({ value: Math.round(v), velocity: vel });
+    },
+  });
+
+  // WHEN — advance in 50ms steps (segment 1: 0→50→100, segment 2: 100→75→50)
+  const p = a.play();
+  ticker.update(50);   // first segment, 50%
+  ticker.update(50);   // first segment, 100% / start of second
+  ticker.update(50);   // second segment, 50%
+  ticker.update(50);   // second segment, 100%
+  await p;
+
+  // THEN
+  expect(updates.length).toBe(4);
+  expect(updates[0].value).toBe(50);   // 50% through 0→100
+  expect(updates[1].value).toBe(100);  // 100% through 0→100
+  expect(updates[2].value).toBe(75);   // 50% through 100→50
+  expect(updates[3].value).toBe(50);   // 100% through 100→50
+
+  // AND velocity positive during climb, zero at keyframe boundary, negative during descent, zero at end
+  expect(updates[0].velocity).toBeGreaterThan(0);
+  expect(updates[1].velocity).toBe(0);          // end of first segment
+  expect(updates[2].velocity).toBeLessThan(0);
+  expect(updates[3].velocity).toBe(0);
+});
+
 test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue is computed immediately", () => {
   // GIVEN
   const tween = createAnimation({
