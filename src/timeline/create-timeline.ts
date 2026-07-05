@@ -48,7 +48,6 @@ type BuildResult = {
 
 const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
   const activeLayers: ActiveLayer[] = [];
-
   let previousEndAt = 0;
 
   for (const layer of rawLayers) {
@@ -66,8 +65,6 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
       layerDuration += resolvedKeyframes[i].gap;
     }
 
-    const endAt = startAt + layerDuration;
-
     const runner = createKeyframeRunner({
       keyframes: resolvedKeyframes,
       onStarted: layer.keyframe.onStarted,
@@ -78,13 +75,13 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
 
     activeLayers.push({
       startAt,
-      endAt,
+      endAt: startAt + layerDuration,
       runner,
       started: false,
       ended: false,
     });
 
-    previousEndAt = endAt;
+    previousEndAt = startAt + layerDuration;
   }
 
   activeLayers.sort((a, b) => a.startAt - b.startAt);
@@ -110,7 +107,7 @@ export const createTimeline = (
   let activeLayers = state.activeLayers;
   let totalDurationMs = state.totalDurationMs;
 
-  let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
+  let timelineStatus: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
   let resolvePromise: Resolve | undefined;
   let remainingLayers = activeLayers.length;
@@ -118,7 +115,7 @@ export const createTimeline = (
   const ticker = getTicker();
 
   const finish = () => {
-    status = "stopped";
+    timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
     resolvePromise?.(timeline);
@@ -136,8 +133,7 @@ export const createTimeline = (
       }
 
       if (layer.started && !layer.ended) {
-        const completed = layer.runner.step(deltaMs);
-        if (completed) {
+        if (layer.runner(deltaMs)) {
           layer.ended = true;
           remainingLayers--;
         }
@@ -146,15 +142,11 @@ export const createTimeline = (
 
     onProgress(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
 
-    if (remainingLayers <= 0) {
-      finish();
-    }
+    if (remainingLayers <= 0) finish();
   };
 
-  // ─── Lifecycle ───
-
   const play = (): Promise<Timeline> => {
-    if (status === "dead") throw new Error("Cannot play a dead timeline");
+    if (timelineStatus === "dead") throw new Error("Cannot play a dead timeline");
 
     state = buildFromConfigs(rawLayers);
     activeLayers = state.activeLayers;
@@ -165,27 +157,27 @@ export const createTimeline = (
     const promise = new Promise<Timeline>((resolve) => {
       resolvePromise = resolve;
     });
-    status = "playing";
+    timelineStatus = "playing";
     onStarted?.();
     ticker.add(update);
     return promise;
   };
 
   const pause = () => {
-    if (status !== "playing") return;
-    status = "paused";
+    if (timelineStatus !== "playing") return;
+    timelineStatus = "paused";
     ticker.remove(update);
   };
 
   const resume = () => {
-    if (status !== "paused") return;
-    status = "playing";
+    if (timelineStatus !== "paused") return;
+    timelineStatus = "playing";
     ticker.add(update);
   };
 
   const stop = () => {
-    if (status !== "playing" && status !== "paused") return;
-    status = "stopped";
+    if (timelineStatus !== "playing" && timelineStatus !== "paused") return;
+    timelineStatus = "stopped";
     ticker.remove(update);
     resolvePromise?.(timeline);
     resolvePromise = undefined;
@@ -196,7 +188,7 @@ export const createTimeline = (
       layer.runner.evaluate(1);
       layer.runner.onEnded?.();
     }
-    status = "stopped";
+    timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
     resolvePromise?.(timeline);
@@ -204,13 +196,13 @@ export const createTimeline = (
   };
 
   const kill = () => {
-    status = "dead";
+    timelineStatus = "dead";
     ticker.remove(update);
     resolvePromise = undefined;
   };
 
   const setProgress = (value: number) => {
-    if (status === "playing") pause();
+    if (timelineStatus === "playing") pause();
 
     const clamped = Math.max(0, Math.min(1, value));
     elapsedMs = clamped * totalDurationMs;
@@ -246,7 +238,7 @@ export const createTimeline = (
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;
     },
     get status() {
-      return status;
+      return timelineStatus;
     },
     get durationMs() {
       return totalDurationMs;

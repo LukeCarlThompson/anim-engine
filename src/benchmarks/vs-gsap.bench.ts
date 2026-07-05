@@ -195,7 +195,7 @@ describe("50 concurrent tweens (500 frames to completion)", () => {
   bench("gsap", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
     targets.forEach((t) => {
-      gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power3.out" });
+      gsap.to(t, { x: 100, duration: CONCURRENT_DURATION_MS / 1000, ease: "power2.out" });
     });
     advanceGSAPFrames(CONCURRENT_FRAMES);
   });
@@ -232,7 +232,7 @@ describe("50 concurrent keyframe animations (500 frames to completion)", () => {
     const d = CONCURRENT_DURATION_MS / 1000;
     targets.forEach((t) => {
       const tl = gsap.timeline();
-      tl.to(t, { x: 50, duration: d * 0.3, ease: "power3.out" }, 0)
+      tl.to(t, { x: 50, duration: d * 0.3, ease: "power2.out" }, 0)
         .to(t, { x: 80, duration: d * 0.4, ease: "power1.inOut" }, d * 0.3)
         .to(t, { x: 100, duration: d * 0.3, ease: "power2.out" }, d * 0.7);
     });

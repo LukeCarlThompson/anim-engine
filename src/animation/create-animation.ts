@@ -68,7 +68,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 
   const finish = () => {
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -98,7 +98,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(runner.step);
+    ticker.add(runner);
     onStarted?.();
     return promise;
   };
@@ -106,36 +106,34 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(runner.step);
+    ticker.add(runner);
   };
 
   const stop = () => {
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
     runner.evaluate(1);
-    if (status === "playing" || status === "paused") {
-      onEnded?.();
-    }
+    if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise = undefined;
   };
 
@@ -146,26 +144,15 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
     stop,
     skipToEnd,
     kill,
-    get currentValue() {
-      return runner.currentValue;
-    },
-    get velocity() {
-      return runner.velocity;
-    },
-    get progress() {
-      return runner.progress;
-    },
+    get currentValue() { return runner.currentValue; },
+    get velocity() { return runner.velocity; },
+    get progress() { return runner.progress; },
     setProgress(value: number) {
       if (status === "playing") pause();
-      const clamped = Math.max(0, Math.min(1, value));
-      runner.evaluate(clamped);
+      runner.evaluate(Math.max(0, Math.min(1, value)));
     },
-    get status() {
-      return status;
-    },
-    get durationMs() {
-      return cachedDurationMs;
-    },
+    get status() { return status; },
+    get durationMs() { return cachedDurationMs; },
   };
 
   return controls;
@@ -194,7 +181,7 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
 
   const finish = () => {
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
@@ -225,7 +212,7 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
       resolvePromise = resolve;
     });
     status = "playing";
-    ticker.add(runner.step);
+    ticker.add(runner);
     onStarted?.();
     return promise;
   };
@@ -233,36 +220,34 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
   const pause = () => {
     if (status !== "playing") return;
     status = "paused";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    ticker.add(runner.step);
+    ticker.add(runner);
   };
 
   const stop = () => {
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
     runner.evaluate(1);
-    if (status === "playing" || status === "paused") {
-      onEnded?.();
-    }
+    if (status === "playing" || status === "paused") onEnded?.();
     status = "stopped";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise?.(controls);
     resolvePromise = undefined;
   };
 
   const kill = () => {
     status = "dead";
-    ticker.remove(runner.step);
+    ticker.remove(runner);
     resolvePromise = undefined;
   };
 
@@ -273,26 +258,15 @@ const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation 
     stop,
     skipToEnd,
     kill,
-    get currentValue() {
-      return runner.currentValue;
-    },
-    get velocity() {
-      return runner.velocity;
-    },
-    get progress() {
-      return runner.progress;
-    },
+    get currentValue() { return runner.currentValue; },
+    get velocity() { return runner.velocity; },
+    get progress() { return runner.progress; },
     setProgress(value: number) {
       if (status === "playing") pause();
-      const clamped = Math.max(0, Math.min(1, value));
-      runner.evaluate(clamped);
+      runner.evaluate(Math.max(0, Math.min(1, value)));
     },
-    get status() {
-      return status;
-    },
-    get durationMs() {
-      return cachedDurationMs;
-    },
+    get status() { return status; },
+    get durationMs() { return cachedDurationMs; },
   };
 
   return controls;
