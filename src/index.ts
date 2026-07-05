@@ -16,7 +16,11 @@ export { getTicker } from "./ticker/get-ticker";
 export { EASE_NAMES, cubicBezier } from "./easing/easing";
 
 // Types
-export type { Keyframe, AnimationOptions } from "./animation/create-animation";
+export type {
+  Keyframe,
+  AnimationOptions,
+  KeyframeAnimationOptions,
+} from "./animation/create-animation";
 export type {
   Animation,
   Interpolation,

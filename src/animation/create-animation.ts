@@ -27,7 +27,7 @@ export type Keyframe = {
   gap?: DynamicValue;
 };
 
-export type KeyframedAnimationOptions = {
+export type KeyframeAnimationOptions = {
   keyframes: Keyframe[];
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
@@ -35,9 +35,9 @@ export type KeyframedAnimationOptions = {
   onEnded?: () => void;
 };
 
-export type AnimationOptions = SingleTweenOptions | KeyframedAnimationOptions;
+export type AnimationOptions = SingleTweenOptions | KeyframeAnimationOptions;
 
-const isKeyframeMode = (options: AnimationOptions): options is KeyframedAnimationOptions => {
+const isKeyframeMode = (options: AnimationOptions): options is KeyframeAnimationOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
@@ -175,7 +175,7 @@ const createSingleTween = (options: SingleTweenOptions): Animation => {
 
 // ─── Keyframe mode ───
 
-const createKeyframeAnimation = (options: KeyframedAnimationOptions): Animation => {
+const createKeyframeAnimation = (options: KeyframeAnimationOptions): Animation => {
   const { keyframes: rawKeyframes, onStarted, onUpdate, onProgress, onEnded } = options;
 
   const resolveKeyframeGaps = (): number => {
