@@ -146,10 +146,10 @@ describe("keyframe animation (3 segments, 1000 frames to completion)", () => {
     const target = { x: 0 };
     const a = createAnimation({
       keyframes: [
-        { at: 0, value: 0 },
-        { at: D * 0.3, value: 50, ease: "outCubic" },
-        { at: D * 0.7, value: 80, ease: "inOutQuad" },
-        { at: D, value: 100, ease: "outCubic" },
+        { value: 0 },
+        { value: 50, gap: D * 0.3, ease: "outCubic" },
+        { value: 80, gap: D * 0.4, ease: "inOutQuad" },
+        { value: 100, gap: D * 0.3, ease: "outCubic" },
       ],
       onUpdate: (v) => {
         target.x = v;
@@ -213,10 +213,10 @@ describe("50 concurrent keyframe animations (500 frames to completion)", () => {
     targets.forEach((_t, i) => {
       const a = createAnimation({
         keyframes: [
-          { at: 0, value: 0 },
-          { at: D * 0.3, value: 50, ease: "outCubic" },
-          { at: D * 0.7, value: 80, ease: "inOutQuad" },
-          { at: D, value: 100, ease: "outCubic" },
+          { value: 0 },
+          { value: 50, gap: D * 0.3, ease: "outCubic" },
+          { value: 80, gap: D * 0.4, ease: "inOutQuad" },
+          { value: 100, gap: D * 0.3, ease: "outCubic" },
         ],
         onUpdate: (v) => {
           targets[i].x = v;

@@ -1,14 +1,14 @@
-import type { Animation, AnimationStatus } from "../shared/types";
+import type { AnimationStatus, DynamicValue } from "../shared/types";
+import type { KeyframedAnimationOptions } from "../animation/create-animation";
+import { easingFunctions } from "../easing/easing";
+import { createKeyframeRunner } from "../animation/runner";
+import type { Runner } from "../animation/runner";
+import { getTicker } from "../ticker/get-ticker";
+import type { EaseFunction, EaseName } from "../shared/types";
 
 export type TimelineLayer =
-  | {
-      at: number;
-      animation: Animation | Animation[];
-    }
-  | {
-      gap: number;
-      animation: Animation | Animation[];
-    };
+  | { keyframe: KeyframedAnimationOptions; at: DynamicValue }
+  | { keyframe: KeyframedAnimationOptions; gap: number };
 
 export type Timeline = {
   play: () => Promise<Timeline>;
@@ -22,16 +22,78 @@ export type Timeline = {
   status: AnimationStatus;
   durationMs: number;
 };
-import { getTicker } from "../ticker/get-ticker";
-
-type Batch = {
-  animations: Animation[];
-  startAt: number;
-  endAt: number;
-  started: boolean;
-};
 
 type Resolve = (value: Timeline) => void;
+
+const resolveValue = (v: DynamicValue): number =>
+  typeof v === "function" ? v() : v;
+
+const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
+  typeof ease === "function" ? ease : easingFunctions[ease];
+
+type ActiveLayer = {
+  startAt: number;
+  endAt: number;
+  runner: Runner;
+  started: boolean;
+  ended: boolean;
+};
+
+type BuildResult = {
+  activeLayers: ActiveLayer[];
+  totalDurationMs: number;
+};
+
+const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
+  const activeLayers: ActiveLayer[] = [];
+
+  let previousEndAt = 0;
+
+  for (const layer of rawLayers) {
+    const startAt = "at" in layer ? resolveValue(layer.at) : previousEndAt + layer.gap;
+
+    // Resolve keyframe config
+    const kfs = layer.keyframe.keyframes;
+    const resolvedKeyframes = kfs.map((kf, j) => ({
+      value: resolveValue(kf.value),
+      gap: j === 0 ? 0 : resolveValue(kf.gap ?? 0),
+      easeFn: resolveEasing(kf.ease ?? "inOutSine"),
+    }));
+
+    // Compute layer duration
+    let layerDuration = 0;
+    for (let i = 1; i < resolvedKeyframes.length; i++) {
+      layerDuration += resolvedKeyframes[i].gap;
+    }
+
+    const endAt = startAt + layerDuration;
+
+    const runner = createKeyframeRunner({
+      keyframes: resolvedKeyframes,
+      onStarted: layer.keyframe.onStarted,
+      onUpdate: layer.keyframe.onUpdate,
+      onProgress: layer.keyframe.onProgress,
+      onEnded: layer.keyframe.onEnded,
+    });
+
+    activeLayers.push({
+      startAt,
+      endAt,
+      runner,
+      started: false,
+      ended: false,
+    });
+
+    previousEndAt = endAt;
+  }
+
+  // Sort by startAt
+  activeLayers.sort((a, b) => a.startAt - b.startAt);
+
+  const totalDurationMs = Math.max(0, ...activeLayers.map((l) => l.endAt));
+
+  return { activeLayers, totalDurationMs };
+};
 
 export const createTimeline = (
   layers: TimelineLayer[],
@@ -42,28 +104,15 @@ export const createTimeline = (
   },
 ): Timeline => {
   const { onStarted, onProgress, onEnded } = options ?? {};
+  const rawLayers = layers;
 
-  // Derive batches from layers
-  const batches: Batch[] = [];
-  let lastBatchEnd = 0;
+  let state = buildFromConfigs(rawLayers);
+  let activeLayers = state.activeLayers;
+  let totalDurationMs = state.totalDurationMs;
 
-  for (const layer of layers) {
-    const anims = Array.isArray(layer.animation) ? layer.animation : [layer.animation];
-    const startAt = "at" in layer ? layer.at : lastBatchEnd + layer.gap;
-    const maxDuration = Math.max(...anims.map((a) => a.durationMs));
-    const endAt = startAt + maxDuration;
-    batches.push({ animations: anims, startAt, endAt, started: false });
-    lastBatchEnd = endAt;
-  }
-
-  batches.sort((a, b) => a.startAt - b.startAt);
-  const totalDurationMs = Math.max(0, ...batches.map((b) => b.endAt));
-
-  // State
   let status: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
   let resolvePromise: Resolve | undefined;
-  let pendingAnimations = 0;
 
   const ticker = getTicker();
 
@@ -71,11 +120,13 @@ export const createTimeline = (
 
   const play = (): Promise<Timeline> => {
     if (status === "dead") throw new Error("Cannot play a dead timeline");
+
+    // Re-resolve everything for fresh dynamic values
+    state = buildFromConfigs(rawLayers);
+    activeLayers = state.activeLayers;
+    totalDurationMs = state.totalDurationMs;
     elapsedMs = 0;
-    pendingAnimations = 0;
-    batches.forEach((b) => {
-      b.started = false;
-    });
+
     const promise = new Promise<Timeline>((resolve) => {
       resolvePromise = resolve;
     });
@@ -89,25 +140,11 @@ export const createTimeline = (
     if (status !== "playing") return;
     status = "paused";
     ticker.remove(update);
-    for (const batch of batches) {
-      if (batch.started) {
-        for (const anim of batch.animations) {
-          if (anim.status === "playing") anim.pause();
-        }
-      }
-    }
   };
 
   const resume = () => {
     if (status !== "paused") return;
     status = "playing";
-    for (const batch of batches) {
-      if (batch.started) {
-        for (const anim of batch.animations) {
-          if (anim.status === "paused") anim.resume();
-        }
-      }
-    }
     ticker.add(update);
   };
 
@@ -115,25 +152,17 @@ export const createTimeline = (
     if (status !== "playing" && status !== "paused") return;
     status = "stopped";
     ticker.remove(update);
-    for (const batch of batches) {
-      if (batch.started) {
-        for (const anim of batch.animations) {
-          anim.stop();
-        }
-      }
-    }
     resolvePromise?.(timeline);
     resolvePromise = undefined;
   };
 
   const skipToEnd = () => {
+    for (const layer of activeLayers) {
+      layer.runner.evaluate(1);
+      layer.runner.onEnded?.();
+    }
     status = "stopped";
     ticker.remove(update);
-    for (const batch of batches) {
-      for (const anim of batch.animations) {
-        anim.skipToEnd();
-      }
-    }
     onEnded?.();
     resolvePromise?.(timeline);
     resolvePromise = undefined;
@@ -142,11 +171,6 @@ export const createTimeline = (
   const kill = () => {
     status = "dead";
     ticker.remove(update);
-    for (const batch of batches) {
-      for (const anim of batch.animations) {
-        anim.kill();
-      }
-    }
     resolvePromise = undefined;
   };
 
@@ -156,28 +180,24 @@ export const createTimeline = (
     if (status !== "playing") return;
     elapsedMs += deltaMs;
 
-    for (const batch of batches) {
-      if (!batch.started && elapsedMs >= batch.startAt) {
-        batch.started = true;
-        pendingAnimations += batch.animations.length;
-        for (const anim of batch.animations) {
-          void anim.play().then(() => {
-            pendingAnimations--;
-            checkComplete();
-          });
+    for (const layer of activeLayers) {
+      if (!layer.started && elapsedMs >= layer.startAt) {
+        layer.runner.reset();
+        layer.runner.onStarted?.();
+        layer.started = true;
+      }
+
+      if (layer.started && !layer.ended) {
+        const completed = layer.runner.step(deltaMs);
+        if (completed) {
+          layer.ended = true;
         }
       }
     }
 
-    onProgress?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0);
+    onProgress?.(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
 
-    if (batches.every((b) => b.started) && pendingAnimations <= 0) {
-      finish();
-    }
-  };
-
-  const checkComplete = () => {
-    if (pendingAnimations <= 0 && status === "playing" && batches.every((b) => b.started)) {
+    if (activeLayers.every((l) => l.ended)) {
       finish();
     }
   };
@@ -196,20 +216,19 @@ export const createTimeline = (
     const clamped = Math.max(0, Math.min(1, value));
     elapsedMs = clamped * totalDurationMs;
 
-    for (const batch of batches) {
-      if (elapsedMs < batch.startAt) {
-        for (const anim of batch.animations) {
-          anim.setProgress(0);
-        }
-        batch.started = false;
+    for (const layer of activeLayers) {
+      if (elapsedMs < layer.startAt) {
+        layer.runner.reset();
+        layer.started = false;
+        layer.ended = false;
       } else {
-        batch.started = true;
-        const batchElapsed = elapsedMs - batch.startAt;
-        for (const anim of batch.animations) {
-          const localProgress =
-            anim.durationMs > 0 ? Math.min(batchElapsed / anim.durationMs, 1) : 1;
-          anim.setProgress(localProgress);
-        }
+        layer.started = true;
+        const layerDuration = layer.endAt - layer.startAt;
+        const localProgress = layerDuration > 0
+          ? Math.min((elapsedMs - layer.startAt) / layerDuration, 1)
+          : 1;
+        layer.runner.evaluate(localProgress);
+        layer.ended = localProgress >= 1;
       }
     }
   };
@@ -223,7 +242,7 @@ export const createTimeline = (
     kill,
     setProgress,
     get progress() {
-      return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 0;
+      return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;
     },
     get status() {
       return status;
