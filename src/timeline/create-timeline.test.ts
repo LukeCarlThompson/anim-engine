@@ -575,3 +575,230 @@ test("GIVEN a timeline with multiple layers and gaps WHEN queried THEN durationM
   // THEN
   expect(tl.durationMs).toBe(200 + 100 + 300);
 });
+
+// ─── Regression: backward scrubbing determinism ───
+
+test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN all layers return to initial value", () => {
+  // Regression: runner.reset() was used for layers before current scrub
+  // position, but reset() doesn't fire onUpdate — DOM stayed at stale value.
+  // Fix: use evaluate(0) instead to fire onUpdate with the initial value.
+
+  // GIVEN
+  const values: Record<string, number> = { a: -1, b: -1, c: -1, d: -1 };
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
+        onUpdate: (v) => { values.a = v; },
+      },
+    },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
+        onUpdate: (v) => { values.b = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
+        onUpdate: (v) => { values.c = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
+        onUpdate: (v) => { values.d = v; },
+      },
+    },
+  ]);
+
+  // WHEN — scrub forward through various positions
+  tl.setProgress(0.25);
+  tl.setProgress(0.5);
+  tl.setProgress(0.75);
+  tl.setProgress(1.0);
+
+  // THEN scrub back to 0
+  tl.setProgress(0);
+
+  expect(values.a).toBe(0);
+  expect(values.b).toBe(0);
+  expect(values.c).toBe(0);
+  expect(values.d).toBe(0);
+
+  tl.kill();
+});
+
+test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times THEN values at each position are deterministic", () => {
+  // GIVEN
+  const values: Record<string, number> = { a: 0, b: 0, c: 0, d: 0 };
+  const snapshots: Array<Record<string, number>> = [];
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
+        onUpdate: (v) => { values.a = v; },
+      },
+    },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
+        onUpdate: (v) => { values.b = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
+        onUpdate: (v) => { values.c = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
+        onUpdate: (v) => { values.d = v; },
+      },
+    },
+  ]);
+
+  // First pass: record values at each position
+  for (const p of [0.25, 0.5, 0.75, 1.0, 0.75, 0.5, 0.25, 0]) {
+    tl.setProgress(p);
+    snapshots.push({ ...values });
+  }
+
+  // Second pass: verify same positions produce same values
+  const positions = [0.25, 0.5, 0.75, 1.0, 0.75, 0.5, 0.25, 0];
+  positions.forEach((p, i) => {
+    tl.setProgress(p);
+    expect(values.a).toBe(snapshots[i].a);
+    expect(values.b).toBe(snapshots[i].b);
+    expect(values.c).toBe(snapshots[i].c);
+    expect(values.d).toBe(snapshots[i].d);
+  });
+
+  // Verify back at 0 after the cycle
+  expect(values.a).toBe(0);
+  expect(values.b).toBe(0);
+  expect(values.c).toBe(0);
+  expect(values.d).toBe(0);
+
+  tl.kill();
+});
+
+test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets onUpdate correctly", async () => {
+  // Regression: stepping forward via update(), then scrubbing back past
+  // a layer's startAt must fire onUpdate with the initial value.
+
+  // GIVEN
+  const ticker = getTicker();
+  const values: Record<string, number> = { a: 0, b: 0, c: 0, d: 0 };
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
+        onUpdate: (v) => { values.a = v; },
+      },
+    },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
+        onUpdate: (v) => { values.b = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
+        onUpdate: (v) => { values.c = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
+        onUpdate: (v) => { values.d = v; },
+      },
+    },
+  ]);
+
+  // WHEN — play partway into the timeline
+  const p = tl.play();
+  ticker.update(500);
+  await Promise.resolve();
+  tl.pause();
+
+  // THEN scrub back to 0
+  tl.setProgress(0);
+
+  expect(values.a).toBe(0);
+  expect(values.b).toBe(0);
+  expect(values.c).toBe(0);
+  expect(values.d).toBe(0);
+
+  tl.kill();
+});
+
+test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 returns all layers to initial value", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const values: Record<string, number> = { a: -1, b: -1, c: -1, d: -1 };
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
+        onUpdate: (v) => { values.a = v; },
+      },
+    },
+    {
+      at: 0,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
+        onUpdate: (v) => { values.b = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
+        onUpdate: (v) => { values.c = v; },
+      },
+    },
+    {
+      gap: 200,
+      keyframe: {
+        keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
+        onUpdate: (v) => { values.d = v; },
+      },
+    },
+  ]);
+
+  // WHEN — play to completion
+  const p = tl.play();
+  ticker.update(3000);
+  await p;
+
+  // THEN scrub back to 0
+  tl.setProgress(0);
+
+  expect(values.a).toBe(0);
+  expect(values.b).toBe(0);
+  expect(values.c).toBe(0);
+  expect(values.d).toBe(0);
+
+  tl.kill();
+});

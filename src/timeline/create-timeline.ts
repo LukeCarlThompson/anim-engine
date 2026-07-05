@@ -1,8 +1,8 @@
-import type { AnimationStatus, DynamicValue } from "../shared/types";
 import type { KeyframedAnimationOptions } from "../animation/create-animation";
-import { easingFunctions } from "../easing/easing";
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
+import { easingFunctions } from "../easing/easing";
+import type { AnimationStatus, DynamicValue } from "../shared/types";
 import type { EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 
@@ -27,8 +27,7 @@ type Resolve = (value: Timeline) => void;
 
 const noop = () => {};
 
-const resolveValue = (v: DynamicValue): number =>
-  typeof v === "function" ? v() : v;
+const resolveValue = (v: DynamicValue): number => (typeof v === "function" ? v() : v);
 
 const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : easingFunctions[ease];
@@ -209,15 +208,14 @@ export const createTimeline = (
 
     for (const layer of activeLayers) {
       if (elapsedMs < layer.startAt) {
-        layer.runner.reset();
+        layer.runner.evaluate(0);
         layer.started = false;
         layer.ended = false;
       } else {
         layer.started = true;
         const layerDuration = layer.endAt - layer.startAt;
-        const localProgress = layerDuration > 0
-          ? Math.min((elapsedMs - layer.startAt) / layerDuration, 1)
-          : 1;
+        const localProgress =
+          layerDuration > 0 ? Math.min((elapsedMs - layer.startAt) / layerDuration, 1) : 1;
         layer.runner.evaluate(localProgress);
         layer.ended = localProgress >= 1;
       }
