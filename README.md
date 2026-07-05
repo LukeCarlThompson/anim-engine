@@ -65,7 +65,7 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 
 |                              |                                                                                                                |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| ⚡ **Fast**                  | 1.7–8.0× faster than GSAP overall; 2.7–4.7× when comparing equivalent `onUpdate` callback dispatch (see [benchmarks](#benchmarks)). |
+| ⚡ **Fast**                  | 1.7–7.5× faster than GSAP overall; 3.0–6.2× when comparing equivalent `onUpdate` callback dispatch (see [benchmarks](#benchmarks)). |
 | 🪶 **Lightweight**           | Tree-shakeable ESM — import only what you use. No DOM, no canvas, no dependencies.                             |
 | 🎯 **Numbers only**          | A single numeric type for all values. No strings, no transforms, no branches. Predictable performance.         |
 | 🔌 **Renderer-agnostic**     | Feed values to PixiJS, ThreeJS, DOM, canvas2d, or WebGL. Same API everywhere.                                  |
@@ -135,16 +135,15 @@ anim.skipToEnd(); // jumps to end, resolves promise
 
 **Single-tween options:**
 
-| Option       | Type                                         | Default     | Description                                                  |
-| ------------ | -------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `from`       | `number \| () => number`                     | —           | Start value (static or dynamic)                              |
-| `to`         | `number \| () => number`                     | —           | End value (static or dynamic)                                |
-| `durationMs` | `number`                                     | —           | Duration in milliseconds                                     |
+| Option       | Type                                         | Default       | Description                                                  |
+| ------------ | -------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `from`       | `number \| () => number`                     | —             | Start value                                                  |
+| `to`         | `number \| () => number`                     | —             | End value                                                    |
+| `durationMs` | `number \| () => number`                     | —             | Duration in milliseconds                                     |
 | `ease`       | `EaseName \| EaseFunction`                   | `"inOutSine"` | Easing function or name                                    |
-| `delayMs`    | `number`                                     | `0`         | Delay before starting                                        |
-| `onStarted`  | `() => void`                                | —           | Called when animation begins (after delay)                   |
-| `onUpdate`   | `(value: number, velocity: number) => void`  | —           | Called every frame with current value and velocity (units/s) |
-| `onEnded`    | `() => void`                                | —           | Called when animation completes                              |
+| `onStarted`  | `() => void`                                | —             | Called when playback begins                                  |
+| `onUpdate`   | `(value: number, velocity: number) => void`  | —             | Called every frame with current value and velocity (units/s) |
+| `onEnded`    | `() => void`                                | —             | Called when animation completes                              |
 **Returns:** `Animation`
 
 ### Keyframes
@@ -628,7 +627,7 @@ requestAnimationFrame(gameLoop);
 
 | Type                 | Description                                                                                                             |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress` (readonly), `status` |
+| `Animation`          | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
 | `Interpolation`      | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                             |
 | `Timeline`           | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                                            |
 | `EaseName`           | Union of 31 ease name strings                                                                                           |
