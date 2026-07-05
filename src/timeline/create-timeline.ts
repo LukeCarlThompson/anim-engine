@@ -7,8 +7,8 @@ import type { EaseFunction, EaseName } from "../shared/types";
 import { getTicker } from "../ticker/get-ticker";
 
 export type TimelineLayer =
-  | { keyframe: KeyframedAnimationOptions; at: DynamicValue }
-  | { keyframe: KeyframedAnimationOptions; gap: number };
+  | { animation: KeyframedAnimationOptions; at: DynamicValue }
+  | { animation: KeyframedAnimationOptions; gap: number };
 
 export type Timeline = {
   play: () => Promise<Timeline>;
@@ -52,7 +52,7 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
   for (const layer of rawLayers) {
     const startAt = "at" in layer ? resolveValue(layer.at) : previousEndAt + layer.gap;
 
-    const kfs = layer.keyframe.keyframes;
+    const kfs = layer.animation.keyframes;
     const resolvedKeyframes = kfs.map((kf, j) => ({
       value: resolveValue(kf.value),
       gap: j === 0 ? 0 : resolveValue(kf.gap ?? 0),
@@ -66,10 +66,10 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
 
     const runner = createKeyframeRunner({
       keyframes: resolvedKeyframes,
-      onStarted: layer.keyframe.onStarted,
-      onUpdate: layer.keyframe.onUpdate,
-      onProgress: layer.keyframe.onProgress,
-      onEnded: layer.keyframe.onEnded,
+      onStarted: layer.animation.onStarted,
+      onUpdate: layer.animation.onUpdate,
+      onProgress: layer.animation.onProgress,
+      onEnded: layer.animation.onEnded,
     });
 
     activeLayers.push({

@@ -16,7 +16,7 @@ test("GIVEN a timeline with two parallel layers WHEN played to completion THEN b
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
         onUpdate: (v) => {
           x = v;
@@ -25,7 +25,7 @@ test("GIVEN a timeline with two parallel layers WHEN played to completion THEN b
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 200, gap: 100 }],
         onUpdate: (v) => {
           y = v;
@@ -52,7 +52,7 @@ test("GIVEN consecutive layers with gap:0 WHEN played THEN they play one after a
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
         onUpdate: (v) => {
           values.push(v);
@@ -61,7 +61,7 @@ test("GIVEN consecutive layers with gap:0 WHEN played THEN they play one after a
     },
     {
       gap: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 200, gap: 100 }],
         onUpdate: (v) => {
           values.push(v);
@@ -90,7 +90,7 @@ test("GIVEN two parallel layers of different durations WHEN played THEN they run
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onUpdate: (v) => {
           if (v >= 1) step1 = true;
@@ -99,7 +99,7 @@ test("GIVEN two parallel layers of different durations WHEN played THEN they run
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 100 }],
         onUpdate: (v) => {
           if (v >= 1) step2 = true;
@@ -126,7 +126,7 @@ test("GIVEN a timeline with a gap between layers WHEN played THEN the gap is res
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onUpdate: () => {
           times.push(1);
@@ -135,7 +135,7 @@ test("GIVEN a timeline with a gap between layers WHEN played THEN the gap is res
     },
     {
       gap: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onUpdate: () => {
           times.push(2);
@@ -167,13 +167,13 @@ test("GIVEN a timeline with gap:100 after a 50ms layer WHEN played THEN the gap 
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
       },
     },
     {
       gap: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onStarted: () => {
           bStartedAt = elapsed;
@@ -219,18 +219,18 @@ test("GIVEN three layers chained with gaps WHEN played THEN each waits for the p
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: { keyframes: [{ value: 0 }, { value: 1, gap: 50 }] },
+      animation: { keyframes: [{ value: 0 }, { value: 1, gap: 50 }] },
     },
     {
       gap: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onStarted: () => starts.push(elapsed),
       },
     },
     {
       gap: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onStarted: () => starts.push(elapsed),
       },
@@ -261,13 +261,13 @@ test("GIVEN a timeline with a dynamic duration in a keyframe WHEN re-played with
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: () => dur }],
       },
     },
     {
       gap: 50,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onStarted: () => {
           bStartedAt = elapsed;
@@ -309,13 +309,13 @@ test("GIVEN a timeline with a negative gap WHEN played THEN layers overlap", asy
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
       },
     },
     {
       gap: -50,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 100 }],
         onUpdate: () => {
           overlapDetected = true;
@@ -343,11 +343,11 @@ test("GIVEN a timeline with mixed at and gap positions WHEN played THEN layers s
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: { keyframes: [{ value: 0 }, { value: 1, gap: 50 }] },
+      animation: { keyframes: [{ value: 0 }, { value: 1, gap: 50 }] },
     },
     {
       at: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 50 }],
         onUpdate: () => {
           started = true;
@@ -378,7 +378,7 @@ test("GIVEN a running timeline WHEN paused and later resumed THEN it pauses prog
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 200 }],
         onUpdate: (v) => {
           finalValue = v;
@@ -420,7 +420,7 @@ test("GIVEN a running timeline WHEN skipToEnd is called THEN all layers complete
     [
       {
         at: 0,
-        keyframe: {
+        animation: {
           keyframes: [{ value: 0 }, { value: 100, gap: 200 }],
           onUpdate: (v) => {
             aValue = v;
@@ -429,7 +429,7 @@ test("GIVEN a running timeline WHEN skipToEnd is called THEN all layers complete
       },
       {
         gap: 0,
-        keyframe: {
+        animation: {
           keyframes: [{ value: 0 }, { value: 200, gap: 300 }],
           onUpdate: (v) => {
             bValue = v;
@@ -459,7 +459,7 @@ test("GIVEN a running timeline WHEN skipToEnd is called THEN all layers complete
 test("GIVEN a timeline that has been killed WHEN play() is called THEN it throws", async () => {
   // GIVEN
   const tl = createTimeline([
-    { at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 100 }] } },
+    { at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 100 }] } },
   ]);
   void tl.play();
 
@@ -478,7 +478,7 @@ test("GIVEN a timeline with onStarted callback WHEN played THEN the callback fir
   let started = false;
 
   const tl = createTimeline(
-    [{ at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 100 }] } }],
+    [{ at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 100 }] } }],
     {
       onStarted: () => {
         started = true;
@@ -501,7 +501,7 @@ test("GIVEN a timeline with onProgress callback WHEN it advances through frames 
   const progressValues: number[] = [];
 
   const tl = createTimeline(
-    [{ at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] } }],
+    [{ at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] } }],
     {
       onProgress: (p) => {
         progressValues.push(Math.round(p * 100));
@@ -527,7 +527,7 @@ test("GIVEN a running timeline WHEN stopped from paused state THEN the stop is h
   const ticker = getTicker();
 
   const tl = createTimeline([
-    { at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] } },
+    { at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] } },
   ]);
   tl.play();
 
@@ -548,7 +548,7 @@ test("GIVEN a timeline with two layers WHEN setProgress is called THEN all layer
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
         onUpdate: (v) => {
           aValue = v;
@@ -557,7 +557,7 @@ test("GIVEN a timeline with two layers WHEN setProgress is called THEN all layer
     },
     {
       gap: 100,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 200, gap: 300, ease: "linear" }],
         onUpdate: (v) => {
           bValue = v;
@@ -590,11 +590,11 @@ test("GIVEN a timeline with multiple layers and gaps WHEN queried THEN durationM
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] },
+      animation: { keyframes: [{ value: 0 }, { value: 100, gap: 200 }] },
     },
     {
       gap: 100,
-      keyframe: { keyframes: [{ value: 0 }, { value: 100, gap: 300 }] },
+      animation: { keyframes: [{ value: 0 }, { value: 100, gap: 300 }] },
     },
   ]);
 
@@ -615,7 +615,7 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
         onUpdate: (v) => {
           values.a = v;
@@ -624,7 +624,7 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
         onUpdate: (v) => {
           values.b = v;
@@ -633,7 +633,7 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
         onUpdate: (v) => {
           values.c = v;
@@ -642,7 +642,7 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
         onUpdate: (v) => {
           values.d = v;
@@ -676,7 +676,7 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
         onUpdate: (v) => {
           values.a = v;
@@ -685,7 +685,7 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
         onUpdate: (v) => {
           values.b = v;
@@ -694,7 +694,7 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
         onUpdate: (v) => {
           values.c = v;
@@ -703,7 +703,7 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
         onUpdate: (v) => {
           values.d = v;
@@ -748,7 +748,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
         onUpdate: (v) => {
           values.a = v;
@@ -757,7 +757,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
         onUpdate: (v) => {
           values.b = v;
@@ -766,7 +766,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
         onUpdate: (v) => {
           values.c = v;
@@ -775,7 +775,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
         onUpdate: (v) => {
           values.d = v;
@@ -809,7 +809,7 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
   const tl = createTimeline([
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
         onUpdate: (v) => {
           values.a = v;
@@ -818,7 +818,7 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
         onUpdate: (v) => {
           values.b = v;
@@ -827,7 +827,7 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
         onUpdate: (v) => {
           values.c = v;
@@ -836,7 +836,7 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
     },
     {
       gap: 200,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
         onUpdate: (v) => {
           values.d = v;
