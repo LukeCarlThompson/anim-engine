@@ -165,6 +165,174 @@ test("GIVEN a timeline with a gap between keyframes WHEN played THEN the gap is 
   expect(times.filter((t) => t === 2).length).toBeGreaterThanOrEqual(1);
 });
 
+test("GIVEN a timeline with gap:100 after a 50ms animation WHEN played THEN the gap is precisely waited", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let bStartedAt = -1;
+  let elapsed = 0;
+
+  const a = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+  });
+  const b = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onStarted: () => {
+      bStartedAt = elapsed;
+    },
+  });
+
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 100, animation: [b] },
+  ]);
+
+  // WHEN — advance frame by frame through the gap
+  const p = tl.play();
+
+  // Helper: update elapsed first so onStarted picks up the right time
+  const advance = (dt: number) => {
+    elapsed += dt;
+    ticker.update(dt);
+  };
+
+  // Timeline: A runs 0–50ms, gap 50–150ms, B runs 150–200ms
+  // Advance through A's duration
+  advance(25);
+  expect(bStartedAt).toBe(-1);
+
+  advance(25);
+  expect(bStartedAt).toBe(-1);
+
+  // Advance through gap (50–150ms)
+  advance(25);
+  expect(bStartedAt).toBe(-1);
+
+  advance(25);
+  expect(bStartedAt).toBe(-1);
+
+  advance(25);
+  expect(bStartedAt).toBe(-1);
+
+  // Advance to where gap ends (150ms)
+  advance(25);
+
+  // THEN — B should start exactly at 150ms
+  expect(bStartedAt).toBe(150);
+
+  // Complete
+  advance(50);
+  await p;
+});
+
+test("GIVEN three animations chained with gaps WHEN played THEN each waits for the previous to finish plus gap", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const starts: number[] = [];
+  let elapsed = 0;
+
+  const a = createAnimation({ from: 0, to: 1, durationMs: 50, ease: "linear" });
+  const b = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onStarted: () => starts.push(elapsed),
+  });
+  const c = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onStarted: () => starts.push(elapsed),
+  });
+
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 100, animation: [b] },
+    { gap: 100, animation: [c] },
+  ]);
+
+  // Expected: A at 0ms, B at 150ms (50+100), C at 300ms (200+100)
+
+  // WHEN — advance through the whole sequence
+  const p = tl.play();
+  const advance = (dt: number) => {
+    elapsed += dt;
+    ticker.update(dt);
+  };
+
+  // Run to completion in 25ms steps
+  while (elapsed < 400) advance(25);
+  await p;
+
+  // THEN — B and C each respect their gap relative to the previous animation's end
+  // B: 50 + 100 = 150ms. C: 200 + 100 = 300ms.
+  expect(starts).toEqual([150, 300]);
+});
+
+test("GIVEN a timeline with an animation using dynamic durationMs WHEN re-played with a different duration THEN the gap adjusts to the new duration", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let dur = 100;
+  let bStartedAt = -1;
+  let elapsed = 0;
+
+  const a = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: () => dur,
+    ease: "linear",
+  });
+  const b = createAnimation({
+    from: 0,
+    to: 1,
+    durationMs: 50,
+    ease: "linear",
+    onStarted: () => {
+      bStartedAt = elapsed;
+    },
+  });
+
+  const tl = createTimeline([
+    { at: 0, animation: [a] },
+    { gap: 50, animation: [b] },
+  ]);
+
+  const advance = (dt: number) => {
+    elapsed += dt;
+    ticker.update(dt);
+  };
+
+  // WHEN — first play with dur = 100
+  let p = tl.play();
+  bStartedAt = -1;
+  elapsed = 0;
+  while (elapsed < 200) advance(25);
+  await p;
+
+  // THEN — B triggered at creation-time endAt (100) + gap (50) = 150
+  expect(bStartedAt).toBe(150);
+
+  // WHEN — change dur and re-play
+  dur = 50;
+
+  bStartedAt = -1;
+  elapsed = 0;
+  p = tl.play();
+  while (elapsed < 200) advance(25);
+  await p;
+
+  // THEN — B should trigger at new endAt (50) + gap (50) = 100
+  // But currently it still uses the stale creation-time batch position (150)
+  expect(bStartedAt).toBe(100);
+});
+
 test("GIVEN a timeline with a negative gap WHEN played THEN animations overlap", async () => {
   // GIVEN
   const ticker = getTicker();
