@@ -127,7 +127,7 @@ const meta = {
       [
         {
           at: 0,
-          keyframe: {
+          animation: {
             keyframes: [{ value: 0 }, { value: 640, gap: 800, ease: "outQuart" }],
             onUpdate: (v) => {
               els[0].style.transform = `translateX(${v}px)`;
@@ -136,7 +136,7 @@ const meta = {
         },
         {
           at: 0,
-          keyframe: {
+          animation: {
             keyframes: [{ value: 0 }, { value: 640, gap: 700, ease: "outBounce" }],
             onUpdate: (v) => {
               els[1].style.transform = `translateX(${v}px)`;
@@ -145,7 +145,7 @@ const meta = {
         },
         {
           gap: 200,
-          keyframe: {
+          animation: {
             keyframes: [{ value: 0 }, { value: 640, gap: 1000, ease: "outElastic" }],
             onUpdate: (v) => {
               els[2].style.transform = `translateX(${v}px)`;
@@ -154,7 +154,7 @@ const meta = {
         },
         {
           gap: 200,
-          keyframe: {
+          animation: {
             keyframes: [{ value: 0 }, { value: 640, gap: 600, ease: "inOutBack" }],
             onUpdate: (v) => {
               els[3].style.transform = `translateX(${v}px)`;

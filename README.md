@@ -231,8 +231,8 @@ For more complex sequences, use `createTimeline`:
 import { createTimeline } from "anim-engine";
 
 const flash = createTimeline([
-  { at: 0, keyframe: { keyframes: [{ value: 0 }, { value: 1, gap: 300 }] } },
-  { gap: 0, keyframe: { keyframes: [{ value: 1 }, { value: 0, gap: 300 }] } },
+  { at: 0, animation: { keyframes: [{ value: 0 }, { value: 1, gap: 300 }] } },
+  { gap: 0, animation: { keyframes: [{ value: 1 }, { value: 0, gap: 300 }] } },
 ]);
 await flash.play();
 ```
@@ -248,14 +248,14 @@ const timeline = createTimeline(
   [
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
         onUpdate: (v) => (sprite.alpha = v),
       },
     },
     {
       at: 0,
-      keyframe: {
+      animation: {
         keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
         onUpdate: (v) => (sprite.x = v),
       },
@@ -273,8 +273,8 @@ timeline.play();
 
 ```ts
 type TimelineLayer =
-  | { keyframe: KeyframedAnimationOptions; at: DynamicValue }
-  | { keyframe: KeyframedAnimationOptions; gap: number };
+  | { animation: KeyframedAnimationOptions; at: DynamicValue }
+  | { animation: KeyframedAnimationOptions; gap: number };
 ```
 
 | Parameter            | Type                 | Description                                                    |
@@ -676,7 +676,7 @@ requestAnimationFrame(gameLoop);
 | `AnimationOptions`          | Single tween or keyframe animation options (discriminated union)                                                        |
 | `Keyframe`                  | `{ value, gap?, ease? }`                                                                                                |
 | `KeyframedAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                               |
-| `TimelineLayer`             | `{ keyframe: KeyframedAnimationOptions; at: DynamicValue } \| { keyframe: KeyframedAnimationOptions; gap: number }`     |
+| `TimelineLayer`             | `{ animation: KeyframedAnimationOptions; at: DynamicValue } \| { animation: KeyframedAnimationOptions; gap: number }`     |
 | `SpringOptions`             | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                               |
 | `SmoothDampOptions`         | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
 | `LerpOptions`               | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |

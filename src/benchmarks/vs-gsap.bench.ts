@@ -333,7 +333,7 @@ describe("50-layer timeline (500 frames to completion)", () => {
     const targets = Array.from({ length: 50 }, () => ({ x: 0 }));
     const layers = targets.map((_t, i) => ({
       at: i * 10,
-      keyframe: {
+      animation: {
         keyframes: [{ value: 0 }, { value: 100, gap: CONCURRENT_DURATION_MS - i * 10 }],
         onUpdate: (v: number) => {
           targets[i].x = v;
