@@ -1,7 +1,8 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
 import type { TimelineLayer, Timeline } from "../domain";
-import { getTicker, resolveEasing, resolveValue } from "../domain";
+import { resolveEasing, resolveValue } from "../domain";
+import { getTicker } from "../ticker";
 
 const noop = () => {};
 

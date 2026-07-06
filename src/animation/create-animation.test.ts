@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "vitest";
 
-import { getTicker } from "../domain";
+import { getTicker } from "../ticker";
 import { createAnimation } from "./create-animation";
 
 beforeEach(() => {

@@ -1,5 +1,6 @@
-import { getTicker, resolveValue } from "../domain";
+import { resolveValue } from "../domain";
 import type { Interpolation, DynamicValue } from "../domain";
+import { getTicker } from "../ticker/ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
 

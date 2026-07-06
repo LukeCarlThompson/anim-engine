@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
 import type { Animation } from "../domain";
-import { getTicker } from "../domain";
+import { getTicker } from "../ticker";
 import { lerpOklab, hexToRgba } from "./lerp-oklab";
 
 getTicker().start();

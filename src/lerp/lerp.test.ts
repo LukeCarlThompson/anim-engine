@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { getTicker } from "../domain";
+import { getTicker } from "../ticker";
 import { createLerp } from "./create-lerp";
 
 describe("createLerp", () => {

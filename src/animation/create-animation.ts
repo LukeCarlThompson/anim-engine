@@ -1,4 +1,4 @@
-import { resolveEasing, resolveValue, getTicker } from "../domain";
+import { resolveEasing, resolveValue } from "../domain";
 import type {
   AnimationStatus,
   AnimationOptions,
@@ -6,6 +6,7 @@ import type {
   SingleTweenOptions,
   Animation,
 } from "../domain";
+import { getTicker } from "../ticker";
 import { createKeyframeRunner, createTweenRunner } from "./runner";
 import type { Runner } from "./runner";
 

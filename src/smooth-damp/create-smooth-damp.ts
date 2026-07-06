@@ -9,7 +9,7 @@ export type SmoothDampOptions = {
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
 };
-import { getTicker } from "../domain";
+import { getTicker } from "../ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 

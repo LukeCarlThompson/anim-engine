@@ -1,6 +1,6 @@
 import type { Interpolation, DynamicValue } from "../domain";
-import { getTicker } from "../domain";
 import { resolveValue } from "../domain/resolve-value";
+import { getTicker } from "../ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 

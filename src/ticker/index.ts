@@ -1,0 +1,1 @@
+export { getTicker } from "./ticker";

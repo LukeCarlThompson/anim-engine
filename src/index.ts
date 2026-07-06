@@ -7,8 +7,9 @@ export { createSmoothDamp } from "./smooth-damp/create-smooth-damp";
 export { createLerp } from "./lerp/create-lerp";
 export { createSmoothClamp } from "./smooth-clamp/smooth-clamp";
 export { lerpOklab, hexToRgba } from "./color/lerp-oklab";
+export { getTicker } from "./ticker/ticker";
 
-export { getTicker, EASE_NAMES, cubicBezier } from "./domain";
+export { EASE_NAMES, cubicBezier } from "./domain";
 
 export type {
   EaseName,

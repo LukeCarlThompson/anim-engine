@@ -1,5 +1,6 @@
-import { getTicker, resolveEasing, resolveValue } from "../domain";
+import { resolveEasing, resolveValue } from "../domain";
 import type { EaseName, AnimationStatus, DynamicValue, EaseFunction } from "../domain";
+import { getTicker } from "../ticker";
 import { createTweenRunner } from "./runner";
 import type { Runner } from "./runner";
 

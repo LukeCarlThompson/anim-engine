@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
 import type { Animation } from "../domain";
+import { getTicker } from "../ticker";
 import { cubicBezier } from "./easing";
-import { getTicker } from "./ticker";
 
 getTicker().start();
 

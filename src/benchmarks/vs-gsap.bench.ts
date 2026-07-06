@@ -13,8 +13,8 @@ gsap.registerPlugin(CustomEase);
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
-import { getTicker } from "../domain";
 import { cubicBezier } from "../domain/easing";
+import { getTicker } from "../ticker";
 import { createTimeline } from "../timeline/create-timeline";
 
 // ─── Constants ───
