@@ -2,10 +2,10 @@
 
 export { createAnimation } from "./animation";
 export { createTimeline } from "./timeline";
-export { createSpring } from "./spring";
-export { createSmoothDamp } from "./smooth-damp";
 export { createLerp } from "./lerp";
+export { createSmoothDamp } from "./smooth-damp";
 export { createSmoothClamp } from "./smooth-clamp";
+export { createSpring } from "./spring";
 export { lerpRgba, hexToRgba } from "./lerp-rgba";
 export { getTicker } from "./ticker";
 export { cubicBezier } from "./domain";

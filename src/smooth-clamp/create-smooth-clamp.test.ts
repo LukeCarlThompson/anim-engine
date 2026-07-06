@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { createSmoothClamp } from "./smooth-clamp";
+import { createSmoothClamp } from "./create-smooth-clamp";
 
 test("GIVEN a smooth clamp with threshold 100 WHEN given small inputs THEN the output is nearly linear", () => {
   // GIVEN

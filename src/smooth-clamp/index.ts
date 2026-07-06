@@ -1,1 +1,1 @@
-export { createSmoothClamp } from "./smooth-clamp";
+export { createSmoothClamp } from "./create-smooth-clamp";
