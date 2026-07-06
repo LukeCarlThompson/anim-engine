@@ -39,7 +39,7 @@ export type Animation = {
   skipToEnd: () => void;
   kill: () => void;
 
-  currentValue: number;
+  value: number;
   velocity: number;
   progress: number;
   setProgress: (value: number) => void;
@@ -164,8 +164,8 @@ export const createSingleTween = ({
     stop,
     skipToEnd,
     kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;

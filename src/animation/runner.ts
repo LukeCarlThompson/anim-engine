@@ -8,7 +8,7 @@ export type Runner = {
   (deltaMs: number): boolean;
   evaluate: (progress: number) => number;
   reset: () => void;
-  currentValue: number;
+  value: number;
   velocity: number;
   progress: number;
   onStarted: (() => void) | undefined;
@@ -40,13 +40,13 @@ export const createTweenRunner = ({
   onProgress = noOp,
   onEnded,
 }: TweenRunnerConfig): Runner => {
-  const state: TweenState = { progress: 0, currentValue: from, velocity: 0 };
+  const state: TweenState = { progress: 0, value: from, velocity: 0 };
 
   let runner!: Runner;
 
   const step = (deltaMs: number): boolean => {
     const completed = updateTween(state, deltaMs, durationMs, easeFn, from, to);
-    onUpdate(state.currentValue, state.velocity);
+    onUpdate(state.value, state.velocity);
     onProgress(state.progress);
     if (completed) {
       onEnded();
@@ -58,28 +58,28 @@ export const createTweenRunner = ({
     const clamped = Math.max(0, Math.min(1, progress));
     state.progress = clamped;
     if (clamped >= 1) {
-      state.currentValue = to;
+      state.value = to;
       state.velocity = 0;
     } else {
       const range = to - from;
-      state.currentValue = from + range * easeFn(clamped);
+      state.value = from + range * easeFn(clamped);
       state.velocity = 0;
     }
-    onUpdate(state.currentValue, state.velocity);
-    return state.currentValue;
+    onUpdate(state.value, state.velocity);
+    return state.value;
   };
 
   const reset = () => {
     state.progress = 0;
-    state.currentValue = from;
+    state.value = from;
     state.velocity = 0;
   };
 
   runner = step as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
-  Object.defineProperty(runner, "currentValue", {
-    get: () => state.currentValue,
+  Object.defineProperty(runner, "value", {
+    get: () => state.value,
     configurable: true,
   });
   Object.defineProperty(runner, "velocity", { get: () => state.velocity, configurable: true });
@@ -141,7 +141,7 @@ export const createKeyframeRunner = ({
   const invTotalDuration = totalDurationMs > 0 ? 1 / totalDurationMs : 1;
 
   // Mutable state
-  let currentValue = keyframes[0].value;
+  let value = keyframes[0].value;
   let velocity = 0;
   let globalProgress = 0;
   let currentSegmentIndex = 0;
@@ -158,28 +158,28 @@ export const createKeyframeRunner = ({
     segmentProgress += deltaMs / segment.durationMs;
     if (segmentProgress >= 1) segmentProgress = 1;
 
-    const previousValue = currentValue;
+    const previousValue = value;
     const eased = segment.easeFn(segmentProgress);
-    currentValue = segment.from + segment.range * eased;
+    value = segment.from + segment.range * eased;
 
     if (segmentProgress >= 1) {
-      currentValue = segment.to;
+      value = segment.to;
       velocity = 0;
     } else {
-      velocity = (currentValue - previousValue) / (deltaMs / 1000);
+      velocity = (value - previousValue) / (deltaMs / 1000);
     }
 
     const elapsedTotal = prefixSum[currentSegmentIndex] + segmentElapsed;
     globalProgress = Math.min(elapsedTotal * invTotalDuration, 1);
     onProgress(globalProgress);
-    onUpdate(currentValue, velocity);
+    onUpdate(value, velocity);
 
     if (segmentProgress >= 1) {
       if (currentSegmentIndex < segments.length - 1) {
         currentSegmentIndex++;
         segmentElapsed = 0;
         segmentProgress = 0;
-        currentValue = segments[currentSegmentIndex].from;
+        value = segments[currentSegmentIndex].from;
         velocity = 0;
         globalProgress = Math.min(prefixSum[currentSegmentIndex] * invTotalDuration, 1);
         onProgress(globalProgress);
@@ -212,7 +212,7 @@ export const createKeyframeRunner = ({
     const clampedSegProgress = Math.max(0, Math.min(1, segProgress));
 
     const eased = segment.easeFn(clampedSegProgress);
-    currentValue = segment.from + segment.range * eased;
+    value = segment.from + segment.range * eased;
     velocity = 0;
     globalProgress = clamped;
 
@@ -220,13 +220,13 @@ export const createKeyframeRunner = ({
     segmentElapsed = elapsed - segStart;
     segmentProgress = clampedSegProgress;
 
-    onUpdate(currentValue, velocity);
+    onUpdate(value, velocity);
     onProgress(clamped);
-    return currentValue;
+    return value;
   };
 
   const reset = () => {
-    currentValue = keyframes[0].value;
+    value = keyframes[0].value;
     velocity = 0;
     globalProgress = 0;
     currentSegmentIndex = 0;
@@ -237,7 +237,7 @@ export const createKeyframeRunner = ({
   runner = update as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
-  Object.defineProperty(runner, "currentValue", { get: () => currentValue, configurable: true });
+  Object.defineProperty(runner, "value", { get: () => value, configurable: true });
   Object.defineProperty(runner, "velocity", { get: () => velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => globalProgress, configurable: true });
   runner.onStarted = onStarted;

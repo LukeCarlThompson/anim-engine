@@ -7,9 +7,9 @@ export type Interpolation = {
   stop: () => void;
   kill: () => void;
 
-  setCurrentValue: (value: number) => void;
+  setValue: (value: number) => void;
 
-  currentValue: number;
+  value: number;
   velocity: number;
   status: InterpolationStatus;
 };

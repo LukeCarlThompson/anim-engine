@@ -256,7 +256,7 @@ const meta = {
     playBtn.addEventListener("click", togglePlay);
 
     returnBtn.addEventListener("click", () => {
-      const startPos = tween ? tween.currentValue : 640;
+      const startPos = tween ? tween.value : 640;
 
       if (tween) {
         tween.kill();

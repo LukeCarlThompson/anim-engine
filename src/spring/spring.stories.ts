@@ -160,7 +160,7 @@ const meta = {
       },
     });
 
-    spring.setCurrentValue(30);
+    spring.setValue(30);
 
     track.addEventListener("mousemove", (e) => {
       const rect = track.getBoundingClientRect();

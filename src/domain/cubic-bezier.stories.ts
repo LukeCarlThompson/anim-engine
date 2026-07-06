@@ -363,7 +363,7 @@ const meta = {
 
     playBtn.addEventListener("click", togglePlay);
     returnBtn.addEventListener("click", () => {
-      const start = anim ? anim.currentValue : 400;
+      const start = anim ? anim.value : 400;
       if (anim) {
         anim.kill();
       }

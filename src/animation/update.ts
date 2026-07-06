@@ -2,7 +2,7 @@ import type { EaseFunction } from "../domain";
 
 export type TweenState = {
   progress: number;
-  currentValue: number;
+  value: number;
   velocity: number;
 };
 
@@ -22,17 +22,17 @@ export const updateTween = (
   const thisFrameProgress = deltaMs / durationMs;
   state.progress = Math.min(state.progress + thisFrameProgress, 1);
 
-  const previousValue = state.currentValue;
+  const previousValue = state.value;
 
   if (state.progress >= 1) {
-    state.currentValue = to;
+    state.value = to;
     state.velocity = 0;
     return true;
   }
 
   const eased = easeFn(state.progress);
   const range = to - from;
-  state.currentValue = from + range * eased;
-  state.velocity = (state.currentValue - previousValue) / (deltaMs / 1000);
+  state.value = from + range * eased;
+  state.velocity = (state.value - previousValue) / (deltaMs / 1000);
   return false;
 };

@@ -66,12 +66,12 @@ export const createLerp = (options: LerpOptions): Interpolation => {
     start,
     stop,
     kill,
-    setCurrentValue: (value: number) => {
+    setValue: (value: number) => {
       state.current = value;
       previousValue = value;
       currentVelocity = 0;
     },
-    get currentValue() {
+    get value() {
       return state.current;
     },
     get velocity() {

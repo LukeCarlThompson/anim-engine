@@ -61,11 +61,11 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
     start,
     stop,
     kill,
-    setCurrentValue: (value: number) => {
+    setValue: (value: number) => {
       state.current = value;
       state.velocity = 0;
     },
-    get currentValue() {
+    get value() {
       return state.current;
     },
     get velocity() {

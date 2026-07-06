@@ -138,8 +138,8 @@ const createSingleTween = ({
     stop,
     skipToEnd,
     kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;
@@ -278,8 +278,8 @@ const createKeyframeAnimation = ({
     stop,
     skipToEnd,
     kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;

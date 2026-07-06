@@ -38,7 +38,7 @@ export type Animation = {
   skipToEnd: () => void;
   kill: () => void;
 
-  currentValue: number;
+  value: number;
   velocity: number;
   progress: number;
   setProgress: (value: number) => void;

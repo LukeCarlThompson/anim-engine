@@ -151,7 +151,7 @@ const meta = {
       },
     });
 
-    damp.setCurrentValue(30);
+    damp.setValue(30);
 
     track.addEventListener("mousemove", (e) => {
       const rect = track.getBoundingClientRect();
