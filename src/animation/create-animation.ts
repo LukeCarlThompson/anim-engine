@@ -1,53 +1,13 @@
-import { resolveEasing } from "../easing/easing";
-import type { EaseName } from "../easing/easing";
-import { resolveValue } from "../resolve-value";
-import type { AnimationStatus, DynamicValue, EaseFunction } from "../shared-types";
-import { getTicker } from "../ticker/get-ticker";
+import { resolveEasing, resolveValue, getTicker } from "../domain";
+import type {
+  AnimationStatus,
+  AnimationOptions,
+  KeyframeAnimationOptions,
+  SingleTweenOptions,
+  Animation,
+} from "../domain";
 import { createKeyframeRunner, createTweenRunner } from "./runner";
 import type { Runner } from "./runner";
-
-export type SingleTweenOptions = {
-  from: DynamicValue;
-  to: DynamicValue;
-  durationMs: DynamicValue;
-  ease?: EaseName | EaseFunction;
-  onStarted?: () => void;
-  onUpdate?: (value: number, velocity: number) => void;
-  onProgress?: (progress: number) => void;
-  onEnded?: () => void;
-};
-
-export type Keyframe = {
-  value: DynamicValue;
-  ease?: EaseName | EaseFunction;
-  gap?: DynamicValue;
-};
-
-export type KeyframeAnimationOptions = {
-  keyframes: Keyframe[];
-  onStarted?: () => void;
-  onUpdate?: (value: number, velocity: number) => void;
-  onProgress?: (progress: number) => void;
-  onEnded?: () => void;
-};
-
-export type AnimationOptions = SingleTweenOptions | KeyframeAnimationOptions;
-
-export type Animation = {
-  play: () => Promise<void>;
-  pause: () => void;
-  resume: () => void;
-  stop: () => void;
-  skipToEnd: () => void;
-  kill: () => void;
-
-  currentValue: number;
-  velocity: number;
-  progress: number;
-  setProgress: (value: number) => void;
-  status: AnimationStatus;
-  durationMs: number;
-};
 
 const isKeyframeMode = (options: AnimationOptions): options is KeyframeAnimationOptions => {
   return "keyframes" in options && Array.isArray(options.keyframes);

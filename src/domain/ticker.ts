@@ -8,6 +8,16 @@ export type Ticker = {
   remove: (handler: TickHandler) => void;
 };
 
+let singleton: Ticker | undefined;
+
+/** Returns the default ticker singleton. Created lazily on first access. */
+export const getTicker = (): Ticker => {
+  if (!singleton) {
+    singleton = createTicker();
+  }
+  return singleton;
+};
+
 /**
  * Create a ticker that drives active animations.
  *

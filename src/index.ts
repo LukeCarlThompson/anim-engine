@@ -1,6 +1,5 @@
 // Anim Engine — Public API
 
-// Primitives
 export { createAnimation } from "./animation/create-animation";
 export { createTimeline } from "./timeline/create-timeline";
 export { createSpring } from "./spring/create-spring";
@@ -9,29 +8,23 @@ export { createLerp } from "./lerp/create-lerp";
 export { createSmoothClamp } from "./smooth-clamp/smooth-clamp";
 export { lerpOklab, hexToRgba } from "./color/lerp-oklab";
 
-// Ticker
-export { getTicker } from "./ticker/get-ticker";
+export { getTicker, EASE_NAMES, cubicBezier } from "./domain";
 
-// Easing
-export { EASE_NAMES, cubicBezier } from "./easing/easing";
-
-// Types
 export type {
-  Animation,
-  Keyframe,
-  AnimationOptions,
-  KeyframeAnimationOptions,
-} from "./animation/create-animation";
-export type {
+  EaseName,
   Interpolation,
   AnimationStatus,
   InterpolationStatus,
   DynamicValue,
-} from "./shared-types";
-export type { EaseName } from "./easing/easing";
+  Animation,
+  Keyframe,
+  AnimationOptions,
+  KeyframeAnimationOptions,
+  TimelineLayer,
+  Timeline,
+  Ticker,
+} from "./domain";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
-export type { TimelineLayer, Timeline } from "./timeline/create-timeline";
 export type { RgbaTuple } from "./color/lerp-oklab";
-export type { Ticker } from "./ticker/ticker";

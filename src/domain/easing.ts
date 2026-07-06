@@ -1,4 +1,4 @@
-import type { EaseFunction } from "../shared-types";
+export type EaseFunction = (t: number) => number;
 
 export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : EASING_FUNCTIONS[ease];

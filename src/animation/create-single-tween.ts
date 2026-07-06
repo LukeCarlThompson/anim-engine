@@ -1,8 +1,5 @@
-import { resolveEasing } from "../easing/easing";
-import type { EaseName } from "../easing/easing";
-import { resolveValue } from "../resolve-value";
-import type { AnimationStatus, DynamicValue, EaseFunction } from "../shared-types";
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker, resolveEasing, resolveValue } from "../domain";
+import type { EaseName, AnimationStatus, DynamicValue, EaseFunction } from "../domain";
 import { createTweenRunner } from "./runner";
 import type { Runner } from "./runner";
 

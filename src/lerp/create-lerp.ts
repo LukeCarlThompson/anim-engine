@@ -1,6 +1,5 @@
-import { resolveValue } from "../resolve-value";
-import type { Interpolation, DynamicValue } from "../shared-types";
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker, resolveValue } from "../domain";
+import type { Interpolation, DynamicValue } from "../domain";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
 

@@ -1,4 +1,9 @@
-import type { Interpolation, DynamicValue } from "../shared-types";
+import type { Interpolation, DynamicValue } from "../domain";
+import { getTicker } from "../domain";
+import { resolveValue } from "../domain/resolve-value";
+import { verletStep } from "./verlet";
+import type { SpringState } from "./verlet";
+
 export type SpringOptions = {
   to: () => number;
   stiffness?: DynamicValue;
@@ -8,10 +13,6 @@ export type SpringOptions = {
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
 };
-import { resolveValue } from "../resolve-value";
-import { getTicker } from "../ticker/get-ticker";
-import { verletStep } from "./verlet";
-import type { SpringState } from "./verlet";
 
 export const createSpring = (options: SpringOptions): Interpolation => {
   const precision = options.precision ?? 0.01;

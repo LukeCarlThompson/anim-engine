@@ -1,4 +1,4 @@
-import type { EaseFunction } from "../shared-types";
+import type { EaseFunction } from "../domain";
 
 export type TweenState = {
   progress: number;

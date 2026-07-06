@@ -1,27 +1,7 @@
-import type { KeyframeAnimationOptions } from "../animation/create-animation";
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import { resolveEasing } from "../easing/easing";
-import { resolveValue } from "../resolve-value";
-import type { AnimationStatus, DynamicValue } from "../shared-types";
-import { getTicker } from "../ticker/get-ticker";
-
-export type TimelineLayer =
-  | { animation: KeyframeAnimationOptions; at: DynamicValue }
-  | { animation: KeyframeAnimationOptions; gap: number };
-
-export type Timeline = {
-  play: () => Promise<void>;
-  pause: () => void;
-  resume: () => void;
-  stop: () => void;
-  skipToEnd: () => void;
-  kill: () => void;
-  setProgress: (value: number) => void;
-  progress: number;
-  status: AnimationStatus;
-  durationMs: number;
-};
+import type { TimelineLayer, Timeline } from "../domain";
+import { getTicker, resolveEasing, resolveValue } from "../domain";
 
 const noop = () => {};
 

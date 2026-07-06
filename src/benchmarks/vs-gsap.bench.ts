@@ -13,8 +13,8 @@ gsap.registerPlugin(CustomEase);
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
-import { cubicBezier } from "../easing/easing";
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker } from "../domain";
+import { cubicBezier } from "../domain/easing";
 import { createTimeline } from "../timeline/create-timeline";
 
 // ─── Constants ───
@@ -399,7 +399,7 @@ describe("50 tweens re-play (2 cycles, 500 frames each)", () => {
 // ═══════════════════════════════════════════════════
 
 import { createTweenRunner } from "../animation/runner";
-import type { EaseFunction } from "../shared-types";
+import type { EaseFunction } from "../domain";
 
 const testEase: EaseFunction = (t) => 1 - Math.pow(1 - t, 3); // outCubic equivalent
 

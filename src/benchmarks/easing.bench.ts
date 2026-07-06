@@ -8,7 +8,7 @@
  */
 import { bench, describe } from "vitest";
 
-import { EASING_FUNCTIONS } from "../easing/easing";
+import { EASING_FUNCTIONS } from "../domain";
 
 const FRAMES = 10_000;
 
