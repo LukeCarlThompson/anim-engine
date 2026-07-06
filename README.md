@@ -81,7 +81,7 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 | 🧩 **Composable models**     | Animations, keyframes, and timelines compose cleanly — put tweens inside timelines, nest keyframes anywhere.                        |
 | 🔄 **Continuous primitives** | Spring, smooth damp, and lerp chase live targets with zero setup — pass `() => value` for dynamic targets.                          |
 | 🚫 **No GC pressure**        | Zero object allocations in hot update paths. State is mutated in place.                                                             |
-| 🎨 **Perceptual color**      | Oklab interpolation via `lerpOklab` — no muddy browns. Compose it into any `onUpdate`.                                              |
+| 🎨 **Perceptual color**      | Oklab interpolation via `lerpRgba` — no muddy browns. Compose it into any `onUpdate`.                                               |
 | 📐 **TypeScript-first**      | Full type exports, exhaustive discriminated unions, no `any`.                                                                       |
 | 🔧 **Ticker control**        | Bring your own game loop or use the built-in rAF ticker. Explicit — never auto-starts.                                              |
 
@@ -112,7 +112,7 @@ Interpolations have `start()`/`stop()`/`kill()` controls, auto-start on creation
 | Primitive                                 | Returns              | Description                                   |
 | ----------------------------------------- | -------------------- | --------------------------------------------- |
 | [`createSmoothClamp`](#createsmoothclamp) | `(n: number) => n`   | Asymptotic clamp — saturates toward threshold |
-| [`lerpOklab` / `hexToRgba`](#color)       | `RgbaTuple` / parser | Perceptually uniform color interpolation      |
+| [`lerpRgba` / `hexToRgba`](#color)        | `RgbaTuple` / parser | Perceptually uniform color interpolation      |
 
 ## Usage
 
@@ -381,7 +381,7 @@ Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. 
 Perceptually uniform Oklab interpolation. Straight RGB lerp produces muddy transitions — red→green goes through brown, blue→yellow goes through grey. Oklab matches human perception: equal steps look like equal changes.
 
 ```ts
-import { lerpOklab, hexToRgba } from "anim-engine";
+import { lerpRgba, hexToRgba } from "anim-engine";
 
 hexToRgba("#ff6b6b"); // → [1, 0.42, 0.42, 1]
 hexToRgba("#f80"); // → [1, 0.533, 0, 1] (shorthand)
@@ -396,7 +396,7 @@ createAnimation({
   durationMs: 2000,
   ease: "outCubic",
   onUpdate: (t) => {
-    const [r, g, b, a] = lerpOklab(fromColor, toColor, t);
+    const [r, g, b, a] = lerpRgba(fromColor, toColor, t);
     sprite.setColor(r, g, b, a);
   },
 });
@@ -405,7 +405,7 @@ createAnimation({
 **With continuous primitives** — drive the blend factor via spring, damp, or lerp:
 
 ```ts
-import { createSpring, lerpOklab, hexToRgba } from "anim-engine";
+import { createSpring, lerpRgba, hexToRgba } from "anim-engine";
 
 const fromColor = hexToRgba("#ff6b6b");
 const toColor = hexToRgba("#4ecdc4");
@@ -416,7 +416,7 @@ const spring = createSpring({
   stiffness: 180,
   damping: 12,
   onUpdate: (t) => {
-    const [r, g, b] = lerpOklab(fromColor, toColor, t);
+    const [r, g, b] = lerpRgba(fromColor, toColor, t);
     sprite.setColor(r, g, b, 1);
   },
 });
@@ -658,7 +658,7 @@ requestAnimationFrame(gameLoop);
 | `createSmoothClamp(threshold)`     | Asymptotic clamp factory            |
 | `getTicker()`                      | Singleton ticker                    |
 | `cubicBezier(p1x, p1y, p2x, p2y)`  | Custom cubic bezier easing          |
-| `lerpOklab(from, to, t)`           | Oklab color interpolation           |
+| `lerpRgba(from, to, t)`            | Oklab color interpolation           |
 | `hexToRgba(hex)`                   | Parse hex color to normalized RGBA  |
 
 ### Type exports

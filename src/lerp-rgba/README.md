@@ -10,17 +10,17 @@ Straight RGB lerp produces muddy, dull transitions — red→green goes through 
 
 ## API
 
-### `lerpOklab(from, to, progress)`
+### `lerpRgba(from, to, progress)`
 
 Interpolate between two RGBA colors in Oklab space. RGB channels are converted to Oklab, lerped perceptually uniformly, and converted back. Alpha is lerped linearly alongside.
 
 ```ts
-import { lerpOklab } from "anim-engine";
+import { lerpRgba } from "anim-engine";
 
 const from = [1, 0, 0, 1]; // red, opaque
 const to = [0, 0, 1, 0.5]; // blue, 50% transparent
 
-const [r, g, b, a] = lerpOklab(from, to, 0.5);
+const [r, g, b, a] = lerpRgba(from, to, 0.5);
 // → R, G, B in 0–1, alpha in 0–1
 ```
 
@@ -46,7 +46,7 @@ Accepts `#RRGGBB`, `#RRGGBBAA`, `#RGB`, `#RGBA`, with or without leading `#`.
 Two-color animation with proper easing. The ease function receives the progress (0–1), which becomes the lerp blend factor:
 
 ```ts
-import { createAnimation, lerpOklab, hexToRgba } from "anim-engine";
+import { createAnimation, lerpRgba, hexToRgba } from "anim-engine";
 
 const fromColor = hexToRgba("#ff6b6b");
 const toColor = hexToRgba("#4ecdc4");
@@ -57,7 +57,7 @@ const anim = createAnimation({
   durationMs: 2000,
   ease: "outCubic",
   onUpdate: (blend) => {
-    const [r, g, b, a] = lerpOklab(fromColor, toColor, blend);
+    const [r, g, b, a] = lerpRgba(fromColor, toColor, blend);
     sprite.setColor(r, g, b, a);
   },
 });
@@ -68,7 +68,7 @@ const anim = createAnimation({
 For three or more colors, compose multiple anim-to-color pairs into a timeline. Each segment has its own color pair and easing:
 
 ```ts
-import { createAnimation, createTimeline, lerpOklab, hexToRgba } from "anim-engine";
+import { createAnimation, createTimeline, lerpRgba, hexToRgba } from "anim-engine";
 
 const red = hexToRgba("#ff6b6b");
 const green = hexToRgba("#4ecdc4");
@@ -82,7 +82,7 @@ const colorSegment = (from: number[], to: number[]) =>
     durationMs: 1000,
     ease: "outCubic" as const,
     onUpdate: (blend: number) => {
-      sprite.setColor(...lerpOklab(from, to, blend), 1);
+      sprite.setColor(...lerpRgba(from, to, blend), 1);
     },
   });
 
@@ -104,10 +104,10 @@ Each segment gets its own easing, duration, and color pair — no manual segment
 
 ### With continuous primitives
 
-`lerpOklab` also works with spring, smooth damp, or lerp — any primitive that drives a value 0–1:
+`lerpRgba` also works with spring, smooth damp, or lerp — any primitive that drives a value 0–1:
 
 ```ts
-import { createSpring, lerpOklab, hexToRgba } from "anim-engine";
+import { createSpring, lerpRgba, hexToRgba } from "anim-engine";
 
 const fromColor = hexToRgba("#ff6b6b");
 const toColor = hexToRgba("#4ecdc4");
@@ -117,7 +117,7 @@ const spring = createSpring({
   stiffness: 180,
   damping: 12,
   onUpdate: (blend) => {
-    const [r, g, b] = lerpOklab(fromColor, toColor, blend);
+    const [r, g, b] = lerpRgba(fromColor, toColor, blend);
     sprite.setColor(r, g, b, 1);
   },
 });
@@ -125,7 +125,7 @@ const spring = createSpring({
 
 ## How It Works
 
-`lerpOklab` converts both RGB tuples to Oklab via matrix multiplication, lerps the L/a/b channels, then converts back. Alpha stays as a simple linear lerp — it doesn't need perceptual treatment. The conversion is about 30 multiply-adds total — fast enough for every frame.
+`lerpRgba` converts both RGB tuples to Oklab via matrix multiplication, lerps the L/a/b channels, then converts back. Alpha stays as a simple linear lerp — it doesn't need perceptual treatment. The conversion is about 30 multiply-adds total — fast enough for every frame.
 
 ```
 RGBA → linearize sRGB → LMS → cbrt(LMS) → Oklab    (forward)

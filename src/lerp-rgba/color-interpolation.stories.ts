@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
 import type { Animation } from "../domain";
-import { getTicker } from "../domain";
-import { lerpOklab, hexToRgba } from "./lerp-oklab";
+import { getTicker } from "../ticker";
+import { hexToRgba } from "./hex-to-rgba";
+import { lerpRgba } from "./lerp-rgba";
 
 getTicker().start();
 
@@ -91,7 +92,7 @@ const meta = {
     const oklabGradient = document.createElement("div");
     oklabGradient.style.cssText = "flex:1;display:flex;";
     for (let i = 0; i < steps; i++) {
-      const [r, g, b] = lerpOklab(fromParsed, toParsed, i / (steps - 1));
+      const [r, g, b] = lerpRgba(fromParsed, toParsed, i / (steps - 1));
       const seg = document.createElement("div");
       seg.style.cssText = `flex:1;background:rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0});`;
       oklabGradient.appendChild(seg);
@@ -227,7 +228,7 @@ const meta = {
       const t = hexToRgba(currentToHex);
       const children = oklabGradient.children;
       for (let i = 0; i < steps && i < children.length; i++) {
-        const [r, g, b] = lerpOklab(f, t, i / (steps - 1));
+        const [r, g, b] = lerpRgba(f, t, i / (steps - 1));
         (children[i] as HTMLElement).style.background =
           `rgb(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0})`;
       }
@@ -334,7 +335,7 @@ const meta = {
       const toColor = hexToRgba(currentToHex);
 
       // Oklab interpolation
-      const [r, g, b, a] = lerpOklab(fromColor, toColor, progress);
+      const [r, g, b, a] = lerpRgba(fromColor, toColor, progress);
       const rgba = `rgba(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0},${a.toFixed(2)})`;
       block.style.background = rgba;
       oklabSwatch.swatch.style.background = rgba;

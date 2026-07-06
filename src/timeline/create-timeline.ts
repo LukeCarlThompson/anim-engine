@@ -1,9 +1,10 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
 import type { TimelineLayer, Timeline } from "../domain";
-import { getTicker, resolveEasing, resolveValue } from "../domain";
+import { resolveEasing, resolveValue } from "../domain";
+import { getTicker } from "../ticker";
 
-const noop = () => {};
+const noOp = () => {};
 
 type ActiveLayer = {
   startAt: number;
@@ -71,8 +72,7 @@ export const createTimeline = (
     onEnded?: () => void;
   },
 ): Timeline => {
-  const { onStarted, onEnded } = options ?? {};
-  const onProgress = options?.onProgress ?? noop;
+  const { onStarted, onEnded, onProgress = noOp } = options ?? {};
   const rawLayers = layers;
 
   let state = buildFromConfigs(rawLayers);

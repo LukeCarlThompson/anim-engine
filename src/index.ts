@@ -1,14 +1,14 @@
 // Anim Engine — Public API
 
-export { createAnimation } from "./animation/create-animation";
-export { createTimeline } from "./timeline/create-timeline";
-export { createSpring } from "./spring/create-spring";
-export { createSmoothDamp } from "./smooth-damp/create-smooth-damp";
-export { createLerp } from "./lerp/create-lerp";
-export { createSmoothClamp } from "./smooth-clamp/smooth-clamp";
-export { lerpOklab, hexToRgba } from "./color/lerp-oklab";
-
-export { getTicker, EASE_NAMES, cubicBezier } from "./domain";
+export { createAnimation } from "./animation";
+export { createTimeline } from "./timeline";
+export { createLerp } from "./lerp";
+export { createSmoothDamp } from "./smooth-damp";
+export { createSmoothClamp } from "./smooth-clamp";
+export { createSpring } from "./spring";
+export { lerpRgba, hexToRgba } from "./lerp-rgba";
+export { getTicker } from "./ticker";
+export { cubicBezier } from "./domain";
 
 export type {
   EaseName,
@@ -23,8 +23,8 @@ export type {
   TimelineLayer,
   Timeline,
   Ticker,
+  LerpOptions,
+  SmoothDampOptions,
+  SpringOptions,
+  RgbaTuple,
 } from "./domain";
-export type { SpringOptions } from "./spring/create-spring";
-export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
-export type { LerpOptions } from "./lerp/create-lerp";
-export type { RgbaTuple } from "./color/lerp-oklab";

@@ -29,3 +29,10 @@
 - **Domain-organized** — group by feature, not by file type (e.g. `auth/login.ts` + `auth/session.ts`, not `controllers/` + `services/`).
 - Barrel exports via `index.ts`.
 - Descriptive variable names over brevity.
+
+## Verify code changes with
+
+- `npm run fmt`
+- `npm run lint`
+- `npm run test`
+- `npm run check:types`
