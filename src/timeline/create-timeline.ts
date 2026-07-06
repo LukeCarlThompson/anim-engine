@@ -1,6 +1,6 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import type { TimelineLayer, Timeline } from "../domain";
+import type { TimelineLayer, Timeline, TimelineCallbacks } from "../domain";
 import { resolveEasing, resolveValue } from "../domain";
 import { getTicker } from "../ticker";
 
@@ -66,18 +66,25 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
 
 export const createTimeline = (
   layers: TimelineLayer[],
-  options?: {
-    onStarted?: () => void;
-    onProgress?: (progress: number) => void;
-    onEnded?: () => void;
-  },
+  { onStarted, onUpdate, onEnded, onProgress = noOp }: TimelineCallbacks = {},
 ): Timeline => {
-  const { onStarted, onEnded, onProgress = noOp } = options ?? {};
   const rawLayers = layers;
 
   let state = buildFromConfigs(rawLayers);
   let activeLayers = state.activeLayers;
   let totalDurationMs = state.totalDurationMs;
+
+  let valuesCache: number[] = [];
+  let velocitiesCache: number[] = [];
+  const syncValues = () => {
+    valuesCache.length = activeLayers.length;
+    velocitiesCache.length = activeLayers.length;
+    for (let i = 0; i < activeLayers.length; i++) {
+      valuesCache[i] = activeLayers[i].runner.velocity;
+      velocitiesCache[i] = activeLayers[i].runner.velocity;
+    }
+  };
+  syncValues();
 
   let timelineStatus: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
@@ -112,6 +119,9 @@ export const createTimeline = (
       }
     }
 
+    syncValues();
+    onUpdate?.(valuesCache, velocitiesCache);
+
     onProgress(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
 
     if (remainingLayers <= 0) finish();
@@ -124,6 +134,9 @@ export const createTimeline = (
     activeLayers = state.activeLayers;
     totalDurationMs = state.totalDurationMs;
     remainingLayers = activeLayers.length;
+    valuesCache = [];
+    velocitiesCache = [];
+    syncValues();
     elapsedMs = 0;
 
     const promise = new Promise<void>((resolve) => {
@@ -160,6 +173,7 @@ export const createTimeline = (
       layer.runner.evaluate(1);
       layer.runner.onEnded?.();
     }
+    syncValues();
     timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
@@ -194,6 +208,8 @@ export const createTimeline = (
       }
     }
 
+    syncValues();
+
     remainingLayers = activeLayers.filter((l) => !l.ended).length;
   };
 
@@ -207,6 +223,12 @@ export const createTimeline = (
     setProgress,
     get progress() {
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;
+    },
+    get values() {
+      return valuesCache;
+    },
+    get velocities() {
+      return velocitiesCache;
     },
     get status() {
       return timelineStatus;

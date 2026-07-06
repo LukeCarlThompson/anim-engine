@@ -20,6 +20,6 @@ export type {
   Keyframe,
 } from "./animation";
 
-export type { TimelineLayer, Timeline } from "./timeline";
+export type { TimelineLayer, Timeline, TimelineCallbacks } from "./timeline";
 
 export type { RgbaTuple, LerpRgba } from "./color";
