@@ -1,4 +1,7 @@
-import type { EaseName, EaseFunction } from "../shared/types";
+export type EaseFunction = (t: number) => number;
+
+export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
+  typeof ease === "function" ? ease : EASING_FUNCTIONS[ease];
 
 // Module-scope constants — computed once, not per frame
 const pow = Math.pow;
@@ -28,7 +31,7 @@ const bounceOut: EaseFunction = (x) => {
 };
 
 /** All 31 named easing identifiers, ordered by type. */
-export const EASE_NAMES: EaseName[] = [
+export const EASE_NAMES = [
   "linear",
   "inQuad",
   "outQuad",
@@ -60,9 +63,11 @@ export const EASE_NAMES: EaseName[] = [
   "inBounce",
   "outBounce",
   "inOutBounce",
-];
+] as const;
 
-export const easingFunctions: Record<EaseName, EaseFunction> = {
+export type EaseName = (typeof EASE_NAMES)[number];
+
+export const EASING_FUNCTIONS: Record<EaseName, EaseFunction> = {
   linear: (x) => x,
 
   inQuad: (x) => x * x,

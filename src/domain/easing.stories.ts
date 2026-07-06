@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
-import type { Animation, EaseName } from "../shared/types";
-import { getTicker } from "../ticker/get-ticker";
-import { easingFunctions, EASE_NAMES } from "./easing";
+import type { Animation } from "../domain";
+import type { EaseName } from "./easing";
+import { EASING_FUNCTIONS, EASE_NAMES } from "./easing";
+import { getTicker } from "./ticker";
 
 // Start the ticker for Storybook demos
 getTicker().start();
@@ -63,7 +64,7 @@ const meta = {
 
     const drawCurve = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const easeFn = easingFunctions[ease as EaseName];
+      const easeFn = EASING_FUNCTIONS[ease];
 
       // Sample points to find min/max y (for overshoot scaling)
       const samples: number[] = [];
@@ -194,7 +195,7 @@ const meta = {
     container.appendChild(controls);
 
     // State
-    let tween: Animation | null = null;
+    let tween: Animation | undefined = undefined;
 
     const resetPosition = () => {
       block.style.transform = "translateX(0px)";
@@ -213,7 +214,7 @@ const meta = {
         from: 0,
         to: 640,
         durationMs,
-        ease: ease as EaseName,
+        ease,
         onUpdate: (value, velocity) => {
           block.style.transform = `translateX(${value}px)`;
           if (tween) {
@@ -228,13 +229,13 @@ const meta = {
           velocityValue.textContent = velocity.toFixed(2);
         },
         onEnded: () => {
-          tween = null;
+          tween = undefined;
           playBtn.textContent = "▶ Play";
           progressFill.style.width = "100%";
         },
       });
 
-      tween.play();
+      void tween.play();
       playBtn.textContent = "⏸ Pause";
     };
 
@@ -265,7 +266,7 @@ const meta = {
         from: startPos,
         to: 0,
         durationMs,
-        ease: ease as EaseName,
+        ease,
         onUpdate: (value, velocity) => {
           block.style.transform = `translateX(${value}px)`;
           if (tween) {
@@ -279,18 +280,18 @@ const meta = {
           velocityValue.textContent = velocity.toFixed(2);
         },
         onEnded: () => {
-          tween = null;
+          tween = undefined;
           playBtn.textContent = "▶ Play";
         },
       });
 
-      tween.play();
+      void tween.play();
       playBtn.textContent = "⏸ Pause";
     });
 
     return container;
   },
-} satisfies Meta;
+} satisfies Meta<{ ease: EaseName; durationMs: number }>;
 
 export default meta;
 type Story = StoryObj;

@@ -8,7 +8,7 @@
  */
 import { bench, describe } from "vitest";
 
-import { easingFunctions } from "../easing/easing";
+import { EASING_FUNCTIONS } from "../domain";
 
 const FRAMES = 10_000;
 
@@ -16,7 +16,7 @@ const FRAMES = 10_000;
 
 describe("easing: inCubic", () => {
   bench("inCubic (multiply baseline)", () => {
-    const fn = easingFunctions.inCubic;
+    const fn = EASING_FUNCTIONS.inCubic;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -27,7 +27,7 @@ describe("easing: inCubic", () => {
 
 describe("easing: outCubic", () => {
   bench("outCubic", () => {
-    const fn = easingFunctions.outCubic;
+    const fn = EASING_FUNCTIONS.outCubic;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -36,7 +36,7 @@ describe("easing: outCubic", () => {
 
 describe("easing: outQuart", () => {
   bench("outQuart", () => {
-    const fn = easingFunctions.outQuart;
+    const fn = EASING_FUNCTIONS.outQuart;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -45,7 +45,7 @@ describe("easing: outQuart", () => {
 
 describe("easing: outQuint", () => {
   bench("outQuint", () => {
-    const fn = easingFunctions.outQuint;
+    const fn = EASING_FUNCTIONS.outQuint;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -56,7 +56,7 @@ describe("easing: outQuint", () => {
 
 describe("easing: inCirc", () => {
   bench("inCirc", () => {
-    const fn = easingFunctions.inCirc;
+    const fn = EASING_FUNCTIONS.inCirc;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -65,7 +65,7 @@ describe("easing: inCirc", () => {
 
 describe("easing: outCirc", () => {
   bench("outCirc", () => {
-    const fn = easingFunctions.outCirc;
+    const fn = EASING_FUNCTIONS.outCirc;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -74,7 +74,7 @@ describe("easing: outCirc", () => {
 
 describe("easing: inOutCirc", () => {
   bench("inOutCirc", () => {
-    const fn = easingFunctions.inOutCirc;
+    const fn = EASING_FUNCTIONS.inOutCirc;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -83,7 +83,7 @@ describe("easing: inOutCirc", () => {
 
 describe("easing: outBack", () => {
   bench("outBack", () => {
-    const fn = easingFunctions.outBack;
+    const fn = EASING_FUNCTIONS.outBack;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");
@@ -92,7 +92,7 @@ describe("easing: outBack", () => {
 
 describe("easing: inOutBack", () => {
   bench("inOutBack", () => {
-    const fn = easingFunctions.inOutBack;
+    const fn = EASING_FUNCTIONS.inOutBack;
     let sum = 0;
     for (let i = 0; i < FRAMES; i++) sum += fn(i / FRAMES);
     if (sum === -1) throw new Error("impossible");

@@ -1,5 +1,5 @@
-import type { Interpolation, DynamicValue } from "../shared/types";
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker, resolveValue } from "../domain";
+import type { Interpolation, DynamicValue } from "../domain";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
 
@@ -23,32 +23,11 @@ export const createLerp = (options: LerpOptions): Interpolation => {
 
   const ticker = getTicker();
 
-  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
-
   // Initialize at the target position
   state.current = options.to();
   previousValue = state.current;
 
-  // Register immediately (auto-start)
-  ticker.add(update);
-
-  const start = () => {
-    if (active) return;
-    active = true;
-    ticker.add(update);
-  };
-
-  const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  function update(deltaMs: number) {
+  const update = (deltaMs: number) => {
     if (!active) return;
 
     const target = options.to();
@@ -69,7 +48,26 @@ export const createLerp = (options: LerpOptions): Interpolation => {
       currentVelocity = 0;
       onEnded();
     }
-  }
+  };
+
+  // Register immediately (auto-start)
+  ticker.add(update);
+
+  const start = () => {
+    if (active) return;
+    active = true;
+    ticker.add(update);
+  };
+
+  const stop = () => {
+    active = false;
+    ticker.remove(update);
+  };
+
+  const kill = () => {
+    active = false;
+    ticker.remove(update);
+  };
 
   const controls: Interpolation = {
     start,

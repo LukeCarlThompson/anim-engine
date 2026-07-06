@@ -1,11 +1,21 @@
 export type TickHandler = (deltaMs: number) => void;
 
-export type TickerControls = {
+export type Ticker = {
   start: () => void;
   stop: () => void;
   update: (deltaMs: number) => void;
   add: (handler: TickHandler) => void;
   remove: (handler: TickHandler) => void;
+};
+
+let singleton: Ticker | undefined;
+
+/** Returns the default ticker singleton. Created lazily on first access. */
+export const getTicker = (): Ticker => {
+  if (!singleton) {
+    singleton = createTicker();
+  }
+  return singleton;
 };
 
 /**
@@ -21,7 +31,7 @@ export type TickerControls = {
  * Uses a flat array with undefined-tombstone removal for safe concurrent
  * modification during iteration. Compacted after each frame.
  */
-export const createTicker = (): TickerControls => {
+export const createTicker = (): Ticker => {
   const activeAnimations: (TickHandler | undefined)[] = [];
   let needsCompact = false;
   let animationFrameRequestId: number | undefined = undefined;

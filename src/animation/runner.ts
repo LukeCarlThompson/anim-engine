@@ -1,4 +1,4 @@
-import type { EaseFunction } from "../shared/types";
+import type { EaseFunction } from "../domain";
 import { updateTween } from "./update";
 import type { TweenState } from "./update";
 
@@ -12,12 +12,10 @@ export type Runner = {
   velocity: number;
   progress: number;
   onStarted: (() => void) | undefined;
-  onUpdate: ((value: number, velocity: number) => void) | undefined;
-  onProgress: ((progress: number) => void) | undefined;
   onEnded: (() => void) | undefined;
 };
 
-const noop = () => {};
+const noOp = () => {};
 
 // ─── Tween runner ───
 
@@ -28,16 +26,20 @@ export type TweenRunnerConfig = {
   easeFn: EaseFunction;
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
-  onEnded?: () => void;
-  onComplete?: () => void;
+  onProgress?: (progress: number) => void;
+  onEnded: () => void;
 };
 
-export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
-  const { from, to, durationMs, easeFn } = config;
-  const onStarted = config.onStarted;
-  const onUpdate = config.onUpdate ?? noop;
-  const onEnded = config.onEnded;
-  const onComplete = config.onComplete;
+export const createTweenRunner = ({
+  from,
+  to,
+  durationMs,
+  easeFn,
+  onStarted,
+  onUpdate = noOp,
+  onProgress = noOp,
+  onEnded,
+}: TweenRunnerConfig): Runner => {
   const state: TweenState = { progress: 0, currentValue: from, velocity: 0 };
 
   let runner!: Runner;
@@ -45,9 +47,9 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
   const step = (deltaMs: number): boolean => {
     const completed = updateTween(state, deltaMs, durationMs, easeFn, from, to);
     onUpdate(state.currentValue, state.velocity);
+    onProgress(state.progress);
     if (completed) {
-      onEnded?.();
-      onComplete?.();
+      onEnded();
     }
     return completed;
   };
@@ -83,8 +85,6 @@ export const createTweenRunner = (config: TweenRunnerConfig): Runner => {
   Object.defineProperty(runner, "velocity", { get: () => state.velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => state.progress, configurable: true });
   runner.onStarted = onStarted;
-  runner.onUpdate = config.onUpdate;
-  runner.onProgress = undefined;
   runner.onEnded = onEnded;
 
   return runner;
@@ -106,16 +106,18 @@ export type KeyframeRunnerConfig = {
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
-  onComplete?: () => void;
 };
 
-export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
-  const { keyframes } = config;
-  const onStarted = config.onStarted;
-  const onUpdate = config.onUpdate ?? noop;
-  const onProgress = config.onProgress ?? noop;
-  const onEnded = config.onEnded;
-  const onComplete = config.onComplete;
+export const createKeyframeRunner = ({
+  keyframes,
+  onStarted,
+  onUpdate = noOp,
+  onProgress = noOp,
+  onEnded,
+}: KeyframeRunnerConfig): Runner => {
+  if (keyframes.length < 2) {
+    throw new Error("Keyframe animation must have at least 2 keyframes");
+  }
 
   const segments: Segment[] = [];
   for (let i = 0; i < keyframes.length - 1; i++) {
@@ -146,39 +148,10 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
   let segmentElapsed = 0;
   let segmentProgress = 0;
 
-  // Build runner first so step can sync properties to it
-  let runner!: Runner;
+  // Build runner first so update can sync properties to it
+  let runner: Runner;
 
-  if (segments.length === 0) {
-    const complete = () => {
-      onEnded?.();
-      onComplete?.();
-    };
-    const step = (_deltaMs: number): boolean => {
-      onUpdate(currentValue, 0);
-      onProgress(1);
-      complete();
-      return true;
-    };
-    const evaluate = (prog: number): number => {
-      onUpdate(currentValue, 0);
-      onProgress(Math.max(0, Math.min(1, prog)));
-      return currentValue;
-    };
-    runner = step as Runner;
-    runner.evaluate = evaluate;
-    runner.reset = () => {};
-    Object.defineProperty(runner, "currentValue", { get: () => currentValue, configurable: true });
-    Object.defineProperty(runner, "velocity", { get: () => 0, configurable: true });
-    Object.defineProperty(runner, "progress", { get: () => 1, configurable: true });
-    runner.onStarted = onStarted;
-    runner.onUpdate = config.onUpdate;
-    runner.onProgress = config.onProgress;
-    runner.onEnded = onEnded;
-    return runner;
-  }
-
-  const step = (deltaMs: number): boolean => {
+  const update = (deltaMs: number): boolean => {
     const segment = segments[currentSegmentIndex];
     segmentElapsed += deltaMs;
 
@@ -212,7 +185,6 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
         onProgress(globalProgress);
       } else {
         onEnded?.();
-        onComplete?.();
         return true;
       }
     }
@@ -262,15 +234,13 @@ export const createKeyframeRunner = (config: KeyframeRunnerConfig): Runner => {
     segmentProgress = 0;
   };
 
-  runner = step as Runner;
+  runner = update as Runner;
   runner.evaluate = evaluate;
   runner.reset = reset;
   Object.defineProperty(runner, "currentValue", { get: () => currentValue, configurable: true });
   Object.defineProperty(runner, "velocity", { get: () => velocity, configurable: true });
   Object.defineProperty(runner, "progress", { get: () => globalProgress, configurable: true });
   runner.onStarted = onStarted;
-  runner.onUpdate = config.onUpdate;
-  runner.onProgress = config.onProgress;
   runner.onEnded = onEnded;
 
   return runner;

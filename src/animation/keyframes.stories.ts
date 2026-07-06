@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
+import { getTicker } from "../domain";
 import { createSmoothClamp } from "../smooth-clamp/smooth-clamp";
-import { getTicker } from "../ticker/get-ticker";
 import { createAnimation } from "./create-animation";
 
 getTicker().start();
@@ -154,7 +154,7 @@ const meta = {
 
     const play = () => {
       reset();
-      anim.play();
+      void anim.play();
       playing = true;
       playBtn.textContent = "⏸ Pause";
     };

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker } from "../domain";
 import { createTimeline } from "./create-timeline";
 
 getTicker().start();
@@ -208,7 +208,7 @@ const meta = {
       } else {
         if (timeline.status === "stopped") {
           resetAll();
-          timeline.play();
+          void timeline.play();
         } else {
           timeline.resume();
         }

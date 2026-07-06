@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
-import type { Animation } from "../shared/types";
-import { getTicker } from "../ticker/get-ticker";
+import type { Animation } from "../domain";
+import { getTicker } from "../domain";
 import { lerpOklab, hexToRgba } from "./lerp-oklab";
 
 getTicker().start();
@@ -402,7 +402,7 @@ const meta = {
         },
       });
 
-      anim.play();
+      void anim.play();
       playBtn.textContent = "⏸ Pause";
     };
 
@@ -435,7 +435,7 @@ const meta = {
 
     return container;
   },
-} satisfies Meta;
+} satisfies Meta<{ fromHex: string; toHex: string; durationMs: number }>;
 
 export default meta;
 type Story = StoryObj;

@@ -1,4 +1,5 @@
-import type { Interpolation, DynamicValue } from "../shared/types";
+import { resolveValue } from "../domain";
+import type { Interpolation, DynamicValue } from "../domain";
 
 export type SmoothDampOptions = {
   to: () => number;
@@ -8,7 +9,7 @@ export type SmoothDampOptions = {
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
 };
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker } from "../domain";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
@@ -21,8 +22,6 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
   let active = true;
 
   const ticker = getTicker();
-
-  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   // Initialize at the target position
   state.current = options.to();

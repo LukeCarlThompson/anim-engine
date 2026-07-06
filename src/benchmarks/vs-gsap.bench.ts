@@ -13,8 +13,8 @@ gsap.registerPlugin(CustomEase);
 import { bench, describe } from "vitest";
 
 import { createAnimation } from "../animation/create-animation";
-import { cubicBezier } from "../easing/easing";
-import { getTicker } from "../ticker/get-ticker";
+import { getTicker } from "../domain";
+import { cubicBezier } from "../domain/easing";
 import { createTimeline } from "../timeline/create-timeline";
 
 // ─── Constants ───
@@ -62,7 +62,7 @@ describe("single tween (1000 frames to completion)", () => {
         target.x = v;
       },
     });
-    a.play();
+    void a.play();
     advanceAnimEngineFrames(SINGLE_FRAMES);
     // animation auto-completes and unregisters from ticker
   });
@@ -107,7 +107,7 @@ describe("linear single tween (1000 frames to completion)", () => {
         target.x = v;
       },
     });
-    a.play();
+    void a.play();
     advanceAnimEngineFrames(SINGLE_FRAMES);
   });
 
@@ -141,7 +141,7 @@ describe("cubic bezier single tween (1000 frames to completion)", () => {
         target.x = v;
       },
     });
-    a.play();
+    void a.play();
     advanceAnimEngineFrames(SINGLE_FRAMES);
   });
 
@@ -172,7 +172,7 @@ describe("keyframe animation (3 segments, 1000 frames to completion)", () => {
         target.x = v;
       },
     });
-    a.play();
+    void a.play();
     advanceAnimEngineFrames(SINGLE_FRAMES);
   });
 
@@ -204,7 +204,7 @@ describe("50 concurrent tweens (500 frames to completion)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -253,7 +253,7 @@ describe("200 concurrent tweens (500 frames to completion)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -306,7 +306,7 @@ describe("50 concurrent keyframe animations (500 frames to completion)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -341,7 +341,7 @@ describe("50-layer timeline (500 frames to completion)", () => {
       },
     }));
     const tl = createTimeline(layers);
-    tl.play();
+    void tl.play();
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
 
@@ -399,7 +399,7 @@ describe("50 tweens re-play (2 cycles, 500 frames each)", () => {
 // ═══════════════════════════════════════════════════
 
 import { createTweenRunner } from "../animation/runner";
-import type { EaseFunction } from "../shared/types";
+import type { EaseFunction } from "../domain";
 
 const testEase: EaseFunction = (t) => 1 - Math.pow(1 - t, 3); // outCubic equivalent
 
@@ -413,6 +413,7 @@ describe("200 concurrent raw runner calls (500 frames, no ticker)", () => {
         durationMs: CONCURRENT_DURATION_MS,
         easeFn: testEase,
         onUpdate: (_v) => {},
+        onEnded: () => {},
       }),
     );
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {
@@ -434,7 +435,7 @@ describe("200 concurrent raw runner calls (500 frames, no ticker)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -453,7 +454,7 @@ describe("200 concurrent tweens — worst case (all dynamic values)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -484,7 +485,7 @@ describe("1000 concurrent tweens (500 frames to completion)", () => {
           targets[i].x = v;
         },
       });
-      a.play();
+      void a.play();
     });
     advanceAnimEngineFrames(CONCURRENT_FRAMES);
   });
@@ -522,6 +523,7 @@ describe("200 concurrent raw updateTween calls (500 frames, no runner)", () => {
         to: 100,
         durationMs: CONCURRENT_DURATION_MS,
         easeFn: testEase,
+        onEnded: () => {},
       }),
     );
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {

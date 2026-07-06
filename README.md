@@ -681,7 +681,7 @@ requestAnimationFrame(gameLoop);
 | `SmoothDampOptions`        | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
 | `LerpOptions`              | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |
 | `RgbaTuple`                | `readonly [number, number, number, number]`                                                                             |
-| `TickerControls`           | `start`, `stop`, `update`, `add`, `remove`                                                                              |
+| `Ticker`                   | `start`, `stop`, `update`, `add`, `remove`                                                                              |
 
 ## License
 
