@@ -435,7 +435,7 @@ const meta = {
 
     return container;
   },
-} satisfies Meta;
+} satisfies Meta<{ fromHex: string; toHex: string; durationMs: number }>;
 
 export default meta;
 type Story = StoryObj;
