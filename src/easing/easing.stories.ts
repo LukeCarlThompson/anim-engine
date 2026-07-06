@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
 import type { Animation } from "../animation/create-animation";
-import type { EaseName } from "../shared-types";
 import { getTicker } from "../ticker/get-ticker";
-import { easingFunctions, EASE_NAMES } from "./easing";
+import type { EaseName } from "./easing";
+import { EASING_FUNCTIONS, EASE_NAMES } from "./easing";
 
 // Start the ticker for Storybook demos
 getTicker().start();
@@ -64,7 +64,7 @@ const meta = {
 
     const drawCurve = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const easeFn = easingFunctions[ease];
+      const easeFn = EASING_FUNCTIONS[ease];
 
       // Sample points to find min/max y (for overshoot scaling)
       const samples: number[] = [];

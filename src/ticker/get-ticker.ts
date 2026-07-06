@@ -1,10 +1,10 @@
-import type { TickerControls } from "./ticker";
+import type { Ticker } from "./ticker";
 import { createTicker } from "./ticker";
 
-let singleton: TickerControls | undefined;
+let singleton: Ticker | undefined;
 
 /** Returns the default ticker singleton. Created lazily on first access. */
-export const getTicker = (): TickerControls => {
+export const getTicker = (): Ticker => {
   if (!singleton) {
     singleton = createTicker();
   }

@@ -1,6 +1,6 @@
 export type TickHandler = (deltaMs: number) => void;
 
-export type TickerControls = {
+export type Ticker = {
   start: () => void;
   stop: () => void;
   update: (deltaMs: number) => void;
@@ -21,7 +21,7 @@ export type TickerControls = {
  * Uses a flat array with undefined-tombstone removal for safe concurrent
  * modification during iteration. Compacted after each frame.
  */
-export const createTicker = (): TickerControls => {
+export const createTicker = (): Ticker => {
   const activeAnimations: (TickHandler | undefined)[] = [];
   let needsCompact = false;
   let animationFrameRequestId: number | undefined = undefined;

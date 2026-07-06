@@ -24,14 +24,14 @@ export type {
 } from "./animation/create-animation";
 export type {
   Interpolation,
-  EaseName,
   AnimationStatus,
   InterpolationStatus,
   DynamicValue,
 } from "./shared-types";
+export type { EaseName } from "./easing/easing";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";
 export type { TimelineLayer, Timeline } from "./timeline/create-timeline";
 export type { RgbaTuple } from "./color/lerp-oklab";
-export type { TickerControls } from "./ticker/ticker";
+export type { Ticker } from "./ticker/ticker";

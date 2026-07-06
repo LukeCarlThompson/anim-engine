@@ -28,26 +28,7 @@ export const createLerp = (options: LerpOptions): Interpolation => {
   state.current = options.to();
   previousValue = state.current;
 
-  // Register immediately (auto-start)
-  ticker.add(update);
-
-  const start = () => {
-    if (active) return;
-    active = true;
-    ticker.add(update);
-  };
-
-  const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  function update(deltaMs: number) {
+  const update = (deltaMs: number) => {
     if (!active) return;
 
     const target = options.to();
@@ -68,7 +49,26 @@ export const createLerp = (options: LerpOptions): Interpolation => {
       currentVelocity = 0;
       onEnded();
     }
-  }
+  };
+
+  // Register immediately (auto-start)
+  ticker.add(update);
+
+  const start = () => {
+    if (active) return;
+    active = true;
+    ticker.add(update);
+  };
+
+  const stop = () => {
+    active = false;
+    ticker.remove(update);
+  };
+
+  const kill = () => {
+    active = false;
+    ticker.remove(update);
+  };
 
   const controls: Interpolation = {
     start,
