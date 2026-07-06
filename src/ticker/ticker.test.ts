@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { createTicker, getTicker } from "./ticker";
+import { createTicker, getTicker } from "./get-ticker";
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
@@ -239,9 +239,9 @@ test("GIVEN a ticker with a handler WHEN the handler adds and removes during upd
   const { fn: h1, deltas: d1 } = capture();
   const { fn: h2 } = capture();
   const { fn: h3, deltas: d3 } = capture();
-  ticker.add(h1);  // index 0
-  ticker.add(h2);  // index 1
-  ticker.add(h3);  // index 2
+  ticker.add(h1); // index 0
+  ticker.add(h2); // index 1
+  ticker.add(h3); // index 2
 
   // WHEN — replace h2 slot with a mutator that removes h1 and adds late (once)
   let lateAdded = false;
@@ -253,8 +253,8 @@ test("GIVEN a ticker with a handler WHEN the handler adds and removes during upd
       lateAdded = true;
     }
   };
-  ticker.remove(h2);          // index 1 → undefined
-  ticker.add(mutator);         // index 3
+  ticker.remove(h2); // index 1 → undefined
+  ticker.add(mutator); // index 3
   // activeAnimations = [h1, undef, h3, mutator]
 
   ticker.update(10);
@@ -265,8 +265,8 @@ test("GIVEN a ticker with a handler WHEN the handler adds and removes during upd
   // i=4: late fires → late=[10] (length grew during iteration)
 
   // THEN
-  expect(d1).toEqual([10]);   // h1 was visited at index 0 before removal
-  expect(d3).toEqual([10]);   // h3 visited normally
+  expect(d1).toEqual([10]); // h1 was visited at index 0 before removal
+  expect(d3).toEqual([10]); // h3 visited normally
   expect(late.deltas).toEqual([10]); // late was pushed and visited same frame
 
   // WHEN — second frame: compaction runs, tombstones removed

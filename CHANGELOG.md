@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `createSmoothDamp` — Unity-style smooth damp chase with `smoothTimeMs` parameter.
 - `createLerp` — first-order exponential chase, single rate parameter.
 - `createSmoothClamp` — asymptotic clamp for capping velocity or force.
-- `lerpOklab` / `hexToRgba` — perceptually uniform color interpolation via Oklab.
+- `lerpRgba` / `hexToRgba` — perceptually uniform color interpolation via Oklab.
 - `cubicBezier` — pre-computed lookup table custom bezier easing.
 - 31 Penner easing functions (linear through bounce).
 - `getTicker` — singleton ticker with rAF auto-loop and manual `update(deltaMs)` modes.

@@ -1,14 +1,5 @@
 import { resolveValue } from "../domain";
-import type { Interpolation, DynamicValue } from "../domain";
-
-export type SmoothDampOptions = {
-  to: () => number;
-  smoothTimeMs: DynamicValue;
-  maxSpeed?: DynamicValue;
-  precision?: number;
-  onUpdate?: (value: number, velocity: number) => void;
-  onEnded?: () => void;
-};
+import type { Interpolation, SmoothDampOptions } from "../domain";
 import { getTicker } from "../ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";

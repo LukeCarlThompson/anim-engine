@@ -1,16 +1,8 @@
 import { resolveValue } from "../domain";
-import type { Interpolation, DynamicValue } from "../domain";
-import { getTicker } from "../ticker/ticker";
+import type { Interpolation, LerpOptions } from "../domain";
+import { getTicker } from "../ticker/get-ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
-
-export type LerpOptions = {
-  to: () => number;
-  smoothTimeMs: DynamicValue;
-  precision?: number;
-  onUpdate?: (value: number, velocity: number) => void;
-  onEnded?: () => void;
-};
 
 export const createLerp = (options: LerpOptions): Interpolation => {
   const precision = options.precision ?? 0.01;
