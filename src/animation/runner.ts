@@ -1,4 +1,4 @@
-import type { EaseFunction } from "../shared/types";
+import type { EaseFunction } from "../shared-types";
 import { updateTween } from "./update";
 import type { TweenState } from "./update";
 

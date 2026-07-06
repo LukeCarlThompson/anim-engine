@@ -399,7 +399,7 @@ describe("50 tweens re-play (2 cycles, 500 frames each)", () => {
 // ═══════════════════════════════════════════════════
 
 import { createTweenRunner } from "../animation/runner";
-import type { EaseFunction } from "../shared/types";
+import type { EaseFunction } from "../shared-types";
 
 const testEase: EaseFunction = (t) => 1 - Math.pow(1 - t, 3); // outCubic equivalent
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/html-vite";
 
 import { createAnimation } from "../animation/create-animation";
 import type { Animation } from "../animation/create-animation";
-import type { EaseName } from "../shared/types";
+import type { EaseName } from "../shared-types";
 import { getTicker } from "../ticker/get-ticker";
 import { easingFunctions, EASE_NAMES } from "./easing";
 

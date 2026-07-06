@@ -28,7 +28,7 @@ export type {
   AnimationStatus,
   InterpolationStatus,
   DynamicValue,
-} from "./shared/types";
+} from "./shared-types";
 export type { SpringOptions } from "./spring/create-spring";
 export type { SmoothDampOptions } from "./smooth-damp/create-smooth-damp";
 export type { LerpOptions } from "./lerp/create-lerp";

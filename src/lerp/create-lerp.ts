@@ -1,4 +1,5 @@
-import type { Interpolation, DynamicValue } from "../shared/types";
+import { resolveValue } from "../resolve-value";
+import type { Interpolation, DynamicValue } from "../shared-types";
 import { getTicker } from "../ticker/get-ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
@@ -22,8 +23,6 @@ export const createLerp = (options: LerpOptions): Interpolation => {
   let active = true;
 
   const ticker = getTicker();
-
-  const resolveValue = (v: number | (() => number)): number => (typeof v === "function" ? v() : v);
 
   // Initialize at the target position
   state.current = options.to();

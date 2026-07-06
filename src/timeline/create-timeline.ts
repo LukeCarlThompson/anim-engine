@@ -1,9 +1,9 @@
 import type { KeyframeAnimationOptions } from "../animation/create-animation";
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import { easingFunctions } from "../easing/easing";
-import type { AnimationStatus, DynamicValue } from "../shared/types";
-import type { EaseFunction, EaseName } from "../shared/types";
+import { resolveEasing } from "../easing/easing";
+import { resolveValue } from "../resolve-value";
+import type { AnimationStatus, DynamicValue } from "../shared-types";
 import { getTicker } from "../ticker/get-ticker";
 
 export type TimelineLayer =
@@ -11,7 +11,7 @@ export type TimelineLayer =
   | { animation: KeyframeAnimationOptions; gap: number };
 
 export type Timeline = {
-  play: () => Promise<Timeline>;
+  play: () => Promise<void>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -23,14 +23,7 @@ export type Timeline = {
   durationMs: number;
 };
 
-type Resolve = (value: Timeline) => void;
-
 const noop = () => {};
-
-const resolveValue = (v: DynamicValue): number => (typeof v === "function" ? v() : v);
-
-const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
-  typeof ease === "function" ? ease : easingFunctions[ease];
 
 type ActiveLayer = {
   startAt: number;
@@ -108,7 +101,7 @@ export const createTimeline = (
 
   let timelineStatus: "playing" | "paused" | "stopped" | "dead" = "stopped";
   let elapsedMs = 0;
-  let resolvePromise: Resolve | undefined;
+  let resolvePromise: (() => void) | undefined;
   let remainingLayers = activeLayers.length;
 
   const ticker = getTicker();
@@ -117,7 +110,7 @@ export const createTimeline = (
     timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
-    resolvePromise?.(timeline);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -144,7 +137,7 @@ export const createTimeline = (
     if (remainingLayers <= 0) finish();
   };
 
-  const play = (): Promise<Timeline> => {
+  const play = (): Promise<void> => {
     if (timelineStatus === "dead") throw new Error("Cannot play a dead timeline");
 
     state = buildFromConfigs(rawLayers);
@@ -153,7 +146,7 @@ export const createTimeline = (
     remainingLayers = activeLayers.length;
     elapsedMs = 0;
 
-    const promise = new Promise<Timeline>((resolve) => {
+    const promise = new Promise<void>((resolve) => {
       resolvePromise = resolve;
     });
     timelineStatus = "playing";
@@ -178,7 +171,7 @@ export const createTimeline = (
     if (timelineStatus !== "playing" && timelineStatus !== "paused") return;
     timelineStatus = "stopped";
     ticker.remove(update);
-    resolvePromise?.(timeline);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
@@ -190,7 +183,7 @@ export const createTimeline = (
     timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
-    resolvePromise?.(timeline);
+    resolvePromise?.();
     resolvePromise = undefined;
   };
 
