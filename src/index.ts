@@ -27,4 +27,5 @@ export type {
   SmoothDampOptions,
   SpringOptions,
   RgbaTuple,
+  ExternalTicker,
 } from "./domain";

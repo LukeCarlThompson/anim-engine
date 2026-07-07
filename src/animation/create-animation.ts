@@ -32,6 +32,7 @@ const createSingleTween = ({
   to: rawTo,
   durationMs: rawDurationMs,
   ease: easeName = "inOutSine",
+  ticker = getTicker(),
 }: SingleTweenOptions): Animation => {
   let cachedDurationMs = resolveValue(rawDurationMs);
   let status: AnimationStatus = "stopped";
@@ -40,8 +41,6 @@ const createSingleTween = ({
     typeof rawTo === "function" ||
     typeof rawDurationMs === "function";
   let resolvePromise: (() => void) | undefined;
-
-  const ticker = getTicker();
 
   const handleEnded = () => {
     status = "stopped";
@@ -167,6 +166,7 @@ const createKeyframeAnimation = ({
   onUpdate,
   onProgress,
   onEnded,
+  ticker = getTicker(),
 }: KeyframeAnimationOptions): Animation => {
   const resolveKeyframeGaps = (): number => {
     let total = 0;
@@ -183,8 +183,6 @@ const createKeyframeAnimation = ({
   const hasDynamicProperty = rawKeyframes.some(
     (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
   );
-
-  const ticker = getTicker();
 
   const handleEnded = () => {
     status = "stopped";

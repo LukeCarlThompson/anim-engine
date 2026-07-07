@@ -7,3 +7,8 @@ export type Ticker = {
   add: (handler: TickHandler) => void;
   remove: (handler: TickHandler) => void;
 };
+
+export type ExternalTicker = {
+  add: (handler: TickHandler) => void;
+  remove: (handler: TickHandler) => void;
+};

@@ -8,7 +8,7 @@ export type {
 } from "./interpolation";
 export type { EaseName, EaseFunction } from "./easing";
 export { EASE_NAMES, cubicBezier, EASING_FUNCTIONS, resolveEasing } from "./easing";
-export type { Ticker, TickHandler } from "./ticker";
+export type { Ticker, TickHandler, ExternalTicker } from "./ticker";
 export { resolveValue } from "./resolve-value";
 export type { DynamicValue } from "./resolve-value";
 

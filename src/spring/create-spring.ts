@@ -4,20 +4,18 @@ import { getTicker } from "../ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
-export const createSpring = (options: SpringOptions): Interpolation => {
-  const precision = options.precision ?? 0.01;
-  const onUpdate = options.onUpdate;
-  const onEnded = options.onEnded;
-
-  const rawTo = options.to;
-  const rawStiffness: number | (() => number) = options.stiffness ?? 180;
-  const rawDamping: number | (() => number) = options.damping ?? 12;
-  const rawMass: number | (() => number) = options.mass ?? 1;
-
+export const createSpring = ({
+  precision = 0.01,
+  onUpdate,
+  onEnded,
+  to: rawTo,
+  stiffness: rawStiffness = 180,
+  damping: rawDamping = 12,
+  mass: rawMass = 1,
+  ticker = getTicker(),
+}: SpringOptions): Interpolation => {
   const state: SpringState = { current: rawTo(), velocity: 0 };
   let active = true;
-
-  const ticker = getTicker();
 
   // Register immediately (auto-start)
   ticker.add(update);

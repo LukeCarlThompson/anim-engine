@@ -1,4 +1,5 @@
 import { DynamicValue } from "./resolve-value";
+import type { ExternalTicker } from "./ticker";
 
 export type InterpolationStatus = "active" | "inactive" | "dead";
 
@@ -20,6 +21,7 @@ export type LerpOptions = {
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };
 
 export type SmoothDampOptions = {
@@ -29,6 +31,7 @@ export type SmoothDampOptions = {
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };
 
 export type SpringOptions = {
@@ -39,4 +42,5 @@ export type SpringOptions = {
   precision?: number;
   onUpdate?: (value: number, velocity: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };

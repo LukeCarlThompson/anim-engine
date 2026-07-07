@@ -1,6 +1,6 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import type { TimelineLayer, Timeline, TimelineCallbacks } from "../domain";
+import type { TimelineLayer, Timeline, TimelineCallbacks, ExternalTicker } from "../domain";
 import { resolveEasing, resolveValue } from "../domain";
 import { getTicker } from "../ticker";
 
@@ -67,6 +67,7 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
 export const createTimeline = (
   layers: TimelineLayer[],
   { onStarted, onUpdate, onEnded, onProgress = noOp }: TimelineCallbacks = {},
+  ticker: ExternalTicker = getTicker(),
 ): Timeline => {
   const rawLayers = layers;
 
@@ -90,8 +91,6 @@ export const createTimeline = (
   let elapsedMs = 0;
   let resolvePromise: (() => void) | undefined;
   let remainingLayers = activeLayers.length;
-
-  const ticker = getTicker();
 
   const finish = () => {
     timelineStatus = "stopped";

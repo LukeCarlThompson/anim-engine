@@ -1,5 +1,6 @@
-import type { DynamicValue } from "../domain";
 import type { KeyframeAnimationOptions, AnimationStatus } from "./animation";
+import type { DynamicValue } from "./resolve-value";
+import type { ExternalTicker } from "./ticker";
 
 export type TimelineLayer =
   | { animation: KeyframeAnimationOptions; at: DynamicValue }
@@ -10,6 +11,7 @@ export type TimelineCallbacks = {
   onUpdate?: (values: number[], velocities: number[]) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };
 
 export type Timeline = {

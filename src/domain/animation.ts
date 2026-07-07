@@ -1,5 +1,6 @@
 import type { EaseFunction, EaseName } from "./easing";
 import { DynamicValue } from "./resolve-value";
+import { ExternalTicker } from "./ticker";
 
 export type AnimationStatus = "playing" | "paused" | "stopped" | "dead";
 
@@ -12,6 +13,7 @@ export type SingleTweenOptions = {
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };
 
 export type Keyframe = {
@@ -26,6 +28,7 @@ export type KeyframeAnimationOptions = {
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  ticker?: ExternalTicker;
 };
 
 export type AnimationOptions = SingleTweenOptions | KeyframeAnimationOptions;
