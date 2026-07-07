@@ -58,17 +58,31 @@ await anim.play();
 
 ## Design
 
-Anim Engine is built around three simple mental models that compose naturally:
+Anim Engine is built around the same animation concepts used in animation applications.
 
-- **Animation** — a timed tween from value A to value B with easing and delay. The atomic unit of motion.
-- **Keyframes** — multi-segment interpolation that describes what a single value does over time, with per-segment easing and millisecond timing.
-- **Timeline** — orchestration of multiple animations running in parallel, sequence, or staggered offset. Composes tweens and keyframes.
+- **Animation** — a timed tween from value A to value B with easing and delay. For simple A to B animations.
+- **Keyframes** — multi-segment animation that describes a value at specific points in time and the easing used to transition between them. For longer more dynamic sequences.
+- **Timeline** — orchestration of multiple keyframe animation layers running in parallel, sequence, or staggered offset. For complex layered animations of multiple values in sync.
 
-Beyond timed animation, the engine provides **continuous primitives** — spring physics, smooth damp, and exponential lerp — for natural, target-chasing motion without a fixed duration.
+With a some dynamic interpolation functions included for interactive behaviours.
 
-### Why numbers only?
+- **createLerp** - a basic linear interpolation function.
+- **createSmoothDamp** - a smoothed interpolation function.
+- **createSpring** - a spring physics function.
+- **createSmoothClamp** - a smoothed clamp function for natural range limits.
 
-By restricting itself to numeric values, the engine eliminates string parsing, color-space branching, and transform-matrix overhead. You get a minimal surface area that is easy to optimise, tree-shake, reason about and fit into any renderer. Color interpolation (Oklab) is provided as a pure function — you compose it yourself into an `onUpdate` callback.
+As well as a colour interpolation helper you can compose into any of the animation functions for smooth colour transitions.
+
+- **lerpRgba** - interpolates between two RGBA colour arrays.
+- **hexToRgba** - convert a hxe colour to an RGBA array.
+
+### Deliberately decoupled.
+
+Anim Engine works strictly with numbers so it remains decoupled from any renderer. This keeps it lean, fast and versatile.
+
+Each function accepts an `onUpdate` callback that provides the latest value and velocity so you can assign it to an DOM element, WebGL object or any other target.
+
+As well as exposing readonly properties for the `value` and `velocity` so they can be read inside a game loop.
 
 ## Key advantages
 
@@ -87,36 +101,9 @@ By restricting itself to numeric values, the engine eliminates string parsing, c
 
 ## Primitives
 
-### Timed (return `Animation`)
+## `createAnimation`
 
-| Primitive                                   | Returns     | Description                                          |
-| ------------------------------------------- | ----------- | ---------------------------------------------------- |
-| [`createAnimation`](#createanimation)       | `Animation` | Timed tween from A to B with easing and delay        |
-| [`createAnimation` (keyframes)](#keyframes) | `Animation` | Multi-segment interpolation with per-segment easing  |
-| [`createTimeline`](#createtimeline)         | `Timeline`  | Orchestrate multiple animations on a shared timeline |
-
-Animations have `play()`/`pause()`/`resume()`/`stop()`/`skipToEnd()`/`kill()` controls, return a `Promise` from `play()`, and emit `onUpdate`/`onEnded`/`onProgress` callbacks.
-
-### Continuous (return `Interpolation`)
-
-| Primitive                               | Returns         | Description                                          |
-| --------------------------------------- | --------------- | ---------------------------------------------------- |
-| [`createSpring`](#createspring)         | `Interpolation` | Physics-based spring (Verlet integration)            |
-| [`createSmoothDamp`](#createsmoothdamp) | `Interpolation` | Unity-style smooth damp, parameter-free chase        |
-| [`createLerp`](#createlerp)             | `Interpolation` | First-order exponential chase, single rate parameter |
-
-Interpolations have `start()`/`stop()`/`kill()` controls, auto-start on creation, and chase a target without a fixed duration. No promise — they run until stopped.
-
-### Utility
-
-| Primitive                                 | Returns              | Description                                   |
-| ----------------------------------------- | -------------------- | --------------------------------------------- |
-| [`createSmoothClamp`](#createsmoothclamp) | `(n: number) => n`   | Asymptotic clamp — saturates toward threshold |
-| [`lerpRgba` / `hexToRgba`](#color)        | `RgbaTuple` / parser | Perceptually uniform color interpolation      |
-
-## Usage
-
-### createAnimation
+### Usage
 
 Animate a single value from `from` to `to` over `durationMs`.
 
@@ -124,70 +111,79 @@ Animate a single value from `from` to `to` over `durationMs`.
 import { createAnimation } from "anim-engine";
 
 const anim = createAnimation({
-  from: 0,
-  to: 100,
-  durationMs: 2000,
+  from: 0, // dynamic value
+  to: 100, // dynamic value
+  durationMs: 2000, // dynamic value
   ease: "outElastic",
+  onStarted: () => console.log("started"),
   onUpdate: (value, velocity) => {
     sprite.x = value;
   },
+  onProgress: (progress) => {
+    console.log(progress); // 0 - 1 range
+  },
   onEnded: () => console.log("done"),
+  ticker: externalTicker, // Only required if you want an external ticker for this specific animation. Most common use case is wrapping in a library the provides it's own ticker.
 });
 
 // Promise-based control
 await anim.play(); // plays, resolves when done
-anim.pause();
-anim.resume();
-anim.stop(); // resets to start
+//...
+anim.value; // the current value
+anim.velocity; // the current velocity
+anim.progress; // 0 - 1 range of the current progress
+anim.pause(); // pauses in current position, suspends the promise
+anim.setProgress(0.5); // sets the current progress in 0 - 1 range
+anim.status; // the current animation status 'dead', 'playing', 'paused, 'stopped'
+anim.durationMs; // the duration of the whole animation
+anim.resume(); // resumes from paused position
+anim.stop(); // resets to start and resolves promise
 anim.skipToEnd(); // jumps to end, resolves promise
 ```
 
-**Single-tween options:**
+## `createAnimation` with keyframes
 
-| Option       | Type                                        | Default       | Description                                                  |
-| ------------ | ------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| `from`       | `number \| () => number`                    | —             | Start value                                                  |
-| `to`         | `number \| () => number`                    | —             | End value                                                    |
-| `durationMs` | `number \| () => number`                    | —             | Duration in milliseconds                                     |
-| `ease`       | `EaseName \| EaseFunction`                  | `"inOutSine"` | Easing function or name                                      |
-| `onStarted`  | `() => void`                                | —             | Called when playback begins                                  |
-| `onUpdate`   | `(value: number, velocity: number) => void` | —             | Called every frame with current value and velocity (units/s) |
-| `onEnded`    | `() => void`                                | —             | Called when animation completes                              |
+Multi-segment animation with per-keyframe easing.
 
-**Returns:** `Animation`
+The first keyframe is the starting point. Each subsequent keyframe specifies the gap in milliseconds from the previous one and an optional easing. Total duration is the sum of all gaps.
 
-### Keyframes
-
-Multi-segment animation with per-keyframe easing. The first keyframe is the starting point (no gap/ease). Each subsequent keyframe specifies the gap from the previous one and an optional easing. Total duration is the sum of all gaps.
+If no `ease` is specified on a keyframe, `"inOutSine"` is used as the default.
 
 ```ts
 import { createAnimation } from "anim-engine";
 
 const anim = createAnimation({
   keyframes: [
-    { value: 0 },
+    { value: 0 }, // dynamic values () => number can be used but are evaluated on each play and cached until played again.
     { value: 50, gap: 300, ease: "outCubic" },
     { value: 80, gap: 400, ease: "inOutQuad" },
-    { value: 100, gap: 300 },
+    { value: 100, gap: 300, ease: "outQuad" },
   ],
-  onUpdate: (value) => (sprite.x = value),
-  onProgress: (progress) => console.log(`${Math.round(progress * 100)}%`),
+  onStarted: () => console.log("started"),
+  onUpdate: (value, velocity) => {
+    sprite.x = value;
+  },
+  onProgress: (progress) => {
+    console.log(progress); // 0 - 1 range
+  },
+  onEnded: () => console.log("done"),
+  ticker: externalTicker, // Only required if you want an external ticker for this specific animation. Most common use case is wrapping in a library the provides it's own ticker.
 });
+
+// Promise-based control
+await anim.play(); // plays, resolves when done
+//...
+anim.value; // the current value
+anim.velocity; // the current velocity
+anim.progress; // 0 - 1 range of the current progress
+anim.pause(); // pauses in current position, suspends the promise
+anim.setProgress(0.5); // sets the current progress in 0 - 1 range
+anim.status; // the current animation status 'dead', 'playing', 'paused, 'stopped'
+anim.resume(); // resumes from paused position
+anim.durationMs; // the total duration of the whole animation
+anim.stop(); // resets to start and resolves promise
+anim.skipToEnd(); // jumps to end, resolves promise
 ```
-
-Each keyframe's `gap` is in milliseconds from the previous keyframe. Total duration is the sum of all gaps (1000ms in this example). If no `ease` is specified on a keyframe, `"inOutSine"` is used as the default.
-
-**Keyframe options:**
-
-| Option       | Type                                        | Description                                        |
-| ------------ | ------------------------------------------- | -------------------------------------------------- |
-| `keyframes`  | `Keyframe[]`                                | Array of `{ value, gap?, ease? }` keyframes        |
-| `onStarted`  | `() => void`                                | Called when playback begins                        |
-| `onUpdate`   | `(value: number, velocity: number) => void` | Called every frame with current value and velocity |
-| `onProgress` | `(progress: number) => void`                | Called every frame with 0–1 global progress        |
-| `onEnded`    | `() => void`                                | Called when the keyframe animation completes       |
-
-**Returns:** `Animation`
 
 ### Re-playing and sequencing
 
@@ -225,21 +221,50 @@ for (let i = 0; i < 6; i++) {
 }
 ```
 
-For more complex sequences, use `createTimeline`:
+## `createTimeline` for more complex layered sequences
 
 ```ts
 import { createTimeline } from "anim-engine";
 
-const flash = createTimeline([
-  { at: 0, animation: { keyframes: [{ value: 0 }, { value: 1, gap: 300 }] } },
-  { gap: 0, animation: { keyframes: [{ value: 1 }, { value: 0, gap: 300 }] } },
-]);
-await flash.play();
+const timeline = createTimeline(
+  [
+    // at can be used for specific ms positioning
+    { at: 0, animation: { keyframes: [{ value: 0 }, { value: 1, gap: 300 }] } },
+    // or gap with wait the number of ms after or before the previous layer finishes, use negative values for before.
+    { gap: 100, animation: { keyframes: [{ value: 1 }, { value: 0, gap: 300 }] } },
+  ],
+  {
+    onStarted: () => console.log("started"),
+    onUpdate: (values, velocities) => {
+      console.log(`layer 1 value: ${values[0]}`);
+      console.log(`layer 1 velocity: ${velocities[0]}`);
+      console.log(`layer 2 value: ${values[1]}`);
+      console.log(`layer 2 velocity: ${velocities[1]}`);
+    },
+    onProgress: (progress) => {
+      console.log(progress); // 0 - 1 range of the whole timeline
+    },
+    onEnded: () => console.log("done"),
+    ticker: externalTicker, // Only required if you want an external ticker for this specific animation. Most common use case is wrapping in a library the provides it's own ticker.
+  },
+);
+
+// Promise-based control
+await anim.play(); // plays, resolves when done
+//...
+anim.values: number[]; // the current values
+anim.velocities: number[]; // the current velocities
+anim.progress; // 0 - 1 range of the current progress
+anim.pause(); // pauses in current position, suspends the promise
+anim.setProgress(0.5); // sets the current progress in 0 - 1 range
+anim.status; // the current animation status 'dead', 'playing', 'paused, 'stopped'
+anim.durationMs; // the total duration of the whole timeline
+anim.resume(); // resumes from paused position
+anim.stop(); // resets to start and resolves promise
+anim.skipToEnd(); // jumps to end, resolves promise
 ```
 
-### createTimeline
-
-Compose multiple keyframe animations on a shared timeline with `at` or `gap` positions. Parallelism comes from multiple layers at the same `at`.
+Compose multiple keyframe animations on a shared timeline with `at` or `gap` positions. Parallelism comes from multiple layers at the same or staggered `at` values.
 
 ```ts
 import { createTimeline } from "anim-engine";
@@ -249,6 +274,7 @@ const timeline = createTimeline(
     {
       at: 0,
       animation: {
+        // each animation entry takes the same props as our `createAnimation` functions so we can listen for updates in callbacks to each single animation.
         keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
         onUpdate: (v) => (sprite.alpha = v),
       },
@@ -265,32 +291,13 @@ const timeline = createTimeline(
     onProgress: (progress) => console.log(`overall: ${progress}`),
   },
 );
-
-timeline.play();
 ```
 
-**Parameters:**
+## Continuous primitives
 
-```ts
-type TimelineLayer =
-  | { animation: KeyframeAnimationOptions; at: DynamicValue }
-  | { animation: KeyframeAnimationOptions; gap: number };
-```
+Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a target.
 
-| Parameter            | Type                 | Description                                                    |
-| -------------------- | -------------------- | -------------------------------------------------------------- |
-| `layers`             | `TimelineLayer[]`    | Array of layers with `at` (absolute) or `gap` (relative) start |
-| `options.onStarted`  | `() => void`         | Called when timeline begins                                    |
-| `options.onProgress` | `(progress) => void` | Called every frame with overall 0–1 progress                   |
-| `options.onEnded`    | `() => void`         | Called when timeline finishes                                  |
-
-`gap` is relative to the end of the previous layer. Use multiple layers at the same `at` for parallel animations. A simple tween is expressed as a 2-keyframe sequence: `{ value: from }, { value: to, gap: durationMs }`.
-
-### Continuous primitives
-
-Spring, smooth damp, and lerp are **continuous** — they auto-start and chase a target. They return `Interpolation` (no `play`/`pause`/`promise`).
-
-#### createSpring
+### `createSpring`
 
 ```ts
 import { createSpring } from "anim-engine";
@@ -306,7 +313,7 @@ const spring = createSpring({
   },
 });
 
-spring.setCurrentValue(0); // jump to start — spring chases back to 100
+spring.setValue(0); // jump to start — spring chases back to 100
 
 // Dynamic target — mouse chase
 const targetX = { value: 0 };
@@ -324,7 +331,7 @@ const follower = createSpring({
 
 All parameters (`stiffness`, `damping`, `mass`, `to`) accept `number | (() => number)` — resolved every frame.
 
-**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setCurrentValue(value)`, `currentValue`, `velocity`, `status`. Starts at the `to()` value. Use `setCurrentValue(value)` to jump elsewhere.
+**Returns:** `Interpolation` — `start()`, `stop()`, `kill()`, `setValue(value)`, `velocity`, `velocity`, `status`. Starts at the `to()` value. Use `setValue(value)` to jump elsewhere.
 
 #### createSmoothDamp
 
@@ -338,7 +345,7 @@ const damp = createSmoothDamp({
   onUpdate: (value, velocity) => (sprite.x = value),
 });
 
-damp.setCurrentValue(0); // jump to start — damp chases back to 100
+damp.setValue(0); // jump to start — damp chases back to 100
 ```
 
 Unity-style smooth damp with Taylor-series exponential approximation. No stiffness/damping/mass to tune — just `smoothTimeMs` (milliseconds to reach target).
@@ -356,7 +363,7 @@ const lerp = createLerp({
   onUpdate: (value, velocity) => (sprite.x = value),
 });
 
-lerp.setCurrentValue(0); // jump to start — lerp chases back to 100
+lerp.setValue(0); // jump to start — lerp chases back to 100
 ```
 
 First-order exponential approach: `value += (target - value) * rate * deltaTime`. `smoothTimeMs` is the approximate time in milliseconds to reach the target. Frame-rate independent.
@@ -374,7 +381,7 @@ const result = clamp(1000); // → ~44.96 (approaches 45 asymptotically)
 const result2 = clamp(-500); // → ~-44.96 (symmetric)
 ```
 
-Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns a function `(value: number) => number` with a `setCurrentValue(0)` method to reset position.
+Uses `threshold * (normalized / (1 + |normalized|))` for asymptotic saturation. Handles `Infinity` correctly. Returns a function `(value: number) => number` with a `setValue(0)` method to reset position.
 
 ### Color
 
@@ -663,25 +670,25 @@ requestAnimationFrame(gameLoop);
 
 ### Type exports
 
-| Type                       | Description                                                                                                             |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Animation`                | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `currentValue`, `velocity`, `progress`, `status` |
-| `Interpolation`            | `start`, `stop`, `kill`, `setCurrentValue`, `currentValue`, `velocity`, `status`                                        |
-| `Timeline`                 | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                             |
-| `EaseName`                 | Union of 31 ease name strings                                                                                           |
-| `EaseFunction`             | `(t: number) => number`                                                                                                 |
-| `DynamicValue`             | `number \| (() => number)`                                                                                              |
-| `AnimationStatus`          | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                           |
-| `InterpolationStatus`      | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                                                |
-| `AnimationOptions`         | Single tween or keyframe animation options (discriminated union)                                                        |
-| `Keyframe`                 | `{ value, gap?, ease? }`                                                                                                |
-| `KeyframeAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                               |
-| `TimelineLayer`            | `{ animation: KeyframeAnimationOptions; at: DynamicValue } \| { animation: KeyframeAnimationOptions; gap: number }`     |
-| `SpringOptions`            | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                               |
-| `SmoothDampOptions`        | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                                  |
-| `LerpOptions`              | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                               |
-| `RgbaTuple`                | `readonly [number, number, number, number]`                                                                             |
-| `Ticker`                   | `start`, `stop`, `update`, `add`, `remove`                                                                              |
+| Type                       | Description                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `Animation`                | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `velocity`, `velocity`, `progress`, `status` |
+| `Interpolation`            | `start`, `stop`, `kill`, `setValue`, `velocity`, `velocity`, `status`                                               |
+| `Timeline`                 | `play`, `pause`, `resume`, `stop`, `skipToEnd`, `kill`, `setProgress`, `progress`, `status`                         |
+| `EaseName`                 | Union of 31 ease name strings                                                                                       |
+| `EaseFunction`             | `(t: number) => number`                                                                                             |
+| `DynamicValue`             | `number \| (() => number)`                                                                                          |
+| `AnimationStatus`          | `"playing" \| "paused" \| "stopped" \| "dead"` (for `Animation` / `Timeline`)                                       |
+| `InterpolationStatus`      | `"active" \| "inactive" \| "dead"` (for `Interpolation`)                                                            |
+| `AnimationOptions`         | Single tween or keyframe animation options (discriminated union)                                                    |
+| `Keyframe`                 | `{ value, gap?, ease? }`                                                                                            |
+| `KeyframeAnimationOptions` | `{ keyframes: Keyframe[], onStarted?, onUpdate?, onProgress?, onEnded? }`                                           |
+| `TimelineLayer`            | `{ animation: KeyframeAnimationOptions; at: DynamicValue } \| { animation: KeyframeAnimationOptions; gap: number }` |
+| `SpringOptions`            | `to`, `stiffness`, `damping`, `mass`, `precision?`, `onUpdate`, `onEnded`                                           |
+| `SmoothDampOptions`        | `to`, `smoothTimeMs`, `maxSpeed?`, `precision?`, `onUpdate`, `onEnded`                                              |
+| `LerpOptions`              | `to`, `smoothTimeMs`, `precision?`, `onUpdate`, `onEnded`                                                           |
+| `RgbaTuple`                | `readonly [number, number, number, number]`                                                                         |
+| `Ticker`                   | `start`, `stop`, `update`, `add`, `remove`                                                                          |
 
 ## License
 
