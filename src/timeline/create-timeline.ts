@@ -97,15 +97,17 @@ export const createTimeline = (
 
   let valuesCache: number[] = [];
   let velocitiesCache: number[] = [];
+  let valuesDirty = true;
   const syncValues = () => {
+    if (!valuesDirty) return;
+    valuesDirty = false;
     valuesCache.length = activeLayers.length;
     velocitiesCache.length = activeLayers.length;
     for (let i = 0; i < activeLayers.length; i++) {
-      valuesCache[i] = activeLayers[i].runner.velocity;
+      valuesCache[i] = activeLayers[i].runner.value;
       velocitiesCache[i] = activeLayers[i].runner.velocity;
     }
   };
-  syncValues();
 
   let timelineStatus: AnimationStatus = "stopped";
   let elapsedMs = 0;
@@ -138,8 +140,11 @@ export const createTimeline = (
       }
     }
 
-    syncValues();
-    onUpdate?.(valuesCache, velocitiesCache);
+    valuesDirty = true;
+    if (onUpdate) {
+      syncValues();
+      onUpdate(valuesCache, velocitiesCache);
+    }
 
     onProgress(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
 
@@ -235,9 +240,11 @@ export const createTimeline = (
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;
     },
     get values() {
+      syncValues();
       return valuesCache;
     },
     get velocities() {
+      syncValues();
       return velocitiesCache;
     },
     get status() {

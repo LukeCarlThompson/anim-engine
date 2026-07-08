@@ -27,6 +27,8 @@ const anim = createAnimation({
 await anim.play();
 ```
 
+> AI agents: this package includes a [`SKILL.md`](SKILL.md) with in-depth usage guidance for agent-assisted development.
+
 ## Design
 
 Anim Engine is built around the same concepts used in animation applications, applied to pure numbers.
@@ -278,11 +280,27 @@ for (let i = 0; i < 6; i++) {
 
 ```ts
 createTimeline([
-  { at: 0, animation: { keyframes: [{ value: 0 }, { value: 1, gap: 500 }] } },
-  { at: 0, animation: { keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }] } },
+  {
+    at: 0,
+    animation: {
+      keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
+      onEnded: () => console.log("layer 1 done"),
+    },
+  },
+  {
+    at: 0,
+    animation: {
+      keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
+      onUpdate: (v) => (sprite.y = v),
+    },
+  },
 ], {
+  // values[i] / velocities[i] correspond to layer i in definition order
+  onUpdate: (values, velocities) => {
+    sprite.x = values[0];
+    sprite.y = values[1];
+  },
   onProgress: (p) => console.log(p),
-  onUpdate: (values, velocities) => { /* one entry per layer */ },
 });
 ```
 
@@ -452,16 +470,16 @@ vs GSAP (vitest bench, Apple Silicon M-series, Node 24). Matched easing function
 
 | Benchmark | anim-engine | GSAP | Ratio |
 |---|---|---|---|
-| Single tween (cubic, 1000 frames) | 40,814 ops/s | 10,776 ops/s | 3.8× |
-| Single tween (bezier, 1000 frames) | 21,449 ops/s | 12,637 ops/s | 1.7× |
-| Keyframe (3 segments, 1000 frames) | 26,741 ops/s | 3,549 ops/s | 7.5× |
-| 50 concurrent tweens (500 frames) | 892 ops/s | 438 ops/s | 2.0× |
-| 200 concurrent tweens (500 frames) | 200 ops/s | 106 ops/s | 1.9× |
-| 1000 concurrent tweens (500 frames) | 38 ops/s | 22 ops/s | 1.7× |
-| 50-layer timeline (500 frames) | 710 ops/s | 404 ops/s | 1.8× |
-| 50 tweens re-play (500 frames) | 558 ops/s | 128 ops/s | 4.4× |
+| Single tween (cubic, 1000 frames) | 40,974 ops/s | 10,656 ops/s | 3.8× |
+| Single tween (bezier, 1000 frames) | 20,190 ops/s | 11,948 ops/s | 1.7× |
+| Keyframe (3 segments, 1000 frames) | 26,661 ops/s | 3,578 ops/s | 7.5× |
+| 50 concurrent tweens (500 frames) | 866 ops/s | 436 ops/s | 2.0× |
+| 200 concurrent tweens (500 frames) | 187 ops/s | 112 ops/s | 1.7× |
+| 1000 concurrent tweens (500 frames) | 37 ops/s | 13 ops/s | 2.8× |
+| 50-layer timeline (500 frames) | 684 ops/s | 406 ops/s | 1.7× |
+| 50 tweens re-play (500 frames) | 523 ops/s | 133 ops/s | 3.9× |
 
-vs GSAP `onUpdate` (apples-to-apples): **3.0–6.2× faster**.
+vs GSAP `onUpdate` (apples-to-apples): **2.8–4.5× faster**.
 
 Run locally: `npm run bench`
 
