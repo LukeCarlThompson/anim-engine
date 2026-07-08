@@ -160,7 +160,7 @@ const meta = {
     };
 
     const togglePlay = () => {
-      if (anim.status === "stopped" || anim.status === "dead") {
+      if (anim.status === "stopped") {
         play();
         return;
       }

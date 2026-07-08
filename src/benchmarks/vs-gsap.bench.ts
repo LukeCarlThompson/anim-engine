@@ -506,7 +506,7 @@ describe("200 concurrent raw updateTween calls (500 frames, no runner)", () => {
   bench("raw math only", () => {
     const states: TweenState[] = Array.from({ length: 200 }, () => ({
       progress: 0,
-      currentValue: 0,
+      value: 0,
       velocity: 0,
     }));
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {

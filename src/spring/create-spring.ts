@@ -4,36 +4,40 @@ import { getTicker } from "../ticker";
 import { verletStep } from "./verlet";
 import type { SpringState } from "./verlet";
 
-export const createSpring = (options: SpringOptions): Interpolation => {
-  const precision = options.precision ?? 0.01;
-  const onUpdate = options.onUpdate;
-  const onEnded = options.onEnded;
-
-  const rawTo = options.to;
-  const rawStiffness: number | (() => number) = options.stiffness ?? 180;
-  const rawDamping: number | (() => number) = options.damping ?? 12;
-  const rawMass: number | (() => number) = options.mass ?? 1;
-
+/**
+ * Creates a spring-based interpolation that simulates mass-spring-damper
+ * physics, producing bouncy or elastic movement toward the target value.
+ *
+ * Uses Verlet integration for stable, energy-conserving simulation.
+ * Higher stiffness produces faster, snappier motion; higher damping
+ * reduces oscillation. The target is re-evaluated every frame.
+ *
+ * @param options - Configuration options for the spring interpolation.
+ * @returns An {@link Interpolation} instance for controlling the spring.
+ */
+export const createSpring = ({
+  precision = 0.01,
+  onUpdate,
+  onEnded,
+  to: rawTo,
+  stiffness: rawStiffness = 180,
+  damping: rawDamping = 12,
+  mass: rawMass = 1,
+  ticker = getTicker(),
+}: SpringOptions): Interpolation => {
   const state: SpringState = { current: rawTo(), velocity: 0 };
   let active = true;
-
-  const ticker = getTicker();
 
   // Register immediately (auto-start)
   ticker.add(update);
 
-  const start = () => {
+  const resume = () => {
     if (active) return;
     active = true;
     ticker.add(update);
   };
 
   const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
     active = false;
     ticker.remove(update);
   };
@@ -62,14 +66,13 @@ export const createSpring = (options: SpringOptions): Interpolation => {
   }
 
   const controls: Interpolation = {
-    start,
+    resume,
     stop,
-    kill,
-    setCurrentValue: (value: number) => {
+    setValue: (value: number) => {
       state.current = value;
       state.velocity = 0;
     },
-    get currentValue() {
+    get value() {
       return state.current;
     },
     get velocity() {

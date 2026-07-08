@@ -147,7 +147,7 @@ const meta = {
       },
     });
 
-    lerp.setCurrentValue(30);
+    lerp.setValue(30);
 
     track.addEventListener("mousemove", (e) => {
       const rect = track.getBoundingClientRect();

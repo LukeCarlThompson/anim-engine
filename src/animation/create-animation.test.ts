@@ -18,7 +18,7 @@ test("GIVEN a linear tween from 0 to 100 over 1000ms WHEN updated by 1000ms THEN
   await p;
 
   // THEN
-  expect(tween.currentValue).toBe(100);
+  expect(tween.value).toBe(100);
   expect(tween.status).toBe("stopped");
 });
 
@@ -69,7 +69,7 @@ test("GIVEN an outElastic tween from 0 to 200 over 500ms WHEN it completes THEN 
   await p;
 
   // THEN
-  expect(tween.currentValue).toBe(200);
+  expect(tween.value).toBe(200);
 });
 
 test("GIVEN a running linear tween WHEN paused at midpoint and later resumed THEN it completes correctly", async () => {
@@ -82,14 +82,14 @@ test("GIVEN a running linear tween WHEN paused at midpoint and later resumed THE
   ticker.update(500);
 
   // THEN — midway
-  expect(Math.trunc(tween.currentValue)).toBe(50);
+  expect(Math.trunc(tween.value)).toBe(50);
 
   // WHEN — pause
   tween.pause();
   ticker.update(500);
 
   // THEN — frozen at 50
-  expect(Math.trunc(tween.currentValue)).toBe(50);
+  expect(Math.trunc(tween.value)).toBe(50);
 
   // WHEN — resume and complete
   tween.resume();
@@ -97,7 +97,7 @@ test("GIVEN a running linear tween WHEN paused at midpoint and later resumed THE
   await p;
 
   // THEN — reaches end
-  expect(tween.currentValue).toBe(100);
+  expect(tween.value).toBe(100);
 });
 
 test("GIVEN a running linear tween WHEN stopped mid-way THEN the promise resolves at the current value", async () => {
@@ -112,7 +112,7 @@ test("GIVEN a running linear tween WHEN stopped mid-way THEN the promise resolve
   await p;
 
   // THEN
-  expect(Math.trunc(tween.currentValue)).toBe(40);
+  expect(Math.trunc(tween.value)).toBe(40);
 });
 
 test("GIVEN a running linear tween WHEN skipToEnd is called THEN the promise resolves at the end value", async () => {
@@ -127,23 +127,7 @@ test("GIVEN a running linear tween WHEN skipToEnd is called THEN the promise res
   await p;
 
   // THEN
-  expect(tween.currentValue).toBe(100);
-});
-
-test("GIVEN a running tween WHEN killed THEN the promise stays unresolved and replay throws", async () => {
-  // GIVEN
-  const ticker = getTicker();
-  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
-  void tween.play();
-
-  // WHEN
-  ticker.update(300);
-  tween.kill();
-  await Promise.resolve();
-
-  // THEN
-  expect(tween.status).toBe("dead");
-  expect(() => tween.play()).toThrow();
+  expect(tween.value).toBe(100);
 });
 
 test("GIVEN a tween with dynamic from/to functions WHEN played THEN the values are evaluated at play time", async () => {
@@ -164,16 +148,7 @@ test("GIVEN a tween with dynamic from/to functions WHEN played THEN the values a
   await p;
 
   // THEN
-  expect(tween.currentValue).toBe(80);
-});
-
-test("GIVEN a tween that has been killed WHEN play() is called THEN it throws", () => {
-  // GIVEN
-  const tween = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
-  tween.kill();
-
-  // WHEN / THEN
-  expect(() => tween.play()).toThrow();
+  expect(tween.value).toBe(80);
 });
 
 test("GIVEN a tween with onStarted callback WHEN playback begins THEN the callback fires", async () => {
@@ -387,7 +362,7 @@ test("GIVEN a tween with three keyframes and onProgress callback WHEN it plays t
   expect(progresses[4]).toBe(1);
 });
 
-test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue is computed immediately", () => {
+test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN value is computed immediately", () => {
   // GIVEN
   const tween = createAnimation({
     from: 0,
@@ -401,8 +376,8 @@ test("GIVEN an outCubic tween WHEN setProgress(0.5) is called THEN currentValue 
 
   // THEN
   expect(tween.progress).toBe(0.5);
-  expect(tween.currentValue).toBeGreaterThan(80);
-  expect(tween.currentValue).toBeLessThan(90);
+  expect(tween.value).toBeGreaterThan(80);
+  expect(tween.value).toBeLessThan(90);
 });
 
 test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like a delayed tween", async () => {
@@ -421,7 +396,7 @@ test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like
   ticker.update(100);
 
   // THEN — still at start
-  expect(tween.currentValue).toBe(0);
+  expect(tween.value).toBe(0);
 
   // WHEN — advance to hold boundary (200ms)
   ticker.update(100);
@@ -430,14 +405,14 @@ test("GIVEN a keyframe with a hold at the start WHEN played THEN it behaves like
   ticker.update(20);
 
   // THEN — should now be mid-animation (20ms into the 0→100 segment)
-  expect(tween.currentValue).toBeGreaterThan(0);
+  expect(tween.value).toBeGreaterThan(0);
 
   // WHEN — complete
   ticker.update(80);
   await p;
 
   // THEN — reaches end value
-  expect(tween.currentValue).toBe(100);
+  expect(tween.value).toBe(100);
 });
 
 // ─── Very short durationMs edge case ───
@@ -458,7 +433,7 @@ test("GIVEN a tween with a very short durationMs of 1 WHEN played with a large d
   await p;
 
   // THEN
-  expect(tween.currentValue).toBe(100);
+  expect(tween.value).toBe(100);
   expect(tween.status).toBe("stopped");
 });
 
@@ -478,7 +453,7 @@ test("GIVEN keyframes with 2 points WHEN played THEN it behaves the same as a si
   await p;
 
   // THEN
-  expect(a.currentValue).toBe(100);
+  expect(a.value).toBe(100);
 });
 
 test("GIVEN keyframes with 3 points WHEN played through THEN it interpolates between them correctly", async () => {

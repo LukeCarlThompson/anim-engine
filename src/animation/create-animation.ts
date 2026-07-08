@@ -14,6 +14,18 @@ const isKeyframeMode = (options: AnimationOptions): options is KeyframeAnimation
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
+/**
+ * Creates an animation instance that can be played, paused, stopped,
+ * and queried for its current state.
+ *
+ * Accepts either a single tween configuration (from → to over a duration)
+ * or a keyframe animation with multiple keyframes, each with optional
+ * easing and gaps.
+ *
+ * @param options - The animation configuration, either {@link SingleTweenOptions}
+ *   or {@link KeyframeAnimationOptions}.
+ * @returns An {@link Animation} instance for controlling the animation.
+ */
 export const createAnimation = (options: AnimationOptions): Animation => {
   if (isKeyframeMode(options)) {
     return createKeyframeAnimation(options);
@@ -24,14 +36,15 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 // ─── Single-tween mode ───
 
 const createSingleTween = ({
-  onStarted,
-  onUpdate,
-  onProgress,
-  onEnded,
   from: rawFrom,
   to: rawTo,
   durationMs: rawDurationMs,
   ease: easeName = "inOutSine",
+  onStarted,
+  onUpdate,
+  onProgress,
+  onEnded,
+  ticker = getTicker(),
 }: SingleTweenOptions): Animation => {
   let cachedDurationMs = resolveValue(rawDurationMs);
   let status: AnimationStatus = "stopped";
@@ -40,8 +53,6 @@ const createSingleTween = ({
     typeof rawTo === "function" ||
     typeof rawDurationMs === "function";
   let resolvePromise: (() => void) | undefined;
-
-  const ticker = getTicker();
 
   const handleEnded = () => {
     status = "stopped";
@@ -72,9 +83,6 @@ const createSingleTween = ({
   runner = buildRunner();
 
   const play = (): Promise<void> => {
-    if (status === "dead") {
-      throw new Error("Cannot play a dead animation");
-    }
     if (hasDynamicProperty) {
       runner = buildRunner();
     } else {
@@ -118,12 +126,6 @@ const createSingleTween = ({
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    status = "dead";
-    ticker.remove(runner);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") {
       pause();
@@ -137,9 +139,8 @@ const createSingleTween = ({
     resume,
     stop,
     skipToEnd,
-    kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;
@@ -167,6 +168,7 @@ const createKeyframeAnimation = ({
   onUpdate,
   onProgress,
   onEnded,
+  ticker = getTicker(),
 }: KeyframeAnimationOptions): Animation => {
   const resolveKeyframeGaps = (): number => {
     let total = 0;
@@ -183,8 +185,6 @@ const createKeyframeAnimation = ({
   const hasDynamicProperty = rawKeyframes.some(
     (kf) => typeof kf.value === "function" || typeof kf.gap === "function",
   );
-
-  const ticker = getTicker();
 
   const handleEnded = () => {
     status = "stopped";
@@ -214,7 +214,6 @@ const createKeyframeAnimation = ({
   runner = buildRunner();
 
   const play = (): Promise<void> => {
-    if (status === "dead") throw new Error("Cannot play a dead animation");
     if (hasDynamicProperty) {
       runner = buildRunner();
       cachedDurationMs = resolveKeyframeGaps();
@@ -258,12 +257,6 @@ const createKeyframeAnimation = ({
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    status = "dead";
-    ticker.remove(runner);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") {
       pause();
@@ -277,9 +270,8 @@ const createKeyframeAnimation = ({
     resume,
     stop,
     skipToEnd,
-    kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;

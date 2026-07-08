@@ -2,7 +2,15 @@ import type { Ticker, TickHandler } from "../domain";
 
 let singleton: Ticker | undefined;
 
-/** Returns the default ticker singleton. Created lazily on first access. */
+/**
+ * Returns the application-wide default ticker singleton.
+ *
+ * The ticker is created lazily on first access and reused for all
+ * subsequent calls. It drives all animations and interpolations that
+ * don't specify an external ticker.
+ *
+ * @returns The default {@link Ticker} instance.
+ */
 export const getTicker = (): Ticker => {
   if (!singleton) {
     singleton = createTicker();

@@ -321,7 +321,7 @@ const meta = {
 
     const play = () => {
       if (anim) {
-        anim.kill();
+        anim.stop();
       }
       resetPosition();
 
@@ -363,9 +363,9 @@ const meta = {
 
     playBtn.addEventListener("click", togglePlay);
     returnBtn.addEventListener("click", () => {
-      const start = anim ? anim.currentValue : 400;
+      const start = anim ? anim.value : 400;
       if (anim) {
-        anim.kill();
+        anim.stop();
       }
       anim = createAnimation({
         from: start,

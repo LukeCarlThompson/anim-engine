@@ -251,7 +251,7 @@ const meta = {
       updateGradients();
       applyColor(0);
       if (anim) {
-        anim.kill();
+        anim.stop();
         anim = null;
       }
       playBtn.textContent = "▶ Play";
@@ -263,7 +263,7 @@ const meta = {
       updateGradients();
       applyColor(0);
       if (anim) {
-        anim.kill();
+        anim.stop();
         anim = null;
       }
       playBtn.textContent = "▶ Play";
@@ -364,7 +364,7 @@ const meta = {
 
     const resetPosition = () => {
       if (anim) {
-        anim.kill();
+        anim.stop();
         anim = null;
       }
       applyColor(0);
@@ -373,7 +373,7 @@ const meta = {
     // Scrubber drag handler — pauses animation and scrubs manually
     scrubInput.addEventListener("input", () => {
       if (anim) {
-        anim.kill();
+        anim.stop();
         anim = null;
         playBtn.textContent = "▶ Play";
       }
@@ -383,7 +383,7 @@ const meta = {
 
     const play = () => {
       if (anim) {
-        anim.kill();
+        anim.stop();
       }
 
       // Start animation from the beginning; scrubber was just for preview
@@ -424,7 +424,7 @@ const meta = {
     playBtn.addEventListener("click", togglePlay);
     resetBtn.addEventListener("click", () => {
       if (anim) {
-        anim.kill();
+        anim.stop();
         anim = null;
       }
       resetPosition();

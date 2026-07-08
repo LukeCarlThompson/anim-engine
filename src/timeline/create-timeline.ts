@@ -1,6 +1,12 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import type { TimelineLayer, Timeline } from "../domain";
+import type {
+  TimelineLayer,
+  Timeline,
+  TimelineCallbacks,
+  ExternalTicker,
+  AnimationStatus,
+} from "../domain";
 import { resolveEasing, resolveValue } from "../domain";
 import { getTicker } from "../ticker";
 
@@ -64,27 +70,47 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
   return { activeLayers, totalDurationMs };
 };
 
+/**
+ * Creates a timeline animation that sequences multiple keyframe animation
+ * layers, each starting at a specified time or gap after the previous layer.
+ *
+ * The timeline aggregates all layers into a single controllable animation
+ * with its own play/pause/resume/stop semantics and returns the combined
+ * values and velocities of all layers on each update.
+ *
+ * @param layers - An array of {@link TimelineLayer} configs describing each
+ *   animation in the sequence and when it should play.
+ * @param callbacks - Optional callback hooks and configuration.
+ * @param ticker - An optional external ticker. Defaults to the global ticker.
+ * @returns A {@link Timeline} instance for controlling the sequenced animation.
+ */
 export const createTimeline = (
   layers: TimelineLayer[],
-  options?: {
-    onStarted?: () => void;
-    onProgress?: (progress: number) => void;
-    onEnded?: () => void;
-  },
+  { onStarted, onUpdate, onEnded, onProgress = noOp }: TimelineCallbacks = {},
+  ticker: ExternalTicker = getTicker(),
 ): Timeline => {
-  const { onStarted, onEnded, onProgress = noOp } = options ?? {};
   const rawLayers = layers;
 
   let state = buildFromConfigs(rawLayers);
   let activeLayers = state.activeLayers;
   let totalDurationMs = state.totalDurationMs;
 
-  let timelineStatus: "playing" | "paused" | "stopped" | "dead" = "stopped";
+  let valuesCache: number[] = [];
+  let velocitiesCache: number[] = [];
+  const syncValues = () => {
+    valuesCache.length = activeLayers.length;
+    velocitiesCache.length = activeLayers.length;
+    for (let i = 0; i < activeLayers.length; i++) {
+      valuesCache[i] = activeLayers[i].runner.velocity;
+      velocitiesCache[i] = activeLayers[i].runner.velocity;
+    }
+  };
+  syncValues();
+
+  let timelineStatus: AnimationStatus = "stopped";
   let elapsedMs = 0;
   let resolvePromise: (() => void) | undefined;
   let remainingLayers = activeLayers.length;
-
-  const ticker = getTicker();
 
   const finish = () => {
     timelineStatus = "stopped";
@@ -112,18 +138,22 @@ export const createTimeline = (
       }
     }
 
+    syncValues();
+    onUpdate?.(valuesCache, velocitiesCache);
+
     onProgress(totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1);
 
     if (remainingLayers <= 0) finish();
   };
 
   const play = (): Promise<void> => {
-    if (timelineStatus === "dead") throw new Error("Cannot play a dead timeline");
-
     state = buildFromConfigs(rawLayers);
     activeLayers = state.activeLayers;
     totalDurationMs = state.totalDurationMs;
     remainingLayers = activeLayers.length;
+    valuesCache = [];
+    velocitiesCache = [];
+    syncValues();
     elapsedMs = 0;
 
     const promise = new Promise<void>((resolve) => {
@@ -160,16 +190,11 @@ export const createTimeline = (
       layer.runner.evaluate(1);
       layer.runner.onEnded?.();
     }
+    syncValues();
     timelineStatus = "stopped";
     ticker.remove(update);
     onEnded?.();
     resolvePromise?.();
-    resolvePromise = undefined;
-  };
-
-  const kill = () => {
-    timelineStatus = "dead";
-    ticker.remove(update);
     resolvePromise = undefined;
   };
 
@@ -194,6 +219,8 @@ export const createTimeline = (
       }
     }
 
+    syncValues();
+
     remainingLayers = activeLayers.filter((l) => !l.ended).length;
   };
 
@@ -203,10 +230,15 @@ export const createTimeline = (
     resume,
     stop,
     skipToEnd,
-    kill,
     setProgress,
     get progress() {
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;
+    },
+    get values() {
+      return valuesCache;
+    },
+    get velocities() {
+      return velocitiesCache;
     },
     get status() {
       return timelineStatus;

@@ -4,44 +4,41 @@ import { getTicker } from "../ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
-export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
-  const precision = options.precision ?? 0.01;
-  const onUpdate = options.onUpdate;
-  const onEnded = options.onEnded;
-
+/**
+ * Creates a smooth damped interpolation that progressively moves a value
+ * toward a target with velocity that decreases as it approaches, producing
+ * a natural deceleration effect.
+ *
+ * Unlike a simple lerp, smooth damp respects an optional max speed and
+ * maintains velocity continuity, making it suitable for camera-relative
+ * movement, UI animations, and game object tracking.
+ *
+ * The target is re-evaluated every frame, allowing it to change dynamically.
+ *
+ * @param options - Configuration options for the smooth damp interpolation.
+ * @returns An {@link Interpolation} instance for controlling the smooth damp.
+ */
+export const createSmoothDamp = ({
+  to,
+  smoothTimeMs: rawSmoothTimeMs,
+  maxSpeed: rawMaxSpeed,
+  precision = 0.01,
+  onUpdate,
+  onEnded,
+  ticker = getTicker(),
+}: SmoothDampOptions): Interpolation => {
   const state: SmoothDampState = { current: 0, velocity: 0 };
   let active = true;
 
-  const ticker = getTicker();
-
   // Initialize at the target position
-  state.current = options.to();
+  state.current = to();
 
-  // Register immediately (auto-start)
-  ticker.add(update);
-
-  const start = () => {
-    if (active) return;
-    active = true;
-    ticker.add(update);
-  };
-
-  const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  function update(deltaMs: number) {
+  const update = (deltaMs: number) => {
     if (!active) return;
 
-    const target = options.to();
-    const smoothTimeMs = resolveValue(options.smoothTimeMs);
-    const maxSpeed = options.maxSpeed !== undefined ? resolveValue(options.maxSpeed) : Infinity;
+    const target = to();
+    const smoothTimeMs = resolveValue(rawSmoothTimeMs);
+    const maxSpeed = rawMaxSpeed !== undefined ? resolveValue(rawMaxSpeed) : Infinity;
     smoothDampStep(state, target, smoothTimeMs, maxSpeed, deltaMs);
 
     onUpdate?.(state.current, state.velocity);
@@ -55,17 +52,30 @@ export const createSmoothDamp = (options: SmoothDampOptions): Interpolation => {
       state.velocity = 0;
       onEnded();
     }
-  }
+  };
+
+  // Register immediately (auto-start)
+  ticker.add(update);
+
+  const resume = () => {
+    if (active) return;
+    active = true;
+    ticker.add(update);
+  };
+
+  const stop = () => {
+    active = false;
+    ticker.remove(update);
+  };
 
   const controls: Interpolation = {
-    start,
+    resume,
     stop,
-    kill,
-    setCurrentValue: (value: number) => {
+    setValue: (value: number) => {
       state.current = value;
       state.velocity = 0;
     },
-    get currentValue() {
+    get value() {
       return state.current;
     },
     get velocity() {

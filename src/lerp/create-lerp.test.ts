@@ -25,7 +25,7 @@ describe("createLerp", () => {
     // THEN
     expect(values.length).toBeGreaterThan(10);
     expect(values[values.length - 1]).toBeGreaterThan(95);
-    lerp.kill();
+    lerp.stop();
   });
 
   it("GIVEN a lerp chasing a dynamic target WHEN the target changes mid-way THEN it follows the new target", () => {
@@ -48,7 +48,7 @@ describe("createLerp", () => {
 
     // THEN
     expect(values[values.length - 1]).toBeGreaterThan(100);
-    lerp.kill();
+    lerp.stop();
   });
 
   it("GIVEN a lerp with a very large smoothTimeMs WHEN updated only a few times THEN it barely moves", () => {
@@ -65,11 +65,11 @@ describe("createLerp", () => {
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
     // THEN
-    expect(lerp.currentValue).toBeLessThan(1);
-    lerp.kill();
+    expect(lerp.value).toBeLessThan(1);
+    lerp.stop();
   });
 
-  it("GIVEN a lerp without an explicit starting value WHEN created THEN currentValue defaults to the target", () => {
+  it("GIVEN a lerp without an explicit starting value WHEN created THEN value defaults to the target", () => {
     // GIVEN / WHEN
     const lerp = createLerp({
       to: () => 100,
@@ -77,24 +77,24 @@ describe("createLerp", () => {
     });
 
     // THEN
-    expect(lerp.currentValue).toBe(100);
-    lerp.kill();
+    expect(lerp.value).toBe(100);
+    lerp.stop();
   });
 
-  it("GIVEN a lerp WHEN setCurrentValue is called before the first tick THEN it sets the initial position", () => {
+  it("GIVEN a lerp WHEN setValue is called before the first tick THEN it sets the initial position", () => {
     // GIVEN / WHEN
     const lerp = createLerp({
       to: () => 100,
       smoothTimeMs: 200,
     });
-    lerp.setCurrentValue(50);
+    lerp.setValue(50);
 
     // THEN
-    expect(lerp.currentValue).toBe(50);
-    lerp.kill();
+    expect(lerp.value).toBe(50);
+    lerp.stop();
   });
 
-  it("GIVEN a running lerp WHEN setCurrentValue is called THEN it teleports the value instantly", () => {
+  it("GIVEN a running lerp WHEN setValue is called THEN it teleports the value instantly", () => {
     // GIVEN
     let target = 0;
     const lerp = createLerp({
@@ -106,11 +106,11 @@ describe("createLerp", () => {
     // WHEN
     target = 100;
     getTicker().update(16);
-    lerp.setCurrentValue(500);
+    lerp.setValue(500);
 
     // THEN
-    expect(lerp.currentValue).toBe(500);
-    lerp.kill();
+    expect(lerp.value).toBe(500);
+    lerp.stop();
   });
 
   it("GIVEN a running lerp WHEN stopped THEN it pauses progress and WHEN started THEN it resumes", () => {
@@ -124,25 +124,25 @@ describe("createLerp", () => {
 
     target = 100;
     for (let i = 0; i < 10; i++) getTicker().update(16);
-    const before = lerp.currentValue;
+    const before = lerp.value;
 
     // WHEN — stop
     lerp.stop();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
     // THEN — paused
-    expect(lerp.currentValue).toBe(before);
+    expect(lerp.value).toBe(before);
 
     // WHEN — resume
-    lerp.start();
+    lerp.resume();
     for (let i = 0; i < 10; i++) getTicker().update(16);
 
     // THEN — progressing again
-    expect(lerp.currentValue).toBeGreaterThan(before);
-    lerp.kill();
+    expect(lerp.value).toBeGreaterThan(before);
+    lerp.stop();
   });
 
-  it("GIVEN a running lerp WHEN killed THEN it stops updating and becomes inactive", () => {
+  it("GIVEN a running lerp WHEN stopped THEN it stops updating and becomes inactive", () => {
     // GIVEN
     let target = 0;
     const lerp = createLerp({
@@ -155,12 +155,12 @@ describe("createLerp", () => {
     getTicker().update(16);
 
     // WHEN
-    lerp.kill();
-    const killedValue = lerp.currentValue;
+    lerp.stop();
+    const stoppedValue = lerp.value;
     getTicker().update(16);
 
     // THEN
-    expect(lerp.currentValue).toBe(killedValue);
+    expect(lerp.value).toBe(stoppedValue);
     expect(lerp.status).toBe("inactive");
   });
 
@@ -185,7 +185,7 @@ describe("createLerp", () => {
     expect(velocities[0]).toBeCloseTo(600, 5);
     expect(velocities[velocities.length - 1]).toBeLessThan(velocities[0]);
     expect(lerp.velocity).toBe(velocities[velocities.length - 1]);
-    lerp.kill();
+    lerp.stop();
   });
 
   it("GIVEN a lerp with onEnded callback WHEN it settles on the target THEN onEnded fires", () => {
@@ -209,8 +209,8 @@ describe("createLerp", () => {
 
     // THEN
     expect(ended).toBe(true);
-    expect(lerp.currentValue).toBeCloseTo(100, 0);
-    lerp.kill();
+    expect(lerp.value).toBeCloseTo(100, 0);
+    lerp.stop();
   });
 
   it("GIVEN a lerp with a dynamic smoothTimeMs function WHEN smoothTimeMs changes mid-animation THEN the speed adjusts", () => {
@@ -229,14 +229,14 @@ describe("createLerp", () => {
     // WHEN — start with slow smoothTime
     target = 100;
     for (let i = 0; i < 60; i++) getTicker().update(16);
-    const afterSlow = lerp.currentValue;
+    const afterSlow = lerp.value;
 
     // WHEN — reduce smoothTime (speed up)
     currentSmoothTimeMs = 100;
     for (let i = 0; i < 30; i++) getTicker().update(16);
 
     // THEN — value progresses faster
-    expect(lerp.currentValue).toBeGreaterThan(afterSlow);
-    lerp.kill();
+    expect(lerp.value).toBeGreaterThan(afterSlow);
+    lerp.stop();
   });
 });

@@ -37,9 +37,8 @@ export type Animation = {
   resume: () => void;
   stop: () => void;
   skipToEnd: () => void;
-  kill: () => void;
 
-  currentValue: number;
+  value: number;
   velocity: number;
   progress: number;
   setProgress: (value: number) => void;
@@ -98,9 +97,6 @@ export const createSingleTween = ({
   runner = buildRunner();
 
   const play = (): Promise<void> => {
-    if (status === "dead") {
-      throw new Error("Cannot play a dead animation");
-    }
     if (hasDynamicProperty) {
       runner = buildRunner();
     } else {
@@ -144,12 +140,6 @@ export const createSingleTween = ({
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    status = "dead";
-    ticker.remove(runner);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") {
       pause();
@@ -163,9 +153,8 @@ export const createSingleTween = ({
     resume,
     stop,
     skipToEnd,
-    kill,
-    get currentValue() {
-      return runner.currentValue;
+    get value() {
+      return runner.value;
     },
     get velocity() {
       return runner.velocity;
