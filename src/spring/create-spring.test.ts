@@ -86,7 +86,7 @@ test("GIVEN a spring created without explicit starting value WHEN created THEN v
 
   // THEN
   expect(spring.value).toBe(100);
-  spring.kill();
+  spring.stop();
 });
 
 test("GIVEN a spring WHEN setValue is called before the first tick THEN it sets the initial position", () => {
@@ -96,7 +96,7 @@ test("GIVEN a spring WHEN setValue is called before the first tick THEN it sets 
 
   // THEN
   expect(spring.value).toBe(50);
-  spring.kill();
+  spring.stop();
 });
 
 test("GIVEN a spring with onUpdate velocity callback WHEN it starts moving THEN velocity is reported correctly", () => {
@@ -123,10 +123,10 @@ test("GIVEN a spring with onUpdate velocity callback WHEN it starts moving THEN 
   expect(velocities.length).toBeGreaterThan(0);
   expect(velocities[0]).toBeCloseTo(320, 5);
   expect(spring.velocity).toBe(velocities[velocities.length - 1]);
-  spring.kill();
+  spring.stop();
 });
 
-test("GIVEN a running spring WHEN killed THEN it becomes inactive", () => {
+test("GIVEN a running spring WHEN stopped THEN it becomes inactive", () => {
   // GIVEN
   const ticker = getTicker();
   let target = 0;
@@ -140,7 +140,7 @@ test("GIVEN a running spring WHEN killed THEN it becomes inactive", () => {
   // WHEN
   target = 100;
   ticker.update(16);
-  spring.kill();
+  spring.stop();
 
   // THEN
   expect(spring.status).toBe("inactive");
@@ -174,7 +174,7 @@ test("GIVEN a running spring WHEN stopped THEN it pauses and WHEN started THEN i
   expect(Math.round(spring.value)).toBe(stoppedAt);
 
   // WHEN — resume
-  spring.start();
+  spring.resume();
   for (let i = 0; i < 200; i++) ticker.update(16);
 
   // THEN — reaches target
@@ -195,5 +195,5 @@ test("GIVEN a spring chasing a dynamic target WHEN the target changes THEN it ch
 
   // THEN
   expect(spring.value).toBeCloseTo(120, 0);
-  spring.kill();
+  spring.stop();
 });

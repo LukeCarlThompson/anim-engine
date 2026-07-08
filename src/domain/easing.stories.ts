@@ -206,7 +206,7 @@ const meta = {
 
     const play = () => {
       if (tween) {
-        tween.kill();
+        tween.stop();
       }
       resetPosition();
 
@@ -259,7 +259,7 @@ const meta = {
       const startPos = tween ? tween.value : 640;
 
       if (tween) {
-        tween.kill();
+        tween.stop();
       }
 
       tween = createAnimation({

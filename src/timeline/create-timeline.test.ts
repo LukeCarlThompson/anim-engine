@@ -456,22 +456,6 @@ test("GIVEN a running timeline WHEN skipToEnd is called THEN all layers complete
   expect(ended).toBe(true);
 });
 
-test("GIVEN a timeline that has been killed WHEN play() is called THEN it throws", async () => {
-  // GIVEN
-  const tl = createTimeline([
-    { at: 0, animation: { keyframes: [{ value: 0 }, { value: 100, gap: 100 }] } },
-  ]);
-  void tl.play();
-
-  // WHEN
-  tl.kill();
-  await Promise.resolve();
-
-  // THEN
-  expect(tl.status).toBe("dead");
-  expect(() => tl.play()).toThrow();
-});
-
 test("GIVEN a timeline with onStarted callback WHEN played THEN the callback fires", async () => {
   // GIVEN
   const ticker = getTicker();
@@ -582,7 +566,7 @@ test("GIVEN a timeline with two layers WHEN setProgress is called THEN all layer
   expect(aValue).toBe(100);
   expect(bValue).toBe(100);
 
-  tl.kill();
+  tl.stop();
 });
 
 test("GIVEN a timeline with multiple layers and gaps WHEN queried THEN durationMs returns the total timeline length", () => {
@@ -665,7 +649,7 @@ test("GIVEN staggered layers WHEN setProgress goes forward then back to 0 THEN a
   expect(values.c).toBe(0);
   expect(values.d).toBe(0);
 
-  tl.kill();
+  tl.stop();
 });
 
 test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times THEN values at each position are deterministic", () => {
@@ -734,7 +718,7 @@ test("GIVEN staggered layers WHEN setProgress goes back and forth multiple times
   expect(values.c).toBe(0);
   expect(values.d).toBe(0);
 
-  tl.kill();
+  tl.stop();
 });
 
 test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets onUpdate correctly", async () => {
@@ -798,7 +782,7 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
   expect(values.c).toBe(0);
   expect(values.d).toBe(0);
 
-  tl.kill();
+  tl.stop();
 });
 
 test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 returns all layers to initial value", async () => {
@@ -858,5 +842,5 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
   expect(values.c).toBe(0);
   expect(values.d).toBe(0);
 
-  tl.kill();
+  tl.stop();
 });

@@ -1,7 +1,7 @@
 import { DynamicValue } from "./resolve-value";
 import type { ExternalTicker } from "./ticker";
 
-export type InterpolationStatus = "active" | "inactive" | "dead";
+export type InterpolationStatus = "active" | "inactive";
 
 export type Interpolation = {
   resume: () => void;

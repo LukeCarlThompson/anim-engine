@@ -130,22 +130,6 @@ test("GIVEN a running linear tween WHEN skipToEnd is called THEN the promise res
   expect(tween.value).toBe(100);
 });
 
-test("GIVEN a running tween WHEN killed THEN the promise stays unresolved and replay throws", async () => {
-  // GIVEN
-  const ticker = getTicker();
-  const tween = createAnimation({ from: 0, to: 100, durationMs: 1000, ease: "linear" });
-  void tween.play();
-
-  // WHEN
-  ticker.update(300);
-  tween.kill();
-  await Promise.resolve();
-
-  // THEN
-  expect(tween.status).toBe("dead");
-  expect(() => tween.play()).toThrow();
-});
-
 test("GIVEN a tween with dynamic from/to functions WHEN played THEN the values are evaluated at play time", async () => {
   // GIVEN
   const ticker = getTicker();
@@ -165,15 +149,6 @@ test("GIVEN a tween with dynamic from/to functions WHEN played THEN the values a
 
   // THEN
   expect(tween.value).toBe(80);
-});
-
-test("GIVEN a tween that has been killed WHEN play() is called THEN it throws", () => {
-  // GIVEN
-  const tween = createAnimation({ from: 0, to: 100, durationMs: 100, ease: "linear" });
-  tween.kill();
-
-  // WHEN / THEN
-  expect(() => tween.play()).toThrow();
 });
 
 test("GIVEN a tween with onStarted callback WHEN playback begins THEN the callback fires", async () => {
