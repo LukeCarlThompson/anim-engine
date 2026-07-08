@@ -5,12 +5,12 @@ import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
 export const createSmoothDamp = ({
-  precision = 0.01,
-  onUpdate,
-  onEnded,
   to,
   smoothTimeMs: rawSmoothTimeMs,
   maxSpeed: rawMaxSpeed,
+  precision = 0.01,
+  onUpdate,
+  onEnded,
   ticker = getTicker(),
 }: SmoothDampOptions): Interpolation => {
   const state: SmoothDampState = { current: 0, velocity: 0 };

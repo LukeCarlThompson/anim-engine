@@ -1,5 +1,17 @@
+/**
+ * A function that maps a progress value `t` in [0, 1] to an eased output value.
+ * Values outside [0, 1] may be returned for overshooting easings like elastic or back.
+ */
 export type EaseFunction = (t: number) => number;
 
+/**
+ * Resolves an easing identifier or function into a concrete {@link EaseFunction}.
+ * If a function is passed, it is returned as-is. If a name is passed, the
+ * corresponding built-in easing function is looked up.
+ *
+ * @param ease - An easing name or a custom easing function.
+ * @returns The resolved easing function.
+ */
 export const resolveEasing = (ease: EaseName | EaseFunction): EaseFunction =>
   typeof ease === "function" ? ease : EASING_FUNCTIONS[ease];
 

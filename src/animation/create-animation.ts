@@ -24,14 +24,14 @@ export const createAnimation = (options: AnimationOptions): Animation => {
 // ─── Single-tween mode ───
 
 const createSingleTween = ({
-  onStarted,
-  onUpdate,
-  onProgress,
-  onEnded,
   from: rawFrom,
   to: rawTo,
   durationMs: rawDurationMs,
   ease: easeName = "inOutSine",
+  onStarted,
+  onUpdate,
+  onProgress,
+  onEnded,
   ticker = getTicker(),
 }: SingleTweenOptions): Animation => {
   let cachedDurationMs = resolveValue(rawDurationMs);
