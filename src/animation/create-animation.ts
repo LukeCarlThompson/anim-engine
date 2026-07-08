@@ -14,6 +14,18 @@ const isKeyframeMode = (options: AnimationOptions): options is KeyframeAnimation
   return "keyframes" in options && Array.isArray(options.keyframes);
 };
 
+/**
+ * Creates an animation instance that can be played, paused, stopped,
+ * and queried for its current state.
+ *
+ * Accepts either a single tween configuration (from → to over a duration)
+ * or a keyframe animation with multiple keyframes, each with optional
+ * easing and gaps.
+ *
+ * @param options - The animation configuration, either {@link SingleTweenOptions}
+ *   or {@link KeyframeAnimationOptions}.
+ * @returns An {@link Animation} instance for controlling the animation.
+ */
 export const createAnimation = (options: AnimationOptions): Animation => {
   if (isKeyframeMode(options)) {
     return createKeyframeAnimation(options);

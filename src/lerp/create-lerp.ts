@@ -4,6 +4,18 @@ import { getTicker } from "../ticker/get-ticker";
 import { lerpStep } from "./step";
 import type { LerpState } from "./step";
 
+/**
+ * Creates a linear interpolation that smoothly moves a value toward a
+ * target over a specified time constant. Uses exponential decay for a
+ * smooth, asymptotic approach.
+ *
+ * The interpolation automatically starts and runs until it reaches the
+ * target within the configured precision. The target is re-evaluated
+ * every frame, allowing it to change dynamically.
+ *
+ * @param options - Configuration options for the interpolation.
+ * @returns An {@link Interpolation} instance for controlling the lerp.
+ */
 export const createLerp = ({
   precision = 0.01,
   onUpdate,

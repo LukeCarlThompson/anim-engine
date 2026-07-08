@@ -4,6 +4,20 @@ import { getTicker } from "../ticker";
 import { smoothDampStep } from "./step";
 import type { SmoothDampState } from "./step";
 
+/**
+ * Creates a smooth damped interpolation that progressively moves a value
+ * toward a target with velocity that decreases as it approaches, producing
+ * a natural deceleration effect.
+ *
+ * Unlike a simple lerp, smooth damp respects an optional max speed and
+ * maintains velocity continuity, making it suitable for camera-relative
+ * movement, UI animations, and game object tracking.
+ *
+ * The target is re-evaluated every frame, allowing it to change dynamically.
+ *
+ * @param options - Configuration options for the smooth damp interpolation.
+ * @returns An {@link Interpolation} instance for controlling the smooth damp.
+ */
 export const createSmoothDamp = ({
   to,
   smoothTimeMs: rawSmoothTimeMs,

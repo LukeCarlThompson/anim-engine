@@ -70,6 +70,20 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
   return { activeLayers, totalDurationMs };
 };
 
+/**
+ * Creates a timeline animation that sequences multiple keyframe animation
+ * layers, each starting at a specified time or gap after the previous layer.
+ *
+ * The timeline aggregates all layers into a single controllable animation
+ * with its own play/pause/resume/stop semantics and returns the combined
+ * values and velocities of all layers on each update.
+ *
+ * @param layers - An array of {@link TimelineLayer} configs describing each
+ *   animation in the sequence and when it should play.
+ * @param callbacks - Optional callback hooks and configuration.
+ * @param ticker - An optional external ticker. Defaults to the global ticker.
+ * @returns A {@link Timeline} instance for controlling the sequenced animation.
+ */
 export const createTimeline = (
   layers: TimelineLayer[],
   { onStarted, onUpdate, onEnded, onProgress = noOp }: TimelineCallbacks = {},
