@@ -785,6 +785,148 @@ test("GIVEN staggered layers WHEN played partway THEN scrubbing back to 0 sets o
   tl.stop();
 });
 
+// ─── Regression: values/velocities getter arrays ───
+
+test("GIVEN a timeline with two parallel layers WHEN playing THEN .values returns current values (not velocities)", async () => {
+  // Regression: syncValues() copied runner.velocity into valuesCache instead of runner.value
+
+  // GIVEN
+  const ticker = getTicker();
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
+      },
+    },
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 50 }, { value: 150, gap: 200, ease: "linear" }],
+      },
+    },
+  ]);
+
+  // WHEN — play to halfway (100ms of 200ms total)
+  void tl.play();
+  ticker.update(100);
+  await Promise.resolve();
+
+  // THEN — values should be halfway between from→to, not matching velocity
+  // Layer 0: 0→100 at t=0.5 → value=50
+  // Layer 1: 50→150 at t=0.5 → value=100
+  // Velocities: 0.5/sec for layer 0, 0.5/sec for layer 1
+  expect(tl.values[0]).toBeGreaterThan(40);
+  expect(tl.values[0]).toBeLessThan(60);
+  expect(tl.values[1]).toBeGreaterThan(90);
+  expect(tl.values[1]).toBeLessThan(110);
+
+  // AND velocity should be non-zero during motion
+  expect(tl.velocities[0]).toBeGreaterThan(0);
+  expect(tl.velocities[1]).toBeGreaterThan(0);
+
+  tl.stop();
+});
+
+test("GIVEN a timeline with two parallel layers at completion THEN .values returns end values and .velocities returns 0", async () => {
+  // GIVEN
+  const ticker = getTicker();
+
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
+      },
+    },
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 50 }, { value: 150, gap: 200, ease: "linear" }],
+      },
+    },
+  ]);
+
+  // WHEN — play to completion
+  const p = tl.play();
+  ticker.update(200);
+  await p;
+
+  // THEN
+  expect(tl.values[0]).toBe(100);
+  expect(tl.values[1]).toBe(150);
+  expect(tl.velocities[0]).toBe(0);
+  expect(tl.velocities[1]).toBe(0);
+});
+
+test("GIVEN a timeline with .values accessed after setProgress THEN they reflect the scrubbed position", () => {
+  // GIVEN
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
+      },
+    },
+  ]);
+
+  // WHEN — scrub to halfway
+  tl.setProgress(0.5);
+
+  // THEN — value is at 50 (not velocity)
+  expect(tl.values[0]).toBe(50);
+  expect(tl.values.length).toBe(1);
+  expect(tl.velocities.length).toBe(1);
+
+  tl.stop();
+});
+
+test("GIVEN a timeline with timeline-level onUpdate callback WHEN playing THEN callback receives correct values array", async () => {
+  // Regression: the timeline-level onUpdate also goes through syncValues
+
+  // GIVEN
+  const ticker = getTicker();
+  let receivedValues: number[] = [];
+  let receivedVelocities: number[] = [];
+
+  const tl = createTimeline(
+    [
+      {
+        at: 0,
+        animation: {
+          keyframes: [{ value: 0 }, { value: 100, gap: 200, ease: "linear" }],
+        },
+      },
+      {
+        at: 0,
+        animation: {
+          keyframes: [{ value: 50 }, { value: 150, gap: 200, ease: "linear" }],
+        },
+      },
+    ],
+    {
+      onUpdate: (values, velocities) => {
+        receivedValues = [...values];
+        receivedVelocities = [...velocities];
+      },
+    },
+  );
+
+  // WHEN — play to halfway
+  void tl.play();
+  ticker.update(100);
+  await Promise.resolve();
+
+  // THEN — values array is correct (not velocities)
+  expect(receivedValues[0]).toBeGreaterThan(40);
+  expect(receivedValues[0]).toBeLessThan(60);
+  expect(receivedValues[1]).toBeGreaterThan(90);
+  expect(receivedValues[1]).toBeLessThan(110);
+
+  tl.stop();
+});
+
 test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 returns all layers to initial value", async () => {
   // GIVEN
   const ticker = getTicker();
