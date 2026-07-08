@@ -2,7 +2,7 @@ import type { EaseFunction, EaseName } from "./easing";
 import { DynamicValue } from "./resolve-value";
 import { ExternalTicker } from "./ticker";
 
-export type AnimationStatus = "playing" | "paused" | "stopped" | "dead";
+export type AnimationStatus = "playing" | "paused" | "stopped";
 
 export type SingleTweenOptions = {
   from: DynamicValue;
@@ -39,7 +39,6 @@ export type Animation = {
   resume: () => void;
   stop: () => void;
   skipToEnd: () => void;
-  kill: () => void;
 
   value: number;
   velocity: number;

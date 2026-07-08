@@ -1,6 +1,12 @@
 import { createKeyframeRunner } from "../animation/runner";
 import type { Runner } from "../animation/runner";
-import type { TimelineLayer, Timeline, TimelineCallbacks, ExternalTicker } from "../domain";
+import type {
+  TimelineLayer,
+  Timeline,
+  TimelineCallbacks,
+  ExternalTicker,
+  AnimationStatus,
+} from "../domain";
 import { resolveEasing, resolveValue } from "../domain";
 import { getTicker } from "../ticker";
 
@@ -87,7 +93,7 @@ export const createTimeline = (
   };
   syncValues();
 
-  let timelineStatus: "playing" | "paused" | "stopped" | "dead" = "stopped";
+  let timelineStatus: AnimationStatus = "stopped";
   let elapsedMs = 0;
   let resolvePromise: (() => void) | undefined;
   let remainingLayers = activeLayers.length;
@@ -127,8 +133,6 @@ export const createTimeline = (
   };
 
   const play = (): Promise<void> => {
-    if (timelineStatus === "dead") throw new Error("Cannot play a dead timeline");
-
     state = buildFromConfigs(rawLayers);
     activeLayers = state.activeLayers;
     totalDurationMs = state.totalDurationMs;
@@ -180,12 +184,6 @@ export const createTimeline = (
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    timelineStatus = "dead";
-    ticker.remove(update);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (timelineStatus === "playing") pause();
 
@@ -218,7 +216,6 @@ export const createTimeline = (
     resume,
     stop,
     skipToEnd,
-    kill,
     setProgress,
     get progress() {
       return totalDurationMs > 0 ? Math.min(elapsedMs / totalDurationMs, 1) : 1;

@@ -20,18 +20,13 @@ export const createSpring = ({
   // Register immediately (auto-start)
   ticker.add(update);
 
-  const start = () => {
+  const resume = () => {
     if (active) return;
     active = true;
     ticker.add(update);
   };
 
   const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
     active = false;
     ticker.remove(update);
   };
@@ -60,9 +55,8 @@ export const createSpring = ({
   }
 
   const controls: Interpolation = {
-    start,
+    resume,
     stop,
-    kill,
     setValue: (value: number) => {
       state.current = value;
       state.velocity = 0;

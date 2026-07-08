@@ -19,26 +19,7 @@ export const createSmoothDamp = ({
   // Initialize at the target position
   state.current = to();
 
-  // Register immediately (auto-start)
-  ticker.add(update);
-
-  const start = () => {
-    if (active) return;
-    active = true;
-    ticker.add(update);
-  };
-
-  const stop = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  const kill = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
-  function update(deltaMs: number) {
+  const update = (deltaMs: number) => {
     if (!active) return;
 
     const target = to();
@@ -57,12 +38,25 @@ export const createSmoothDamp = ({
       state.velocity = 0;
       onEnded();
     }
-  }
+  };
+
+  // Register immediately (auto-start)
+  ticker.add(update);
+
+  const resume = () => {
+    if (active) return;
+    active = true;
+    ticker.add(update);
+  };
+
+  const stop = () => {
+    active = false;
+    ticker.remove(update);
+  };
 
   const controls: Interpolation = {
-    start,
+    resume,
     stop,
-    kill,
     setValue: (value: number) => {
       state.current = value;
       state.velocity = 0;

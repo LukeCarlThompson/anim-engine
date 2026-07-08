@@ -47,7 +47,7 @@ export const createLerp = ({
   // Register immediately (auto-start)
   ticker.add(update);
 
-  const start = () => {
+  const resume = () => {
     if (active) return;
     active = true;
     ticker.add(update);
@@ -58,15 +58,9 @@ export const createLerp = ({
     ticker.remove(update);
   };
 
-  const kill = () => {
-    active = false;
-    ticker.remove(update);
-  };
-
   const controls: Interpolation = {
-    start,
+    resume,
     stop,
-    kill,
     setValue: (value: number) => {
       state.current = value;
       previousValue = value;

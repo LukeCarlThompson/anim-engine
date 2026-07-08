@@ -71,9 +71,6 @@ const createSingleTween = ({
   runner = buildRunner();
 
   const play = (): Promise<void> => {
-    if (status === "dead") {
-      throw new Error("Cannot play a dead animation");
-    }
     if (hasDynamicProperty) {
       runner = buildRunner();
     } else {
@@ -117,12 +114,6 @@ const createSingleTween = ({
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    status = "dead";
-    ticker.remove(runner);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") {
       pause();
@@ -136,7 +127,6 @@ const createSingleTween = ({
     resume,
     stop,
     skipToEnd,
-    kill,
     get value() {
       return runner.value;
     },
@@ -212,7 +202,6 @@ const createKeyframeAnimation = ({
   runner = buildRunner();
 
   const play = (): Promise<void> => {
-    if (status === "dead") throw new Error("Cannot play a dead animation");
     if (hasDynamicProperty) {
       runner = buildRunner();
       cachedDurationMs = resolveKeyframeGaps();
@@ -256,12 +245,6 @@ const createKeyframeAnimation = ({
     resolvePromise = undefined;
   };
 
-  const kill = () => {
-    status = "dead";
-    ticker.remove(runner);
-    resolvePromise = undefined;
-  };
-
   const setProgress = (value: number) => {
     if (status === "playing") {
       pause();
@@ -275,7 +258,6 @@ const createKeyframeAnimation = ({
     resume,
     stop,
     skipToEnd,
-    kill,
     get value() {
       return runner.value;
     },

@@ -20,7 +20,6 @@ export type Timeline = {
   resume: () => void;
   stop: () => void;
   skipToEnd: () => void;
-  kill: () => void;
   setProgress: (value: number) => void;
   progress: number;
   status: AnimationStatus;

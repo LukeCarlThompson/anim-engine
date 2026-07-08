@@ -4,9 +4,8 @@ import type { ExternalTicker } from "./ticker";
 export type InterpolationStatus = "active" | "inactive" | "dead";
 
 export type Interpolation = {
-  start: () => void;
+  resume: () => void;
   stop: () => void;
-  kill: () => void;
 
   setValue: (value: number) => void;
 
