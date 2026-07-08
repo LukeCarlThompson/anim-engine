@@ -813,18 +813,17 @@ test("GIVEN a timeline with two parallel layers WHEN playing THEN .values return
   ticker.update(100);
   await Promise.resolve();
 
-  // THEN — values should be halfway between from→to, not matching velocity
-  // Layer 0: 0→100 at t=0.5 → value=50
-  // Layer 1: 50→150 at t=0.5 → value=100
-  // Velocities: 0.5/sec for layer 0, 0.5/sec for layer 1
-  expect(tl.values[0]).toBeGreaterThan(40);
-  expect(tl.values[0]).toBeLessThan(60);
-  expect(tl.values[1]).toBeGreaterThan(90);
-  expect(tl.values[1]).toBeLessThan(110);
+  // THEN — values should be halfway between from→to
+  // Layer 0: 0→100 at t=0.5 → value=50, velocity = (50-0)/(100/1000) = 500
+  // Layer 1: 50→150 at t=0.5 → value=100, velocity = (100-50)/(100/1000) = 500
+  expect(tl.values[0]).toBeCloseTo(50, 0);
+  expect(tl.values[1]).toBeCloseTo(100, 0);
 
-  // AND velocity should be non-zero during motion
-  expect(tl.velocities[0]).toBeGreaterThan(0);
-  expect(tl.velocities[1]).toBeGreaterThan(0);
+  // AND velocities are in different units (per-second) and don't match values
+  expect(tl.velocities[0]).toBeCloseTo(500, -1);
+  expect(tl.velocities[1]).toBeCloseTo(500, -1);
+  expect(tl.velocities[0]).not.toBe(tl.values[0]);
+  expect(tl.velocities[1]).not.toBe(tl.values[1]);
 
   tl.stop();
 });
@@ -919,10 +918,16 @@ test("GIVEN a timeline with timeline-level onUpdate callback WHEN playing THEN c
   await Promise.resolve();
 
   // THEN — values array is correct (not velocities)
-  expect(receivedValues[0]).toBeGreaterThan(40);
-  expect(receivedValues[0]).toBeLessThan(60);
-  expect(receivedValues[1]).toBeGreaterThan(90);
-  expect(receivedValues[1]).toBeLessThan(110);
+  // Layer 0: 0→100 at t=0.5 → value=50, velocity ≈ 500
+  // Layer 1: 50→150 at t=0.5 → value=100, velocity ≈ 500
+  expect(receivedValues[0]).toBeCloseTo(50, 0);
+  expect(receivedValues[1]).toBeCloseTo(100, 0);
+
+  // AND velocities are in per-second units, distinct from values
+  expect(receivedVelocities[0]).toBeCloseTo(500, -1);
+  expect(receivedVelocities[1]).toBeCloseTo(500, -1);
+  expect(receivedVelocities[0]).not.toBe(receivedValues[0]);
+  expect(receivedVelocities[1]).not.toBe(receivedValues[1]);
 
   tl.stop();
 });
