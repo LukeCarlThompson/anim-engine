@@ -27,6 +27,8 @@ const anim = createAnimation({
 await anim.play();
 ```
 
+> AI agents: this package includes a [`SKILL.md`](SKILL.md) with in-depth usage guidance for agent-assisted development.
+
 ## Design
 
 Anim Engine is built around the same concepts used in animation applications, applied to pure numbers.
@@ -278,11 +280,27 @@ for (let i = 0; i < 6; i++) {
 
 ```ts
 createTimeline([
-  { at: 0, animation: { keyframes: [{ value: 0 }, { value: 1, gap: 500 }] } },
-  { at: 0, animation: { keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }] } },
+  {
+    at: 0,
+    animation: {
+      keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
+      onEnded: () => console.log("layer 1 done"),
+    },
+  },
+  {
+    at: 0,
+    animation: {
+      keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
+      onUpdate: (v) => (sprite.y = v),
+    },
+  },
 ], {
+  // values[i] / velocities[i] correspond to layer i in definition order
+  onUpdate: (values, velocities) => {
+    sprite.x = values[0];
+    sprite.y = values[1];
+  },
   onProgress: (p) => console.log(p),
-  onUpdate: (values, velocities) => { /* one entry per layer */ },
 });
 ```
 
