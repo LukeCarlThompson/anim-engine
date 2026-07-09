@@ -1,6 +1,6 @@
 ---
 name: anim-engine
-description: Renderer-agnostic numeric animation library for JavaScript runtimes. Use when a user has installed 'anim-engine' and needs help writing animation code: tweens, keyframes, timelines, springs, smooth damp, lerp, or color interpolation. Covers all exported primitives, common recipes, game engine integration, and the ticker setup pattern.
+description: Renderer-agnostic numeric animation library for JavaScript runtimes. Use when a user has installed 'anim-engine' and needs help writing animation code with tweens, keyframes, timelines, springs, smooth damp, lerp, or color interpolation. Covers all exported primitives, common recipes, game engine integration, and the ticker setup pattern.
 metadata:
   triggers: "anim-engine, animation, createAnimation, createTimeline, createSpring, createSmoothDamp, createLerp, createSmoothClamp, lerpRgba, hexToRgba, animation library, js animation, tween, keyframe animation, timeline animation, spring physics"
 ---
@@ -218,8 +218,8 @@ const timeline = createTimeline(
   {
     // values[i] / velocities[i] correspond to layer i in definition order
     onUpdate: (values, velocities) => {
-      sprite.x = values[0];  // layer 1 (fade in)
-      sprite.y = values[1];  // layer 2 (slide up)
+      sprite.x = values[0]; // layer 1 (fade in)
+      sprite.y = values[1]; // layer 2 (slide up)
       sprite.rotation = values[2]; // layer 3 (spin)
     },
     onProgress: (p) => console.log(p),
