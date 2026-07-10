@@ -20,7 +20,10 @@ import { createAnimation, getTicker } from "anim-engine";
 getTicker().start();
 
 const anim = createAnimation({
-  from: 0, to: 100, durationMs: 1000, ease: "outCubic",
+  from: 0,
+  to: 100,
+  durationMs: 1000,
+  ease: "outCubic",
   onUpdate: (value) => (sprite.x = value),
 });
 
@@ -62,7 +65,7 @@ Anim Engine works strictly with numbers to stay renderer-agnostic. Each function
 - [Dynamic values](#dynamic-values)
 - [Color](#color)
 - [Ticker](#ticker)
-- [Game engine integration](#game-engine-integration)
+- [Rendering Library integration](#rendering-library-integration)
 - [Benchmarks](#benchmarks)
 
 ---
@@ -71,10 +74,10 @@ Anim Engine works strictly with numbers to stay renderer-agnostic. Each function
 
 Two families with complementary shapes:
 
-| Family | Functions | Lifespan |
-|---|---|---|
-| **Timed** | `createAnimation`, `createTimeline` | Fixed motion path, runs once per `play()` |
-| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp` | Chases a live target until stopped |
+| Family         | Functions                                        | Lifespan                                  |
+| -------------- | ------------------------------------------------ | ----------------------------------------- |
+| **Timed**      | `createAnimation`, `createTimeline`              | Fixed motion path, runs once per `play()` |
+| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp` | Chases a live target until stopped        |
 
 All return a control handle with `value`, `velocity`, `status`, and lifecycle methods.
 
@@ -86,54 +89,54 @@ All return a control handle with `value`, `velocity`, `status`, and lifecycle me
 
 ```ts
 type Animation = {
-  play: () => Promise<void>
-  pause: () => void
-  resume: () => void
-  stop: () => void
-  skipToEnd: () => void
-  setProgress: (value: number) => void
+  play: () => Promise<void>;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  skipToEnd: () => void;
+  setProgress: (value: number) => void;
 
-  value: number
-  velocity: number
-  progress: number       // 0 → 1
-  status: "playing" | "paused" | "stopped"
-  durationMs: number
-}
+  value: number;
+  velocity: number;
+  progress: number; // 0 → 1
+  status: "playing" | "paused" | "stopped";
+  durationMs: number;
+};
 ```
 
 **Options — single tween:**
 
 ```ts
 type TweenOptions = {
-  from: DynamicValue
-  to: DynamicValue
-  durationMs: DynamicValue
-  ease?: EaseName | EaseFunction
-  onStarted?: () => void
-  onUpdate?: (value: number, velocity: number) => void
-  onProgress?: (progress: number) => void
-  onEnded?: () => void
-  ticker?: ExternalTicker
-}
+  from: DynamicValue;
+  to: DynamicValue;
+  durationMs: DynamicValue;
+  ease?: EaseName | EaseFunction;
+  onStarted?: () => void;
+  onUpdate?: (value: number, velocity: number) => void;
+  onProgress?: (progress: number) => void;
+  onEnded?: () => void;
+  ticker?: ExternalTicker;
+};
 ```
 
 **Options — keyframes:**
 
 ```ts
 type KeyframeOptions = {
-  keyframes: Keyframe[]
-  onStarted?: () => void
-  onUpdate?: (value: number, velocity: number) => void
-  onProgress?: (progress: number) => void
-  onEnded?: () => void
-  ticker?: ExternalTicker
-}
+  keyframes: Keyframe[];
+  onStarted?: () => void;
+  onUpdate?: (value: number, velocity: number) => void;
+  onProgress?: (progress: number) => void;
+  onEnded?: () => void;
+  ticker?: ExternalTicker;
+};
 
 type Keyframe = {
-  value: DynamicValue
-  gap?: DynamicValue    // ms from previous keyframe
-  ease?: EaseName | EaseFunction
-}
+  value: DynamicValue;
+  gap?: DynamicValue; // ms from previous keyframe
+  ease?: EaseName | EaseFunction;
+};
 ```
 
 ### Timed — `Timeline`
@@ -142,44 +145,44 @@ Layers multiple keyframe animations in parallel or sequence.
 
 ```ts
 type Timeline = {
-  play: () => Promise<void>
-  pause: () => void
-  resume: () => void
-  stop: () => void
-  skipToEnd: () => void
-  setProgress: (value: number) => void
+  play: () => Promise<void>;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  skipToEnd: () => void;
+  setProgress: (value: number) => void;
 
-  values: number[]      // one per layer
-  velocities: number[]  // one per layer
-  progress: number
-  status: "playing" | "paused" | "stopped"
-  durationMs: number
-}
+  values: number[]; // one per layer
+  velocities: number[]; // one per layer
+  progress: number;
+  status: "playing" | "paused" | "stopped";
+  durationMs: number;
+};
 ```
 
 ```ts
 type TimelineLayer =
-  | { animation: KeyframeOptions; at: DynamicValue }      // absolute position
-  | { animation: KeyframeOptions; gap: number }            // relative to previous layer end
+  | { animation: KeyframeOptions; at: DynamicValue } // absolute position
+  | { animation: KeyframeOptions; gap: number }; // relative to previous layer end
 ```
 
 ### Continuous — `Interpolation`
 
 ```ts
 type Interpolation = {
-  resume: () => void
-  stop: () => void
-  setValue: (value: number) => void
+  resume: () => void;
+  stop: () => void;
+  setValue: (value: number) => void;
 
-  value: number
-  velocity: number
-  status: "active" | "inactive"
-}
+  value: number;
+  velocity: number;
+  status: "active" | "inactive";
+};
 ```
 
 **Options:**
 
-```ts
+````ts
 type SpringOptions = {
   to: () => number
   stiffness?: DynamicValue   // default 180
@@ -209,28 +212,33 @@ type LerpOptions = {
   onEnded?: () => void
   ticker?: ExternalTicker
 }
-```
+
+### Smooth clamp (pure function)
+
+```ts
+createSmoothClamp(threshold: number): (input: number) => number
+````
 
 ### Common option patterns
 
-| | `from` | `to` / target | `onUpdate` values | `durationMs` / `smoothTimeMs` |
-|---|---|---|---|---|
-| `createAnimation` (tween) | ✅ `DynamicValue` | ✅ `DynamicValue` | single `(value, velocity)` | ✅ `DynamicValue` |
-| `createAnimation` (keyframes) | — (first keyframe) | — (last keyframe) | single `(value, velocity)` | — (sum of gaps) |
-| `createTimeline` | — | — | multi `(values[], velocities[])` | — (computed) |
-| `createSpring` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | — (physics params) |
-| `createSmoothDamp` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | ✅ `DynamicValue` |
-| `createLerp` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | ✅ `DynamicValue` |
+|                               | `from`             | `to` / target     | `onUpdate` values                | `durationMs` / `smoothTimeMs` |
+| ----------------------------- | ------------------ | ----------------- | -------------------------------- | ----------------------------- |
+| `createAnimation` (tween)     | ✅ `DynamicValue`  | ✅ `DynamicValue` | single `(value, velocity)`       | ✅ `DynamicValue`             |
+| `createAnimation` (keyframes) | — (first keyframe) | — (last keyframe) | single `(value, velocity)`       | — (sum of gaps)               |
+| `createTimeline`              | —                  | —                 | multi `(values[], velocities[])` | — (computed)                  |
+| `createSpring`                | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | — (physics params)            |
+| `createSmoothDamp`            | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | ✅ `DynamicValue`             |
+| `createLerp`                  | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | ✅ `DynamicValue`             |
 
 ### Shared options
 
 ```ts
-type DynamicValue = number | (() => number)
+type DynamicValue = number | (() => number);
 
 type ExternalTicker = {
-  add: (handler: TickHandler) => void
-  remove: (handler: TickHandler) => void
-}
+  add: (handler: TickHandler) => void;
+  remove: (handler: TickHandler) => void;
+};
 ```
 
 ---
@@ -241,7 +249,10 @@ type ExternalTicker = {
 
 ```ts
 const anim = createAnimation({
-  from: 0, to: 100, durationMs: 2000, ease: "outElastic",
+  from: 0,
+  to: 100,
+  durationMs: 2000,
+  ease: "outElastic",
   onUpdate: (v) => (sprite.x = v),
 });
 await anim.play();
@@ -251,11 +262,7 @@ await anim.play();
 
 ```ts
 createAnimation({
-  keyframes: [
-    { value: 0 },
-    { value: 50, gap: 300, ease: "outCubic" },
-    { value: 100, gap: 400 },
-  ],
+  keyframes: [{ value: 0 }, { value: 50, gap: 300, ease: "outCubic" }, { value: 100, gap: 400 }],
   onUpdate: (v) => (sprite.x = v),
 }).play();
 ```
@@ -266,7 +273,8 @@ createAnimation({
 const anim = createAnimation({
   from: () => (forward ? 1 : 1.3),
   to: () => (forward ? 1.3 : 1),
-  durationMs: 600, ease: "inOutSine",
+  durationMs: 600,
+  ease: "inOutSine",
   onUpdate: (v) => sprite.scale.set(v),
 });
 
@@ -279,29 +287,32 @@ for (let i = 0; i < 6; i++) {
 ### Timeline
 
 ```ts
-createTimeline([
-  {
-    at: 0,
-    animation: {
-      keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
-      onEnded: () => console.log("layer 1 done"),
+createTimeline(
+  [
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: 0 }, { value: 1, gap: 500 }],
+        onEnded: () => console.log("layer 1 done"),
+      },
     },
-  },
-  {
-    at: 0,
-    animation: {
-      keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
-      onUpdate: (v) => (sprite.y = v),
+    {
+      at: 0,
+      animation: {
+        keyframes: [{ value: -100 }, { value: 0, gap: 800, ease: "outBack" }],
+        onUpdate: (v) => (sprite.y = v),
+      },
     },
+  ],
+  {
+    // values[i] / velocities[i] correspond to layer i in definition order
+    onUpdate: (values, velocities) => {
+      sprite.x = values[0];
+      sprite.y = values[1];
+    },
+    onProgress: (p) => console.log(p),
   },
-], {
-  // values[i] / velocities[i] correspond to layer i in definition order
-  onUpdate: (values, velocities) => {
-    sprite.x = values[0];
-    sprite.y = values[1];
-  },
-  onProgress: (p) => console.log(p),
-});
+);
 ```
 
 ### Spring
@@ -309,7 +320,8 @@ createTimeline([
 ```ts
 const spring = createSpring({
   to: () => mouseX,
-  stiffness: 180, damping: 12,
+  stiffness: 180,
+  damping: 12,
   onUpdate: (v) => (sprite.x = v),
 });
 ```
@@ -318,7 +330,8 @@ const spring = createSpring({
 
 ```ts
 createSmoothDamp({
-  to: () => 100, smoothTimeMs: 300,
+  to: () => 100,
+  smoothTimeMs: 300,
   onUpdate: (v) => (sprite.x = v),
 });
 ```
@@ -327,7 +340,8 @@ createSmoothDamp({
 
 ```ts
 createLerp({
-  to: () => 100, smoothTimeMs: 300,
+  to: () => 100,
+  smoothTimeMs: 300,
   onUpdate: (v) => (sprite.x = v),
 });
 ```
@@ -347,18 +361,39 @@ clamp(1000); // ≈ 44.96 (asymptotic to 45)
 
 ```ts
 type EaseName =
-  | "linear" | "inQuad" | "outQuad" | "inOutQuad"
-  | "inCubic" | "outCubic" | "inOutCubic"
-  | "inQuart" | "outQuart" | "inOutQuart"
-  | "inQuint" | "outQuint" | "inOutQuint"
-  | "inSine" | "outSine" | "inOutSine"
-  | "inExpo" | "outExpo" | "inOutExpo"
-  | "inCirc" | "outCirc" | "inOutCirc"
-  | "inBack" | "outBack" | "inOutBack"
-  | "inElastic" | "outElastic" | "inOutElastic"
-  | "inBounce" | "outBounce" | "inOutBounce"
+  | "linear"
+  | "inQuad"
+  | "outQuad"
+  | "inOutQuad"
+  | "inCubic"
+  | "outCubic"
+  | "inOutCubic"
+  | "inQuart"
+  | "outQuart"
+  | "inOutQuart"
+  | "inQuint"
+  | "outQuint"
+  | "inOutQuint"
+  | "inSine"
+  | "outSine"
+  | "inOutSine"
+  | "inExpo"
+  | "outExpo"
+  | "inOutExpo"
+  | "inCirc"
+  | "outCirc"
+  | "inOutCirc"
+  | "inBack"
+  | "outBack"
+  | "inOutBack"
+  | "inElastic"
+  | "outElastic"
+  | "inOutElastic"
+  | "inBounce"
+  | "outBounce"
+  | "inOutBounce";
 
-type EaseFunction = (t: number) => number
+type EaseFunction = (t: number) => number;
 ```
 
 Custom bezier:
@@ -396,11 +431,20 @@ createSpring({ to: () => mouseX, ... });
 Oklab (perceptually uniform) color interpolation via `lerpRgba`.
 
 ```ts
-const from = hexToRgba("#ff6b6b");  // [1, 0.42, 0.42, 1]
+type RgbaTuple = [number, number, number, number]
+
+hexToRgba(hex: string): RgbaTuple
+lerpRgba(from: RgbaTuple, to: RgbaTuple, t: number): RgbaTuple
+```
+
+```ts
+const from = hexToRgba("#ff6b6b"); // [1, 0.42, 0.42, 1]
 const to = hexToRgba("#4ecdc4");
 
 createAnimation({
-  from: 0, to: 1, durationMs: 2000,
+  from: 0,
+  to: 1,
+  durationMs: 2000,
   onUpdate: (t) => {
     const [r, g, b, a] = lerpRgba(from, to, t);
     sprite.setColor(r, g, b, a);
@@ -433,7 +477,7 @@ Stop with `getTicker().stop()`.
 
 ---
 
-## Game engine integration
+## Rendering Library integration
 
 ### PixiJS
 
@@ -443,7 +487,11 @@ const ticker = getTicker();
 
 app.ticker.add((delta) => ticker.update(delta.deltaMS));
 
-createAnimation({ from: 0, to: 300, durationMs: 2000, ease: "outElastic",
+createAnimation({
+  from: 0,
+  to: 300,
+  durationMs: 2000,
+  ease: "outElastic",
   onUpdate: (x) => (sprite.x = x),
 }).play();
 ```
@@ -468,16 +516,16 @@ animate();
 
 vs GSAP (vitest bench, Apple Silicon M-series, Node 24). Matched easing functions.
 
-| Benchmark | anim-engine | GSAP | Ratio |
-|---|---|---|---|
-| Single tween (cubic, 1000 frames) | 40,974 ops/s | 10,656 ops/s | 3.8× |
-| Single tween (bezier, 1000 frames) | 20,190 ops/s | 11,948 ops/s | 1.7× |
-| Keyframe (3 segments, 1000 frames) | 26,661 ops/s | 3,578 ops/s | 7.5× |
-| 50 concurrent tweens (500 frames) | 866 ops/s | 436 ops/s | 2.0× |
-| 200 concurrent tweens (500 frames) | 187 ops/s | 112 ops/s | 1.7× |
-| 1000 concurrent tweens (500 frames) | 37 ops/s | 13 ops/s | 2.8× |
-| 50-layer timeline (500 frames) | 684 ops/s | 406 ops/s | 1.7× |
-| 50 tweens re-play (500 frames) | 523 ops/s | 133 ops/s | 3.9× |
+| Benchmark                           | anim-engine  | GSAP         | Ratio |
+| ----------------------------------- | ------------ | ------------ | ----- |
+| Single tween (cubic, 1000 frames)   | 40,974 ops/s | 10,656 ops/s | 3.8×  |
+| Single tween (bezier, 1000 frames)  | 20,190 ops/s | 11,948 ops/s | 1.7×  |
+| Keyframe (3 segments, 1000 frames)  | 26,661 ops/s | 3,578 ops/s  | 7.5×  |
+| 50 concurrent tweens (500 frames)   | 866 ops/s    | 436 ops/s    | 2.0×  |
+| 200 concurrent tweens (500 frames)  | 187 ops/s    | 112 ops/s    | 1.7×  |
+| 1000 concurrent tweens (500 frames) | 37 ops/s     | 13 ops/s     | 2.8×  |
+| 50-layer timeline (500 frames)      | 684 ops/s    | 406 ops/s    | 1.7×  |
+| 50 tweens re-play (500 frames)      | 523 ops/s    | 133 ops/s    | 3.9×  |
 
 vs GSAP `onUpdate` (apples-to-apples): **2.8–4.5× faster**.
 
