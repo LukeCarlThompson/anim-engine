@@ -47,6 +47,8 @@ Anim Engine is built around the same concepts used in animation applications, ap
 - **Spring** — mass-spring-damper physics for bouncy or elastic movement.
 - **Smooth damp** — natural deceleration toward a target (Unity-style).
 - **Lerp** — exponential approach for smooth asymptotic tracking.
+- **Inertia** — velocity decay for drag-to-throw gestures (fling, spin).
+- **Smooth scroll** — delta-based momentum scroll with clamped bounds.
 - **Smooth clamp** — asymptotic saturation for capping velocity, torque, or force.
 
 **Color helpers** — Oklab-based composable interpolation.
@@ -74,14 +76,16 @@ Anim Engine works strictly with numbers to stay renderer-agnostic. Each function
 
 Two families with complementary shapes:
 
-| Family         | Functions                                        | Lifespan                                  |
-| -------------- | ------------------------------------------------ | ----------------------------------------- |
-| **Timed**      | `createAnimation`, `createTimeline`              | Fixed motion path, runs once per `play()` |
-| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp` | Chases a live target until stopped        |
+| Family         | Functions                                                                               | Lifespan                                  |
+| -------------- | --------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Timed**      | `createAnimation`, `createTimeline`                                                     | Fixed motion path, runs once per `play()` |
+| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp`, `createInertia`, `createSmoothScroll` | Chases a live target until stopped        |
 
 All return a control handle with `value`, `velocity`, `status`, and lifecycle methods.
 
 `createSmoothClamp` is a pure function factory (no handle — returns `(input: number) => number`).
+
+`createInertia` and `createSmoothScroll` are gesture-driven continuous primitives with distinct control handles (see below).
 
 ## At a glance
 
@@ -212,23 +216,18 @@ type LerpOptions = {
   onEnded?: () => void
   ticker?: ExternalTicker
 }
-
-### Smooth clamp (pure function)
-
-```ts
-createSmoothClamp(threshold: number): (input: number) => number
-````
+```
 
 ### Common option patterns
 
-|                               | `from`             | `to` / target     | `onUpdate` values                | `durationMs` / `smoothTimeMs` |
-| ----------------------------- | ------------------ | ----------------- | -------------------------------- | ----------------------------- |
-| `createAnimation` (tween)     | ✅ `DynamicValue`  | ✅ `DynamicValue` | single `(value, velocity)`       | ✅ `DynamicValue`             |
-| `createAnimation` (keyframes) | — (first keyframe) | — (last keyframe) | single `(value, velocity)`       | — (sum of gaps)               |
-| `createTimeline`              | —                  | —                 | multi `(values[], velocities[])` | — (computed)                  |
-| `createSpring`                | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | — (physics params)            |
-| `createSmoothDamp`            | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | ✅ `DynamicValue`             |
-| `createLerp`                  | — (chases current) | ✅ `() => number` | single `(value, velocity)`       | ✅ `DynamicValue`             |
+| | `from` | `to` / target | `onUpdate` values | `durationMs` / `smoothTimeMs` |
+|---|---|---|---|---|
+| `createAnimation` (tween) | ✅ `DynamicValue` | ✅ `DynamicValue` | single `(value, velocity)` | ✅ `DynamicValue` |
+| `createAnimation` (keyframes) | — (first keyframe) | — (last keyframe) | single `(value, velocity)` | — (sum of gaps) |
+| `createTimeline` | — | — | multi `(values[], velocities[])` | — (computed) |
+| `createSpring` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | — (physics params) |
+| `createSmoothDamp` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | ✅ `DynamicValue` |
+| `createLerp` | — (chases current) | ✅ `() => number` | single `(value, velocity)` | ✅ `DynamicValue` |
 
 ### Shared options
 
@@ -353,6 +352,57 @@ const clamp = createSmoothClamp(45);
 clamp(1000); // ≈ 44.96 (asymptotic to 45)
 ```
 
+### Inertia (drag-to-throw)
+
+Call `track()` every frame while dragging, then `release()` to coast.
+
+```ts
+const inertia = createInertia({
+  decelerationMs: 300,
+  precision: 0.5,
+  onUpdate: (v) => (block.style.left = `${v}px`),
+});
+
+function onPointerDown(e) {
+  inertia.track(e.clientX);
+}
+function onPointerMove(e) {
+  if (e.buttons) inertia.track(e.clientX);
+}
+function onPointerUp() {
+  inertia.release();
+}
+
+// Teleport and reset velocity instantly
+inertia.setValue(30);
+```
+
+### Smooth scroll (momentum scroll)
+
+Delta-driven momentum scroll with optional bounds. Target is clamped on write so there's no dead zone when coming back from overscroll.
+
+```ts
+const scroll = createSmoothScroll({
+  smoothTimeMs: 30,
+  min: 0,
+  max: 650,
+  onUpdate: (v) => (track.style.transform = `translateX(${-v}px)`),
+});
+
+// Wheel
+viewport.addEventListener("wheel", (e) => {
+  scroll.addDelta(e.deltaX || e.deltaY);
+});
+
+// Pointer drag
+function onPointerDown(e) {
+  scroll.setValue(scroll.value); // re-sync on grab
+}
+function onPointerMove(e) {
+  if (e.buttons) scroll.addDelta(e.clientX - lastX);
+}
+```
+
 ---
 
 ## Easing
@@ -458,7 +508,7 @@ Accepts `#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA` formats.
 
 ## Ticker
 
-Does **not** auto-start. Explicit control:
+Does **not** auto-start. Explicit control. **Call `getTicker().start()` once per application** — at your entry point, not inside a component or per-animation.
 
 ```ts
 import { getTicker } from "anim-engine";
@@ -536,3 +586,4 @@ Run locally: `npm run bench`
 ## License
 
 MIT
+````
