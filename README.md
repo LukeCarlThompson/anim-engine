@@ -76,10 +76,10 @@ Anim Engine works strictly with numbers to stay renderer-agnostic. Each function
 
 Two families with complementary shapes:
 
-| Family | Functions | Lifespan |
-|---|---|---|
-| **Timed** | `createAnimation`, `createTimeline` | Fixed motion path, runs once per `play()` |
-| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp`, `createInertia`, `createSmoothScroll` | Chases a live target until stopped |
+| Family         | Functions                                                                               | Lifespan                                  |
+| -------------- | --------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Timed**      | `createAnimation`, `createTimeline`                                                     | Fixed motion path, runs once per `play()` |
+| **Continuous** | `createSpring`, `createSmoothDamp`, `createLerp`, `createInertia`, `createSmoothScroll` | Chases a live target until stopped        |
 
 All return a control handle with `value`, `velocity`, `status`, and lifecycle methods.
 
@@ -586,3 +586,4 @@ Run locally: `npm run bench`
 ## License
 
 MIT
+````
