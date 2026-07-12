@@ -5,6 +5,10 @@ export type {
   LerpOptions,
   SmoothDampOptions,
   SpringOptions,
+  InertiaOptions,
+  Inertia,
+  SmoothScrollOptions,
+  SmoothScroll,
 } from "./interpolation";
 export type { EaseName, EaseFunction } from "./easing";
 export { EASE_NAMES, cubicBezier, EASING_FUNCTIONS, resolveEasing } from "./easing";

@@ -1,8 +1,8 @@
 ---
 name: anim-engine
-description: Renderer-agnostic numeric animation library for JavaScript runtimes. Use when a user has installed 'anim-engine' and needs help writing animation code with tweens, keyframes, timelines, springs, smooth damp, lerp, or color interpolation. Covers all exported primitives, common recipes, game engine integration, and the ticker setup pattern.
+description: Renderer-agnostic numeric animation library for JavaScript runtimes. Use when a user has installed 'anim-engine' and needs help writing animation code with tweens, keyframes, timelines, springs, smooth damp, lerp, inertia, smooth scroll, or color interpolation. Covers all exported primitives, common recipes, game engine integration, and the ticker setup pattern.
 metadata:
-  triggers: "anim-engine, animation, createAnimation, createTimeline, createSpring, createSmoothDamp, createLerp, createSmoothClamp, lerpRgba, hexToRgba, animation library, js animation, tween, keyframe animation, timeline animation, spring physics"
+  triggers: "anim-engine, animation, createAnimation, createTimeline, createSpring, createSmoothDamp, createLerp, createSmoothClamp, createInertia, createSmoothScroll, inertia, smooth scroll, momentum scroll, lerpRgba, hexToRgba, animation library, js animation, tween, keyframe animation, timeline animation, spring physics"
 ---
 
 # anim-engine
@@ -17,7 +17,9 @@ npm install anim-engine
 
 ## Getting Started
 
-Import the primitives you need and start a ticker once. The ticker drives all animations — it does **not** auto-start.
+Import the primitives you need and start a ticker once per application. The ticker drives all animations — it does **not** auto-start.
+
+> ⚠️ **Call `getTicker().start()` once** at your app's entry point, not inside a component or per animation.
 
 ```ts
 import { createAnimation, getTicker } from "anim-engine";
@@ -41,6 +43,8 @@ await anim.play();
 ## Ticker Setup
 
 The ticker must be started before any animations will advance. There are two modes:
+
+> ⚠️ **Call `getTicker().start()` exactly once per application** — at your app's entry point or initialization, not inside a component, hook, or per-animation scope. Multiple calls are harmless (the ticker is a singleton), but instantiating separate ticker loops in components will fight each other, leak resources, and break frame timing.
 
 ### Automatic (rAF)
 
@@ -101,7 +105,7 @@ Two animation families:
 | Family            | Factories                                        | What it does                                                 |
 | ----------------- | ------------------------------------------------ | ------------------------------------------------------------ |
 | **Timed**         | `createAnimation`, `createTimeline`              | Fixed motion path. Runs once per `play()`.                   |
-| **Continuous**    | `createSpring`, `createSmoothDamp`, `createLerp` | Chases a live target every frame until stopped.              |
+| **Continuous**    | `createSpring`, `createSmoothDamp`, `createLerp`, `createInertia`, `createSmoothScroll` | Chases a live target every frame until stopped. |
 | **Pure function** | `createSmoothClamp`                              | Asymptotic saturation — returns `(input: number) => number`. |
 
 ---
@@ -124,7 +128,6 @@ const anim = createAnimation({
   onProgress: (progress) => {}, // 0 → 1
   onStarted: () => {},
   onEnded: () => {},
-  ticker: customTicker, // optional ExternalTicker
 });
 
 await anim.play(); // Promise resolves when animation completes
@@ -249,7 +252,6 @@ const spring = createSpring({
     sprite.x = value;
   },
   onEnded: () => {},
-  ticker: customTicker,
 });
 
 // Later:
@@ -279,7 +281,6 @@ const damp = createSmoothDamp({
     /* assign */
   },
   onEnded: () => {},
-  ticker: customTicker,
 });
 ```
 
@@ -298,9 +299,70 @@ const lerp = createLerp({
     /* assign */
   },
   onEnded: () => {},
-  ticker: customTicker,
 });
 ```
+
+---
+
+## Gesture-driven: `createInertia`
+
+Exponential velocity decay for drag-to-throw gestures. Call `track(position)` every frame while dragging — it records position and computes velocity from the frame-to-frame delta. On `release()`, velocity decays exponentially and the value coasts to a stop.
+
+```ts
+import { createInertia } from "anim-engine";
+
+const inertia = createInertia({
+  decelerationMs: 300, // Time constant — higher = longer coast
+  precision: 0.5,       // Settling threshold
+  onUpdate: (value, velocity) => {
+    block.style.left = `${value}px`;
+  },
+  onEnded: () => {},
+});
+
+// During drag:
+inertia.track(e.clientX);
+
+// On release:
+inertia.release(); // Velocity decays to stop
+
+// Teleport instantly:
+inertia.setValue(50);
+```
+
+Self-registers on the ticker while active (tracking or coasting), removes itself when settled — no explicit lifecycle management needed.
+
+---
+
+## Gesture-driven: `createSmoothScroll`
+
+Delta-based momentum scroll built on top of smooth damp. Manages an internal target clamped on write so there's no dead zone when coming back from overscroll. Add deltas via `addDelta()` and the value smooth-damps toward the cumulative target every frame.
+
+```ts
+import { createSmoothScroll } from "anim-engine";
+
+const scroll = createSmoothScroll({
+  smoothTimeMs: 30,  // Response time — lower = snappier
+  min: 0,
+  max: 650,
+  precision: 0.5,
+  onUpdate: (value) => {
+    viewport.style.transform = `translateX(${-value}px)`;
+  },
+  onEnded: () => {},
+});
+
+// Re-sync on pointer grab:
+scroll.setValue(scroll.value);
+
+// Wheel event:
+scroll.addDelta(e.deltaY);
+
+// Pointer move:
+scroll.addDelta(e.clientX - lastX);
+```
+
+Self-registers on the ticker only while animating toward the target — automatically stops when settled.
 
 ---
 
@@ -358,6 +420,8 @@ Resolution timing depends on the primitive:
 | `createAnimation` (keyframes)                      | Once per `play()` call                          |
 | `createTimeline`                                   | Once per `play()` call                          |
 | `createSpring` / `createSmoothDamp` / `createLerp` | **Every frame** (target is a live value)        |
+| `createInertia`                                     | `decelerationMs` resolved **every frame** while coasting |
+| `createSmoothScroll`                                | `smoothTimeMs`, `min`, `max` resolved **every frame**   |
 
 ```ts
 // Static value — resolved once
@@ -479,8 +543,7 @@ draw();
 ### Spring-loaded UI element
 
 ```ts
-import { createSpring, getTicker } from "anim-engine";
-getTicker().start();
+import { createSpring } from "anim-engine";
 
 createSpring({
   to: () => mouseX,
@@ -512,4 +575,58 @@ function gameLoop(dt: number) {
   enemy.x = spring.value; // Read current position
   enemy.vx = spring.velocity; // Read current velocity
 }
+```
+
+### Drag-to-throw with inertia
+
+```ts
+import { createInertia } from "anim-engine";
+
+const inertia = createInertia({
+  decelerationMs: 400,
+  onUpdate: (v) => (card.style.transform = `translateX(${v}px)`),
+});
+
+card.addEventListener("pointerdown", (e) => {
+  inertia.track(e.clientX);
+  card.setPointerCapture(e.pointerId);
+});
+card.addEventListener("pointermove", (e) => {
+  if (e.buttons) inertia.track(e.clientX);
+});
+card.addEventListener("pointerup", () => inertia.release());
+card.addEventListener("pointercancel", () => inertia.release());
+```
+
+### Momentum scroll with smooth scroll
+
+```ts
+import { createSmoothScroll } from "anim-engine";
+
+const scroll = createSmoothScroll({
+  smoothTimeMs: 30,
+  min: 0,
+  max: 1200,
+  onUpdate: (v) => (track.style.transform = `translateX(${-v}px)`),
+});
+
+// Wheel
+viewport.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  scroll.addDelta(e.deltaX || e.deltaY);
+}, { passive: false });
+
+// Pointer drag
+let lastX = 0;
+viewport.addEventListener("pointerdown", (e) => {
+  lastX = e.clientX;
+  scroll.setValue(scroll.value);
+  viewport.setPointerCapture(e.pointerId);
+});
+viewport.addEventListener("pointermove", (e) => {
+  if (e.buttons) {
+    scroll.addDelta(-(e.clientX - lastX));
+    lastX = e.clientX;
+  }
+});
 ```
