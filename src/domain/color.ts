@@ -2,7 +2,7 @@
  * A tuple representing an RGBA color with each channel as a float in the range [0, 1].
  * Ordered as [red, green, blue, alpha].
  */
-export type RgbaTuple = readonly [number, number, number, number];
+export type RgbaTuple = [number, number, number, number];
 
 /**
  * A function that linearly interpolates between two RGBA colors in Oklab color space.
