@@ -534,7 +534,7 @@ Build the animation once and call `play()` to run it again — `play()` resets i
 
 ### `onUpdate` signature
 
-`onUpdate(value, velocity)`. Passing a signal setter directly calls it as `setter(value, velocity)`; prefer `onUpdate: (value) => setter(value)`.
+`onUpdate(value, velocity)` is always called with two arguments. A plain one-parameter setter ignores the extra `velocity`, but a setter that gives its second parameter a meaning — `(key, value)`, `(value, options)`, `(partial, replace)` — receives `velocity` in the wrong slot. Prefer wrapping it: `onUpdate: (value) => setter(value)`.
 
 ### Picking the API
 
