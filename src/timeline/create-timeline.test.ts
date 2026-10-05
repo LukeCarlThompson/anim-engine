@@ -991,3 +991,134 @@ test("GIVEN staggered layers WHEN played to completion THEN scrubbing back to 0 
 
   tl.stop();
 });
+
+// ─── Keyframe onReached in timeline layers ───
+
+test("GIVEN a timeline layer with keyframe onReached WHEN played through THEN the callbacks fire in order", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const events: string[] = [];
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [
+          { value: 0 },
+          {
+            value: 100,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:1"),
+          },
+          {
+            value: 0,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:2"),
+          },
+        ],
+      },
+    },
+  ]);
+
+  // WHEN
+  const p = tl.play();
+  ticker.update(100);
+  ticker.update(100);
+  await p;
+
+  // THEN
+  expect(events).toEqual(["a:1", "a:2"]);
+});
+
+test("GIVEN a timeline WHEN skipToEnd is called THEN each layer's remaining onReached fire before its onEnded", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const events: string[] = [];
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [
+          { value: 0 },
+          {
+            value: 100,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:1"),
+          },
+          {
+            value: 0,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:2"),
+          },
+        ],
+        onEnded: () => events.push("a:ended"),
+      },
+    },
+    {
+      gap: 0,
+      animation: {
+        keyframes: [
+          { value: 0 },
+          {
+            value: 100,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("b:1"),
+          },
+        ],
+        onEnded: () => events.push("b:ended"),
+      },
+    },
+  ]);
+  const p = tl.play();
+  ticker.update(100);
+
+  // WHEN — layer a is mid-flight, layer b has not started
+  tl.skipToEnd();
+  await p;
+
+  // THEN — mirroring onEnded, both layers' remaining checkpoints run
+  expect(events).toEqual(["a:1", "a:2", "a:ended", "b:1", "b:ended"]);
+});
+
+test("GIVEN a running timeline WHEN setProgress jumps forward THEN layer onReached does not fire", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const events: string[] = [];
+  const tl = createTimeline([
+    {
+      at: 0,
+      animation: {
+        keyframes: [
+          { value: 0 },
+          {
+            value: 100,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:1"),
+          },
+          {
+            value: 0,
+            gap: 100,
+            ease: "linear",
+            onReached: () => events.push("a:2"),
+          },
+        ],
+      },
+    },
+  ]);
+  const p = tl.play();
+  ticker.update(50);
+
+  // WHEN
+  tl.setProgress(0.75);
+
+  // THEN
+  expect(events).toEqual([]);
+
+  tl.stop();
+  await p;
+});

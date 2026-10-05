@@ -37,6 +37,7 @@ const buildFromConfigs = (rawLayers: TimelineLayer[]): BuildResult => {
       value: resolveValue(kf.value),
       gap: j === 0 ? 0 : resolveValue(kf.gap ?? 0),
       easeFn: resolveEasing(kf.ease ?? "inOutSine"),
+      onReached: kf.onReached,
     }));
 
     let layerDuration = 0;
@@ -192,7 +193,7 @@ export const createTimeline = (
 
   const skipToEnd = () => {
     for (const layer of activeLayers) {
-      layer.runner.evaluate(1);
+      layer.runner.finish(true);
       layer.runner.onEnded?.();
     }
     syncValues();

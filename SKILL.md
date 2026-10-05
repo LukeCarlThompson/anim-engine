@@ -135,16 +135,20 @@ await anim.play(); // Promise resolves when animation completes
 
 ### Keyframes
 
-Multiple segments, each with its own value, duration (`gap`), and easing.
+Multiple segments, each with its own value, duration (`gap`), easing, and optional `onReached` callback.
 
 ```ts
 createAnimation({
-  keyframes: [{ value: 0 }, { value: 50, gap: 300, ease: "outCubic" }, { value: 100, gap: 400 }],
+  keyframes: [
+    { value: 0 },
+    { value: 50, gap: 300, ease: "outCubic", onReached: () => commit() },
+    { value: 100, gap: 400 },
+  ],
   onUpdate: (v) => (sprite.x = v),
 }).play();
 ```
 
-The first keyframe provides the starting value; `gap` is the duration from the previous keyframe.
+The first keyframe provides the starting value; `gap` is the duration from the previous keyframe. `onReached` fires when the animation reaches that keyframe — see [Running an action at a keyframe](#running-an-action-at-a-keyframe).
 
 ### Control handle
 
@@ -153,8 +157,8 @@ anim.play()         → Promise<void>   // Start or restart from beginning
 anim.pause()        → void            // Freeze at current position
 anim.resume()       → void            // Continue from paused position
 anim.stop()         → void            // Stop; promise resolves at current value
-anim.skipToEnd()    → void            // Jump to end value; promise resolves
-anim.setProgress(p) → void            // Jump to progress [0, 1]; pauses if playing
+anim.skipToEnd()    → void            // Finish now: runs remaining onReached, then onEnded
+anim.setProgress(p) → void            // Seek to progress [0, 1]; pauses if playing, fires no onReached/onEnded
 
 anim.value          → number          // Current interpolated value (readonly)
 anim.velocity       → number          // Current velocity in units/sec (readonly)
@@ -165,19 +169,21 @@ anim.durationMs     → number          // Total duration (readonly)
 
 ### Repeat & yoyo
 
-Since `DynamicValue` is re-evaluated each `play()` call, alternating the source toggles direction:
+Build the animation once and call `play()` to run it again — `play()` resets it. Since `DynamicValue` is re-evaluated each `play()` call, alternating the source toggles direction:
 
 ```ts
 let forward = true;
 
+const anim = createAnimation({
+  from: () => (forward ? 1 : 1.3),
+  to: () => (forward ? 1.3 : 1),
+  durationMs: 600,
+  ease: "inOutSine",
+  onUpdate: (v) => sprite.scale.set(v),
+});
+
 for (let i = 0; i < 6; i++) {
-  await createAnimation({
-    from: () => (forward ? 1 : 1.3),
-    to: () => (forward ? 1.3 : 1),
-    durationMs: 600,
-    ease: "inOutSine",
-    onUpdate: (v) => sprite.scale.set(v),
-  }).play();
+  await anim.play();
   forward = !forward;
 }
 ```
@@ -502,6 +508,40 @@ createAnimation({
 ---
 
 ## Common Recipes
+
+### Running an action at a keyframe
+
+Put `onReached` on the keyframe you want to act on. It fires once when the segment into that keyframe completes, after the value is written. Do **not** split a single sequence into chained `createAnimation().play()` promises.
+
+```ts
+const transition = createAnimation({
+  keyframes: [
+    { value: 0 },
+    { value: 1, gap: 800, ease: "inOutQuart", onReached: () => commit() },
+    { value: 2, gap: 700, ease: "inOutQuart" },
+  ],
+  onUpdate: (value) => setProgress(value),
+});
+
+void transition.play(); // restarts from the beginning
+```
+
+The first keyframe is the starting value, so its `onReached` is ignored. `onReached` follows the same rules as `onEnded`: it also fires for the keyframes that remain when `skipToEnd()` finishes a playing animation, but it does not fire for a `setProgress()` seek. Seeking backwards and playing forward crosses the keyframe again, so `onReached` fires again.
+
+### Reusing an animation
+
+Build the animation once and call `play()` to run it again — `play()` resets it, so don't recreate it per trigger. An idle animation is not registered on the ticker; it only ticks while playing.
+
+### `onUpdate` signature
+
+`onUpdate(value, velocity)`. Passing a signal setter directly calls it as `setter(value, velocity)`; prefer `onUpdate: (value) => setter(value)`.
+
+### Picking the API
+
+- one tween → `createAnimation({ from, to })`
+- a multi-segment sequence → `createAnimation({ keyframes })` with `onReached`
+- several independent or staggered animations → `createTimeline`
+- never `await` a chain of `play()` calls for one sequence
 
 ### Animating CSS transforms
 

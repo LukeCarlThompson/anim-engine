@@ -68,6 +68,20 @@ export type Keyframe = {
    * The gap before the keyframe in milliseconds. Can be a number or a function that returns a number.
    */
   gap?: DynamicValue;
+  /**
+   * Callback fired when the animation reaches this keyframe during playback,
+   * that is, when the segment ending at it completes, after the value has been
+   * written by `onUpdate`.
+   *
+   * It follows the same rules as `onEnded`: it also fires for keyframes that
+   * remain when `skipToEnd()` completes a playing animation, but it does not
+   * fire for a jump made with `setProgress()`. It is ignored on the first
+   * keyframe, which is the starting value — use `onStarted` for the start.
+   *
+   * A keyframe can be reached again: seeking backwards with `setProgress()` and
+   * then playing forward fires this callback again.
+   */
+  onReached?: () => void;
 };
 
 /**

@@ -201,6 +201,7 @@ const createKeyframeAnimation = ({
       value: resolveValue(kf.value),
       gap: i === 0 ? 0 : resolveValue(kf.gap ?? 0),
       easeFn: resolveEasing(kf.ease ?? "inOutSine"),
+      onReached: kf.onReached,
     }));
     return createKeyframeRunner({
       keyframes: resolvedKeyframes,
@@ -249,8 +250,9 @@ const createKeyframeAnimation = ({
   };
 
   const skipToEnd = () => {
-    runner.evaluate(1);
-    if (status === "playing" || status === "paused") onEnded?.();
+    const fireCallbacks = status === "playing" || status === "paused";
+    runner.finish(fireCallbacks);
+    if (fireCallbacks) onEnded?.();
     status = "stopped";
     ticker.remove(runner);
     resolvePromise?.();
