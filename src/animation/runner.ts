@@ -7,6 +7,7 @@ import type { TweenState } from "./update";
 export type Runner = {
   (deltaMs: number): boolean;
   evaluate: (progress: number) => number;
+  finish: (fireReached: boolean) => void;
   reset: () => void;
   value: number;
   velocity: number;
@@ -69,6 +70,10 @@ export const createTweenRunner = ({
     return state.value;
   };
 
+  const finish = (): void => {
+    evaluate(1);
+  };
+
   const reset = () => {
     state.progress = 0;
     state.value = from;
@@ -77,6 +82,7 @@ export const createTweenRunner = ({
 
   runner = step as Runner;
   runner.evaluate = evaluate;
+  runner.finish = finish;
   runner.reset = reset;
   Object.defineProperty(runner, "value", {
     get: () => state.value,
@@ -101,7 +107,12 @@ type Segment = {
 };
 
 export type KeyframeRunnerConfig = {
-  keyframes: { value: number; gap: number; easeFn: EaseFunction }[];
+  keyframes: {
+    value: number;
+    gap: number;
+    easeFn: EaseFunction;
+    onReached?: () => void;
+  }[];
   onStarted?: () => void;
   onUpdate?: (value: number, velocity: number) => void;
   onProgress?: (progress: number) => void;
@@ -175,6 +186,7 @@ export const createKeyframeRunner = ({
     onUpdate(value, velocity);
 
     if (segmentProgress >= 1) {
+      keyframes[currentSegmentIndex + 1].onReached?.();
       if (currentSegmentIndex < segments.length - 1) {
         currentSegmentIndex++;
         segmentElapsed = 0;
@@ -225,6 +237,15 @@ export const createKeyframeRunner = ({
     return value;
   };
 
+  const finish = (fireReached: boolean): void => {
+    const firstReached = currentSegmentIndex + 1;
+    evaluate(1);
+    if (!fireReached) return;
+    for (let i = firstReached; i < keyframes.length; i++) {
+      keyframes[i].onReached?.();
+    }
+  };
+
   const reset = () => {
     value = keyframes[0].value;
     velocity = 0;
@@ -236,6 +257,7 @@ export const createKeyframeRunner = ({
 
   runner = update as Runner;
   runner.evaluate = evaluate;
+  runner.finish = finish;
   runner.reset = reset;
   Object.defineProperty(runner, "value", { get: () => value, configurable: true });
   Object.defineProperty(runner, "velocity", { get: () => velocity, configurable: true });

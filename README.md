@@ -30,6 +30,8 @@ const anim = createAnimation({
 await anim.play();
 ```
 
+> **One sequence, one animation.** Don't `await` a chain of `play()` calls to sequence steps. Use a single `createAnimation({ keyframes })` and `onReached` to act at a point. See [Keyframes](#keyframes).
+
 > AI agents: this package includes a [`SKILL.md`](SKILL.md) with in-depth usage guidance for agent-assisted development.
 
 ## Design
@@ -140,6 +142,7 @@ type Keyframe = {
   value: DynamicValue;
   gap?: DynamicValue; // ms from previous keyframe
   ease?: EaseName | EaseFunction;
+  onReached?: () => void; // fires when the animation reaches this keyframe
 };
 ```
 
@@ -261,10 +264,16 @@ await anim.play();
 
 ```ts
 createAnimation({
-  keyframes: [{ value: 0 }, { value: 50, gap: 300, ease: "outCubic" }, { value: 100, gap: 400 }],
+  keyframes: [
+    { value: 0 },
+    { value: 50, gap: 300, ease: "outCubic", onReached: () => commit() },
+    { value: 100, gap: 400 },
+  ],
   onUpdate: (v) => (sprite.x = v),
 }).play();
 ```
+
+`onReached` fires once when the animation reaches that keyframe, after `onUpdate` writes its value — the minimal way to run an action at a point in a sequence. It follows the same rules as `onEnded`: it does not fire for a `setProgress()` seek, and it also fires for the keyframes that remain when `skipToEnd()` finishes a playing animation. The first keyframe is the starting value, so its `onReached` is ignored.
 
 ### Repeat & yoyo
 

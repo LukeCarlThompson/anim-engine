@@ -509,3 +509,255 @@ test("GIVEN a keyframe animation with velocity tracking WHEN it moves THEN veloc
   expect(velocities[velocities.length - 1]).toBe(0);
   expect(a.velocity).toBe(velocities[velocities.length - 1]);
 });
+
+// ─── Keyframe onReached ───
+
+test("GIVEN a three-keyframe animation WHEN played through THEN onReached fires once per keyframe, after onUpdate and before onEnded", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const log: string[] = [];
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      { value: 100, gap: 100, ease: "linear", onReached: () => log.push("reached:1") },
+      { value: 50, gap: 100, ease: "linear", onReached: () => log.push("reached:2") },
+    ],
+    onUpdate: (v) => log.push(`update:${Math.round(v)}`),
+    onEnded: () => log.push("ended"),
+  });
+
+  // WHEN
+  const p = a.play();
+  ticker.update(50);
+  ticker.update(50);
+  ticker.update(50);
+  ticker.update(50);
+  await p;
+
+  // THEN — the middle keyframe fires exactly once, right after its onUpdate
+  expect(log.filter((e) => e === "reached:1")).toHaveLength(1);
+  expect(log.indexOf("reached:1")).toBe(log.indexOf("update:100") + 1);
+
+  // AND — the final keyframe fires once, after its onUpdate and before onEnded
+  expect(log.filter((e) => e === "reached:2")).toHaveLength(1);
+  expect(log.indexOf("reached:2")).toBe(log.lastIndexOf("update:50") + 1);
+  expect(log.indexOf("ended")).toBe(log.indexOf("reached:2") + 1);
+});
+
+test("GIVEN a first keyframe with onReached WHEN played through THEN it never fires", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let firstFired = 0;
+  const a = createAnimation({
+    keyframes: [
+      {
+        value: 0,
+        onReached: () => {
+          firstFired++;
+        },
+      },
+      { value: 100, gap: 100, ease: "linear" },
+    ],
+  });
+
+  // WHEN
+  const p = a.play();
+  ticker.update(100);
+  await p;
+
+  // THEN
+  expect(firstFired).toBe(0);
+});
+
+test("GIVEN a keyframe animation WHEN played twice THEN onReached fires on each play", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let fired = 0;
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      {
+        value: 100,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          fired++;
+        },
+      },
+    ],
+  });
+
+  // WHEN — play once
+  const p1 = a.play();
+  ticker.update(100);
+  await p1;
+
+  // THEN
+  expect(fired).toBe(1);
+
+  // WHEN — play again
+  const p2 = a.play();
+  ticker.update(100);
+  await p2;
+
+  // THEN
+  expect(fired).toBe(2);
+});
+
+test("GIVEN a running keyframe animation WHEN setProgress jumps past a keyframe THEN onReached does not fire on the jump or on resume", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let firstFired = 0;
+  let secondFired = 0;
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      {
+        value: 100,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          firstFired++;
+        },
+      },
+      {
+        value: 50,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          secondFired++;
+        },
+      },
+    ],
+  });
+  const p = a.play();
+  ticker.update(50);
+
+  // WHEN — jump forward, past the first keyframe, then continue playing
+  a.setProgress(0.75);
+  a.resume();
+  ticker.update(50);
+  await p;
+
+  // THEN — the skipped keyframe never fired, the crossed one did
+  expect(firstFired).toBe(0);
+  expect(secondFired).toBe(1);
+  expect(a.value).toBe(50);
+});
+
+test("GIVEN a keyframe was reached WHEN setProgress seeks backwards and playback resumes THEN onReached fires again", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let fired = 0;
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      {
+        value: 100,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          fired++;
+        },
+      },
+      { value: 50, gap: 100, ease: "linear" },
+    ],
+  });
+  const p = a.play();
+  ticker.update(100);
+  expect(fired).toBe(1);
+
+  // WHEN — seek back before the keyframe and play forward again
+  a.setProgress(0.25);
+  a.resume();
+  ticker.update(50);
+  ticker.update(100);
+  await p;
+
+  // THEN
+  expect(fired).toBe(2);
+});
+
+test("GIVEN a running keyframe animation WHEN skipToEnd is called THEN remaining onReached fire in order, then onEnded", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  const log: string[] = [];
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      { value: 100, gap: 100, ease: "linear", onReached: () => log.push("reached:1") },
+      { value: 50, gap: 100, ease: "linear", onReached: () => log.push("reached:2") },
+    ],
+    onEnded: () => log.push("ended"),
+  });
+  const p = a.play();
+  ticker.update(50);
+
+  // WHEN
+  a.skipToEnd();
+  await p;
+
+  // THEN
+  expect(log).toEqual(["reached:1", "reached:2", "ended"]);
+  expect(a.value).toBe(50);
+});
+
+test("GIVEN a stopped keyframe animation WHEN skipToEnd is called THEN neither onReached nor onEnded fire", () => {
+  // GIVEN
+  let fired = 0;
+  let ended = 0;
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      {
+        value: 100,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          fired++;
+        },
+      },
+    ],
+    onEnded: () => {
+      ended++;
+    },
+  });
+
+  // WHEN — never played
+  a.skipToEnd();
+
+  // THEN
+  expect(fired).toBe(0);
+  expect(ended).toBe(0);
+  expect(a.value).toBe(100);
+});
+
+test("GIVEN a running keyframe animation WHEN stopped before a keyframe THEN its onReached does not fire", async () => {
+  // GIVEN
+  const ticker = getTicker();
+  let fired = 0;
+  const a = createAnimation({
+    keyframes: [
+      { value: 0 },
+      {
+        value: 100,
+        gap: 100,
+        ease: "linear",
+        onReached: () => {
+          fired++;
+        },
+      },
+      { value: 50, gap: 100, ease: "linear" },
+    ],
+  });
+
+  // WHEN
+  const p = a.play();
+  ticker.update(50);
+  a.stop();
+  ticker.update(200);
+  await p;
+
+  // THEN
+  expect(fired).toBe(0);
+});
