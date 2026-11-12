@@ -5,6 +5,17 @@ Results are produced by `npm run bench` and printed to stdout. Nothing is commit
 Numbers move with machine, Node version, and benchmark ordering. Compare cases within a
 single run; do not diff absolute throughput across runs.
 
+## Known harness bias
+
+Vitest transforms project source and rewrites named imports into namespace property reads
+(`__vite_ssr_import_0__.updateTween(...)`). A namespace read costs roughly 35% more than a
+local binding, and the library pays it on every frame. Dependencies such as GSAP load
+natively and pay nothing. The anim-engine numbers therefore under-state the library; treat
+the published ratios as a floor. No source change is made to work around this.
+
+Removing the bias properly would mean benchmarking the built `dist/` outside Vitest, as
+`dist` has explicit `.js` specifiers and can be loaded by Node directly.
+
 ## Commands
 
 | Command         | Description                          |
