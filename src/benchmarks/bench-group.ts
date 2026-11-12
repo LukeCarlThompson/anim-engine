@@ -1,16 +1,15 @@
+import type { Ticker } from "anim-engine-bench/domain/ticker.js";
+import { createTicker } from "anim-engine-bench/ticker/get-ticker.js";
 import { test } from "vitest";
 import type { BenchFn, BenchRegistration } from "vitest";
-
-import type { Ticker } from "../domain";
-import { createTicker } from "../ticker/get-ticker";
 
 /**
  * Registers a single benchmark case inside a {@link benchGroup}.
  *
- * Mirrors the `bench(name, fn)` shape of Vitest 4, but collects the
- * registration instead of running it immediately.
+ * Collects the case instead of running it, so a group can be handed to
+ * `bench.compare()` as one table.
  */
-export type BenchRegistrar = (name: string, fn: BenchFn) => void;
+type BenchRegistrar = (name: string, fn: BenchFn) => void;
 
 /**
  * Register a group of benchmarks.

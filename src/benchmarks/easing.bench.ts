@@ -1,4 +1,5 @@
-import { EASING_FUNCTIONS } from "../domain";
+import { EASING_FUNCTIONS } from "anim-engine-bench/domain/easing.js";
+
 /**
  * Benchmarks: easing function throughput.
  *

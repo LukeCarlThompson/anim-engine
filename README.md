@@ -573,23 +573,23 @@ animate();
 
 ## Benchmarks
 
-`vitest bench` on Apple M1 Pro, Node v26.13.1. Easing functions matched; `onUpdate` writes to a plain object, so these measure the engine rather than rendering.
+`npm run bench` on Apple M1 Pro, Node v26.13.1. Benchmarks run against the built package, loaded by Node directly — not through Vite's test transform — so both engines are compiled the same way. Easing functions are matched and `onUpdate` writes to a plain object, so these measure the engine rather than rendering.
 
 | Benchmark                            | anim-engine  | GSAP         | GSAP path   | Ratio    |
 | ------------------------------------ | ------------ | ------------ | ----------- | -------- |
-| Single tween (cubic, 1000 frames)    | 37,235 ops/s | 9,712 ops/s  | `onUpdate`  | **3.8×** |
-| Single tween (linear, 1000 frames)   | 28,896 ops/s | 16,038 ops/s | no callback | **1.8×** |
-| Single tween (bezier, 1000 frames)   | 20,854 ops/s | 13,505 ops/s | no callback | **1.5×** |
-| Keyframe (3 segments, 1000 frames)   | 26,691 ops/s | 4,235 ops/s  | `timeline`  | **6.3×** |
-| 50 concurrent tweens (500 frames)    | 844 ops/s    | 378 ops/s    | `onUpdate`  | **2.2×** |
-| 200 concurrent tweens (500 frames)   | 181 ops/s    | 90 ops/s     | `onUpdate`  | **2.0×** |
-| 50 concurrent keyframes (500 frames) | 872 ops/s    | 196 ops/s    | `timeline`  | **4.4×** |
-| 50-layer timeline (500 frames)       | 718 ops/s    | 449 ops/s    | no callback | **1.6×** |
-| 50 tweens re-play (500 frames)       | 504 ops/s    | 158 ops/s    | no callback | **3.2×** |
-| 200 concurrent, all dynamic values   | 180 ops/s    | 75 ops/s     | no callback | **2.4×** |
-| 1000 concurrent tweens (500 frames)  | 36 ops/s     | 14 ops/s     | no callback | **2.5×** |
+| Single tween (cubic, 1000 frames)    | 53,002 ops/s | 9,832 ops/s  | `onUpdate`  | **5.4×** |
+| Single tween (linear, 1000 frames)   | 35,213 ops/s | 16,131 ops/s | no callback | **2.2×** |
+| Single tween (bezier, 1000 frames)   | 25,175 ops/s | 13,584 ops/s | no callback | **1.9×** |
+| Keyframe (3 segments, 1000 frames)   | 27,170 ops/s | 4,248 ops/s  | `timeline`  | **6.4×** |
+| 50 concurrent tweens (500 frames)    | 1,065 ops/s  | 382 ops/s    | `onUpdate`  | **2.8×** |
+| 200 concurrent tweens (500 frames)   | 235 ops/s    | 91 ops/s     | `onUpdate`  | **2.6×** |
+| 50 concurrent keyframes (500 frames) | 896 ops/s    | 195 ops/s    | `timeline`  | **4.6×** |
+| 50-layer timeline (500 frames)       | 731 ops/s    | 457 ops/s    | no callback | **1.6×** |
+| 50 tweens re-play (500 frames)       | 633 ops/s    | 157 ops/s    | no callback | **4.0×** |
+| 200 concurrent, all dynamic values   | 229 ops/s    | 76 ops/s     | no callback | **3.0×** |
+| 1000 concurrent tweens (500 frames)  | 46 ops/s     | 15 ops/s     | no callback | **3.1×** |
 
-vs GSAP `onUpdate`: **2.0–3.8× faster**.
+vs GSAP `onUpdate`: **2.6–5.4× faster**.
 
 Run locally: `npm run bench`
 

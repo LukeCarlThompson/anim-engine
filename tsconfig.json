@@ -8,6 +8,11 @@
 
     /* Bundler mode */
     "moduleResolution": "Bundler",
+    // Benchmark imports resolve to source here so `check:types` needs no build.
+    // The benchmarks themselves execute the staged build, not this.
+    "paths": {
+      "anim-engine-bench/*.js": ["./src/*.ts"]
+    },
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",

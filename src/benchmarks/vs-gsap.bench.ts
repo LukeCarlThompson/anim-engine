@@ -1,11 +1,11 @@
+import { createTweenRunner } from "anim-engine-bench/animation/runner.js";
+import type { TweenState } from "anim-engine-bench/animation/update.js";
+import { updateTween } from "anim-engine-bench/animation/update.js";
+import type { EaseFunction } from "anim-engine-bench/domain/easing.js";
+import { cubicBezier } from "anim-engine-bench/domain/easing.js";
+import type { Ticker } from "anim-engine-bench/domain/ticker.js";
+import { createAnimation, createTimeline } from "anim-engine-bench/index.js";
 import gsap from "gsap";
-import { CustomEase } from "gsap/CustomEase";
-
-gsap.registerPlugin(CustomEase);
-
-import { createAnimation } from "../animation/create-animation";
-import { cubicBezier } from "../domain/easing";
-import { createTimeline } from "../timeline/create-timeline";
 /**
  * Benchmarks: anim-engine vs GSAP.
  *
@@ -13,7 +13,11 @@ import { createTimeline } from "../timeline/create-timeline";
  * Each animation runs to natural completion (duration matches frame window).
  * No manual kill() — auto-cleanup measured.
  */
+import { CustomEase } from "gsap/CustomEase";
+
 import { benchGroup } from "./bench-group";
+
+gsap.registerPlugin(CustomEase);
 
 // ─── Constants ───
 
@@ -402,9 +406,6 @@ benchGroup("50 tweens re-play (2 cycles, 500 frames each)", (bench, ticker) => {
 //  DIAGNOSTIC — raw runner calls vs ticker
 // ═══════════════════════════════════════════════════
 
-import { createTweenRunner } from "../animation/runner";
-import type { EaseFunction, Ticker } from "../domain";
-
 const testEase: EaseFunction = (t) => 1 - Math.pow(1 - t, 3); // outCubic equivalent
 
 benchGroup("200 concurrent raw runner calls (500 frames, no ticker)", (bench, ticker) => {
@@ -506,13 +507,6 @@ benchGroup("1000 concurrent tweens (500 frames to completion)", (bench, ticker) 
   });
 });
 
-import { updateTween } from "../animation/update";
-import type { TweenState } from "../animation/update";
-
-// Bind once: Vitest's module runner exposes exports as getters, and reading
-// one per frame adds overhead to the measurement.
-const tween = updateTween;
-
 benchGroup("200 concurrent raw updateTween calls (500 frames, no runner)", (bench, _ticker) => {
   bench("raw math only", () => {
     const states: TweenState[] = Array.from({ length: 200 }, () => ({
@@ -522,7 +516,7 @@ benchGroup("200 concurrent raw updateTween calls (500 frames, no runner)", (benc
     }));
     for (let f = 0; f < CONCURRENT_FRAMES; f++) {
       for (let i = 0; i < states.length; i++) {
-        tween(states[i], DT, CONCURRENT_DURATION_MS, testEase, 0, 100);
+        updateTween(states[i], DT, CONCURRENT_DURATION_MS, testEase, 0, 100);
       }
     }
   });

@@ -20,7 +20,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "npm run lint && npm run test:watch && vite",
-    "build": "npm run lint && npm run test && tsc && vite build",
+    "build": "npm run lint && npm run test && npm run build:lib",
+    "build:lib": "tsc && vite build",
     "preview": "vite preview",
     "check:types": "tsc --noEmit",
     "lint": "oxlint",
@@ -29,7 +30,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "npm run lint && npm run test && storybook build",
     "prepublishOnly": "npm run build",
-    "bench": "vitest bench src/benchmarks/ --run --reporter=verbose",
+    "bench": "npm run build:lib && node src/benchmarks/stage-package.mjs && vitest bench src/benchmarks/ --run --reporter=verbose",
     "format": "oxfmt src docs",
     "format:check": "oxfmt --check src docs",
     "fmt": "oxfmt src docs"
