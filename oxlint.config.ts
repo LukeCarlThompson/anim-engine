@@ -1,6 +1,7 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
+  ignorePatterns: ["dist/**", ".tmp/**", "**/*.astro"],
   options: {
     typeAware: true,
     typeCheck: true,
