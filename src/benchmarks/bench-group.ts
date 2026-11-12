@@ -2,7 +2,7 @@ import { test } from "vitest";
 import type { BenchFn, BenchRegistration } from "vitest";
 
 import type { Ticker } from "../domain";
-import { createTicker } from "../ticker";
+import { createTicker } from "../ticker/get-ticker";
 
 /**
  * Registers a single benchmark case inside a {@link benchGroup}.

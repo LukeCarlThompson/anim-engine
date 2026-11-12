@@ -1,1 +1,1 @@
-export { createTicker, getTicker } from "./get-ticker";
+export { getTicker } from "./get-ticker";
