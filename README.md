@@ -573,20 +573,23 @@ animate();
 
 ## Benchmarks
 
-vs GSAP (vitest bench, Apple Silicon M-series, Node 24). Matched easing functions.
+`vitest bench` on Apple M1 Pro, Node v26.13.1. Easing functions matched; `onUpdate` writes to a plain object, so these measure the engine rather than rendering.
 
-| Benchmark                           | anim-engine  | GSAP         | Ratio |
-| ----------------------------------- | ------------ | ------------ | ----- |
-| Single tween (cubic, 1000 frames)   | 40,974 ops/s | 10,656 ops/s | 3.8×  |
-| Single tween (bezier, 1000 frames)  | 20,190 ops/s | 11,948 ops/s | 1.7×  |
-| Keyframe (3 segments, 1000 frames)  | 26,661 ops/s | 3,578 ops/s  | 7.5×  |
-| 50 concurrent tweens (500 frames)   | 866 ops/s    | 436 ops/s    | 2.0×  |
-| 200 concurrent tweens (500 frames)  | 187 ops/s    | 112 ops/s    | 1.7×  |
-| 1000 concurrent tweens (500 frames) | 37 ops/s     | 13 ops/s     | 2.8×  |
-| 50-layer timeline (500 frames)      | 684 ops/s    | 406 ops/s    | 1.7×  |
-| 50 tweens re-play (500 frames)      | 523 ops/s    | 133 ops/s    | 3.9×  |
+| Benchmark                            | anim-engine  | GSAP         | GSAP path   | Ratio    |
+| ------------------------------------ | ------------ | ------------ | ----------- | -------- |
+| Single tween (cubic, 1000 frames)    | 53,610 ops/s | 9,752 ops/s  | `onUpdate`  | **5.5×** |
+| Single tween (linear, 1000 frames)   | 35,610 ops/s | 16,153 ops/s | no callback | **2.2×** |
+| Single tween (bezier, 1000 frames)   | 27,162 ops/s | 13,447 ops/s | no callback | **2.0×** |
+| Keyframe (3 segments, 1000 frames)   | 26,996 ops/s | 4,253 ops/s  | `timeline`  | **6.3×** |
+| 50 concurrent tweens (500 frames)    | 1,065 ops/s  | 383 ops/s    | `onUpdate`  | **2.8×** |
+| 200 concurrent tweens (500 frames)   | 235 ops/s    | 91 ops/s     | `onUpdate`  | **2.6×** |
+| 50 concurrent keyframes (500 frames) | 879 ops/s    | 198 ops/s    | `timeline`  | **4.4×** |
+| 50-layer timeline (500 frames)       | 720 ops/s    | 456 ops/s    | no callback | **1.6×** |
+| 50 tweens re-play (500 frames)       | 633 ops/s    | 155 ops/s    | no callback | **4.1×** |
+| 200 concurrent, all dynamic values   | 229 ops/s    | 76 ops/s     | no callback | **3.0×** |
+| 1000 concurrent tweens (500 frames)  | 46 ops/s     | 15 ops/s     | no callback | **3.0×** |
 
-vs GSAP `onUpdate` (apples-to-apples): **2.8–4.5× faster**.
+vs GSAP `onUpdate`: **2.6–5.5× faster**.
 
 Run locally: `npm run bench`
 

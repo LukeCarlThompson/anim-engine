@@ -1,3 +1,4 @@
+import { EASING_FUNCTIONS } from "../domain";
 /**
  * Benchmarks: easing function throughput.
  *
@@ -6,15 +7,13 @@
  *
  * Each benchmark calls the easing function 10,000 times per sample.
  */
-import { bench, describe } from "vitest";
-
-import { EASING_FUNCTIONS } from "../domain";
+import { benchGroup } from "./bench-group";
 
 const FRAMES = 10_000;
 
 // ── Already optimised (no pow) — baseline ──
 
-describe("easing: inCubic", () => {
+benchGroup("easing: inCubic", (bench) => {
   bench("inCubic (multiply baseline)", () => {
     const fn = EASING_FUNCTIONS.inCubic;
     let sum = 0;
@@ -25,7 +24,7 @@ describe("easing: inCubic", () => {
 
 // ── Converted from pow to multiply ──
 
-describe("easing: outCubic", () => {
+benchGroup("easing: outCubic", (bench) => {
   bench("outCubic", () => {
     const fn = EASING_FUNCTIONS.outCubic;
     let sum = 0;
@@ -34,7 +33,7 @@ describe("easing: outCubic", () => {
   });
 });
 
-describe("easing: outQuart", () => {
+benchGroup("easing: outQuart", (bench) => {
   bench("outQuart", () => {
     const fn = EASING_FUNCTIONS.outQuart;
     let sum = 0;
@@ -43,7 +42,7 @@ describe("easing: outQuart", () => {
   });
 });
 
-describe("easing: outQuint", () => {
+benchGroup("easing: outQuint", (bench) => {
   bench("outQuint", () => {
     const fn = EASING_FUNCTIONS.outQuint;
     let sum = 0;
@@ -54,7 +53,7 @@ describe("easing: outQuint", () => {
 
 // ── Still using pow — candidates ──
 
-describe("easing: inCirc", () => {
+benchGroup("easing: inCirc", (bench) => {
   bench("inCirc", () => {
     const fn = EASING_FUNCTIONS.inCirc;
     let sum = 0;
@@ -63,7 +62,7 @@ describe("easing: inCirc", () => {
   });
 });
 
-describe("easing: outCirc", () => {
+benchGroup("easing: outCirc", (bench) => {
   bench("outCirc", () => {
     const fn = EASING_FUNCTIONS.outCirc;
     let sum = 0;
@@ -72,7 +71,7 @@ describe("easing: outCirc", () => {
   });
 });
 
-describe("easing: inOutCirc", () => {
+benchGroup("easing: inOutCirc", (bench) => {
   bench("inOutCirc", () => {
     const fn = EASING_FUNCTIONS.inOutCirc;
     let sum = 0;
@@ -81,7 +80,7 @@ describe("easing: inOutCirc", () => {
   });
 });
 
-describe("easing: outBack", () => {
+benchGroup("easing: outBack", (bench) => {
   bench("outBack", () => {
     const fn = EASING_FUNCTIONS.outBack;
     let sum = 0;
@@ -90,7 +89,7 @@ describe("easing: outBack", () => {
   });
 });
 
-describe("easing: inOutBack", () => {
+benchGroup("easing: inOutBack", (bench) => {
   bench("inOutBack", () => {
     const fn = EASING_FUNCTIONS.inOutBack;
     let sum = 0;

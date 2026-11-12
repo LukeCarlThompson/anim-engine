@@ -16,6 +16,10 @@ export type Runner = {
   onEnded: (() => void) | undefined;
 };
 
+// Read through the module binding once. The alternative is a namespace
+// property lookup on every frame of every animation.
+const advanceTween = updateTween;
+
 const noOp = () => {};
 
 // ─── Tween runner ───
@@ -46,7 +50,7 @@ export const createTweenRunner = ({
   let runner!: Runner;
 
   const step = (deltaMs: number): boolean => {
-    const completed = updateTween(state, deltaMs, durationMs, easeFn, from, to);
+    const completed = advanceTween(state, deltaMs, durationMs, easeFn, from, to);
     onUpdate(state.value, state.velocity);
     onProgress(state.progress);
     if (completed) {
